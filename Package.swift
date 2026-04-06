@@ -26,14 +26,16 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
-            ]
+            ],
+            path: "Sources/TCAFlowMacros"
         ),
         .target(
             name: "TCAFlow",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "TCAFlowMacros"
-            ]
+            ],
+            path: "Sources/TCAFlow"
         ),
         .testTarget(
             name: "TCAFlowTests",

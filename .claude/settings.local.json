@@ -14,7 +14,11 @@
       "Bash(open TCAFlowExamples.xcodeproj)",
       "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -scheme TCAFlowExamples -showBuildSettings)",
       "Bash(xcodebuild:*)",
-      "Bash(swift run:*)"
+      "Bash(swift run:*)",
+      "Bash(swift:*)",
+      "Bash(open:*)",
+      "Bash(cp:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
