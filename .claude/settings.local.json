@@ -9,7 +9,8 @@
       "Bash(sed:*)",
       "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -scheme TCAFlowExamples -destination \"platform=iOS Simulator,name=iPhone 15\" -showBuildSettings)",
       "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -showBuildSettings)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
