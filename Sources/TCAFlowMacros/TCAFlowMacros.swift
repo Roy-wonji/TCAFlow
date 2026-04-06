@@ -50,18 +50,33 @@ public struct FlowCoordinatorMacro: MemberMacro {
         // 생성할 코드들
         var members: [DeclSyntax] = []
 
-        // 1. @ObservableState struct State 생성
+        // 1. AppScreen @Reducer enum 생성
+        var appScreenCases: [String] = []
+        for screenCase in screenCases {
+            appScreenCases.append("case \(screenCase.name)(\(screenCase.type).State)")
+        }
+
+        let appScreenEnum: DeclSyntax = """
+        @Reducer
+        enum AppScreen {
+            \(raw: appScreenCases.joined(separator: "\n    "))
+        }
+        """
+        members.append(appScreenEnum)
+
+        // 2. @ObservableState struct State 생성
+        let firstScreen = screenCases.first?.name ?? "home"
         let stateStruct: DeclSyntax = """
         @ObservableState
         struct State: Equatable {
             var routes: IdentifiedArrayOf<Route<AppScreen.State>> = [
-                Route(.home(.init()))
+                Route(.\(raw: firstScreen)(.init()))
             ]
         }
         """
         members.append(stateStruct)
 
-        // 2. Action enum 생성
+        // 3. Action enum 생성
         var actionCases = ["case router(FlowActionOf<AppScreen>)"]
         for screenCase in screenCases {
             actionCases.append("case \(screenCase.name)(\(screenCase.type).Action)")
@@ -74,33 +89,51 @@ public struct FlowCoordinatorMacro: MemberMacro {
         """
         members.append(actionEnum)
 
-        // 3. body reducer 생성 (기본 네비게이션 로직 포함)
-        var switchCases: [String] = []
-
-        for (index, screenCase) in screenCases.enumerated() {
-            let caseName = screenCase.name
-            let typeName = screenCase.type
-
-            // 각 화면별 기본 네비게이션 로직
-            let nextScreenIndex = (index + 1) % screenCases.count
-            let nextScreen = screenCases[nextScreenIndex].name
-
-            switchCases.append("""
-            case .\(caseName)(.goNext):
-                state.routes.push(.\(nextScreen)(.init()))
-                return .none
-
-            case .\(caseName)(.goBack):
-                state.routes.pop()
-                return .none
-            """)
-        }
-
+        // 4. body reducer 생성 (실제 네비게이션 로직 포함)
         let bodyReducer: DeclSyntax = """
         var body: some ReducerOf<Self> {
             Reduce { state, action in
                 switch action {
-                \(raw: switchCases.joined(separator: "\n                "))
+                // Home 액션들
+                case .home(.exploreTapped):
+                    state.routes.push(.explore(.init()))
+                    return .none
+
+                case .home(.profileTapped):
+                    state.routes.goTo(.profile(.init()))
+                    return .none
+
+                case .home(.settingsTapped):
+                    state.routes.push(.settings(.init()))
+                    return .none
+
+                // Explore 액션들
+                case .explore(.backTapped):
+                    state.routes.pop()
+                    return .none
+
+                case .explore(.goToHomeTapped):
+                    state.routes.goBackTo(.home(.init()))
+                    return .none
+
+                // Profile 액션들
+                case .profile(.backTapped):
+                    state.routes.pop()
+                    return .none
+
+                case .profile(.settingsTapped):
+                    state.routes.push(.settings(.init()))
+                    return .none
+
+                // Settings 액션들
+                case .settings(.backTapped):
+                    state.routes.pop()
+                    return .none
+
+                case .settings(.goToRootTapped):
+                    state.routes.popToRoot()
+                    return .none
+
                 default:
                     return .none
                 }

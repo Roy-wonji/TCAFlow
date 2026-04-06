@@ -1,100 +1,123 @@
-import Foundation
 import ComposableArchitecture
-import SwiftUI
+import Foundation
 
-// MARK: - Route (Hashable 제약 완화)
-public struct Route<State: Equatable>: Identifiable, Hashable {
-    public let id = UUID()
+public struct Route<State: Equatable>: Identifiable, Equatable, Hashable {
+    public let id: UUID
     public var state: State
 
-    public init(_ state: State) {
+    public init(id: UUID = UUID(), _ state: State) {
+        self.id = id
         self.state = state
     }
 
-    // ID 기반으로만 해싱 (State의 Hashable 불필요)
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        hasher.combine(self.id)
     }
 
-    public static func == (lhs: Route<State>, rhs: Route<State>) -> Bool {
-        lhs.id == rhs.id
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.state == rhs.state
     }
 }
 
-// MARK: - FlowActionOf
-public typealias FlowActionOf<Screen: Reducer> = (id: Route<Screen.State>.ID, action: Screen.Action) where Screen.State: Equatable
+public struct FlowAction<Action> {
+    public let id: UUID
+    public var action: Action
 
-// MARK: - 네비게이션 확장
-extension IdentifiedArrayOf where Element: Identifiable, Element.ID == UUID {
+    public init(id: UUID, action: Action) {
+        self.id = id
+        self.action = action
+    }
+}
 
-    /// 새로운 화면 추가
-    public mutating func push<S: Equatable>(_ state: S) where Element == Route<S> {
-        append(Route(state))
+public typealias FlowActionOf<Screen: Reducer> = FlowAction<Screen.Action>
+
+extension IdentifiedArrayOf where Element.ID == UUID {
+    public var currentRoute: Element? {
+        self.last
     }
 
-    /// 이전 화면으로
+    public var rootRoute: Element? {
+        self.first
+    }
+
+    public var depth: Int {
+        self.count
+    }
+}
+
+extension IdentifiedArrayOf where Element == Route<some Equatable> {
+}
+
+extension IdentifiedArrayOf {
+    public mutating func push<S: Equatable>(_ state: S) where Element == Route<S> {
+        self.append(Route(state))
+    }
+
     @discardableResult
     public mutating func pop() -> Element? {
-        if isEmpty {
-            return nil
-        }
-        return removeLast()
+        guard !self.isEmpty else { return nil }
+        return self.removeLast()
     }
 
-    /// 루트로 돌아가기
     public mutating func popToRoot() {
-        removeAll()
+        guard let first = self.first else { return }
+        self = [first]
     }
 
-    /// 현재 화면 교체
     public mutating func replace<S: Equatable>(with state: S) where Element == Route<S> {
-        if isEmpty {
-            push(state)
-        } else {
-            self[count - 1] = Route(state)
+        guard let currentRoute else {
+            self.push(state)
+            return
         }
+        self[id: currentRoute.id]?.state = state
     }
 
-    /// 스크린으로 특정 화면 이동
+    public var currentScreen<S: Equatable>: S? where Element == Route<S> {
+        self.last?.state
+    }
+
+    public var rootScreen<S: Equatable>: S? where Element == Route<S> {
+        self.first?.state
+    }
+
+    public func has<S: Equatable>(_ targetScreen: S) where Element == Route<S> -> Bool {
+        self.contains { $0.state.matchesCase(of: targetScreen) }
+    }
+
     public mutating func goTo<S: Equatable>(_ targetScreen: S) where Element == Route<S> {
-        let targetType = String(describing: targetScreen).components(separatedBy: "(").first ?? ""
-
-        if let index = firstIndex(where: { route in
-            let routeType = String(describing: route.state).components(separatedBy: "(").first ?? ""
-            return routeType == targetType
-        }) {
-            removeSubrange((index + 1)...)
+        if let index = self.firstIndex(where: { $0.state.matchesCase(of: targetScreen) }) {
+            self.removeSubrange((index + 1)...)
         } else {
-            append(Route(targetScreen))
+            self.append(Route(targetScreen))
         }
     }
 
-    /// 스크린으로 특정 화면까지 뒤로 가기
     public mutating func goBackTo<S: Equatable>(_ targetScreen: S) where Element == Route<S> {
-        let targetType = String(describing: targetScreen).components(separatedBy: "(").first ?? ""
-
-        while let last = last {
-            let lastType = String(describing: last.state).components(separatedBy: "(").first ?? ""
-            if lastType == targetType {
-                break
-            }
-            removeLast()
+        while let last = self.last, !last.state.matchesCase(of: targetScreen) {
+            self.removeLast()
         }
     }
 
-    /// 스크린 존재 확인
-    public func has<S: Equatable>(_ targetScreen: S) -> Bool where Element == Route<S> {
-        let targetType = String(describing: targetScreen).components(separatedBy: "(").first ?? ""
-
-        return contains { route in
-            let routeType = String(describing: route.state).components(separatedBy: "(").first ?? ""
-            return routeType == targetType
+    public mutating func reduce<Screen: Reducer>(
+        _ flowAction: FlowAction<Screen.Action>,
+        with reducer: Screen
+    ) -> Effect<FlowAction<Screen.Action>>
+    where Element == Route<Screen.State>, Screen.State: Equatable {
+        guard let route = self[id: flowAction.id] else {
+            return .none
         }
-    }
 
-    /// 스택 깊이
-    public var depth: Int {
-        count
+        var routeState = route.state
+        let effect = reducer.reduce(into: &routeState, action: flowAction.action)
+        self[id: flowAction.id]?.state = routeState
+
+        return effect.map { FlowAction(id: flowAction.id, action: $0) }
     }
 }
 
+private extension Equatable {
+    func matchesCase(of other: Self) -> Bool {
+        String(describing: self).split(separator: "(").first
+            == String(describing: other).split(separator: "(").first
+    }
+}
