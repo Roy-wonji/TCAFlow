@@ -10,7 +10,11 @@
       "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -scheme TCAFlowExamples -destination \"platform=iOS Simulator,name=iPhone 15\" -showBuildSettings)",
       "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -showBuildSettings)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(open TCAFlowExamples.xcodeproj)",
+      "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -scheme TCAFlowExamples -showBuildSettings)",
+      "Bash(xcodebuild:*)",
+      "Bash(swift run:*)"
     ]
   }
 }
