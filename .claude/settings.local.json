@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(find .:*)",
+      "Bash(swift build:*)",
+      "Bash(swift test:*)",
+      "Bash(sed:*)",
+      "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -scheme TCAFlowExamples -destination \"platform=iOS Simulator,name=iPhone 15\" -showBuildSettings)",
+      "Bash(xcodebuild -project TCAFlowExamples.xcodeproj -showBuildSettings)",
+      "Bash(git add:*)"
+    ]
+  }
+}
