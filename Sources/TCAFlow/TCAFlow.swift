@@ -1,6 +1,8 @@
 import ComposableArchitecture
 import Foundation
+import IdentifiedCollections
 
+@ObservableState
 public struct Route<State: Equatable>: Identifiable, Equatable, Hashable {
     public let id: UUID
     public var state: State
@@ -19,19 +21,88 @@ public struct Route<State: Equatable>: Identifiable, Equatable, Hashable {
     }
 }
 
-public struct FlowAction<Action> {
-    public let id: UUID
-    public var action: Action
+@ObservableState
+public struct RouteStack<State: Equatable>: Equatable {
+    public var routes: IdentifiedArrayOf<Route<State>>
 
-    public init(id: UUID, action: Action) {
-        self.id = id
-        self.action = action
+    public init(_ routes: IdentifiedArrayOf<Route<State>> = []) {
+        self.routes = routes
+    }
+
+    public init(_ routes: [Route<State>]) {
+        self.routes = IdentifiedArray(uniqueElements: routes)
+    }
+}
+
+extension RouteStack {
+    public var currentRoute: Route<State>? {
+        self.routes.currentRoute
+    }
+
+    public var rootRoute: Route<State>? {
+        self.routes.rootRoute
+    }
+
+    public var depth: Int {
+        self.routes.depth
+    }
+
+    public var count: Int {
+        self.routes.count
+    }
+
+    public var isEmpty: Bool {
+        self.routes.isEmpty
+    }
+
+    public mutating func push(_ state: State) {
+        self.routes.push(state)
+    }
+
+    @discardableResult
+    public mutating func pop() -> Route<State>? {
+        self.routes.pop()
+    }
+
+    public mutating func popToRoot() {
+        self.routes.popToRoot()
+    }
+
+    public mutating func replace(with state: State) {
+        self.routes.replace(with: state)
+    }
+
+    public mutating func goTo(_ targetScreen: State) {
+        self.routes.goTo(targetScreen)
+    }
+
+    public mutating func goBackTo(_ targetScreen: State) {
+        self.routes.goBackTo(targetScreen)
+    }
+}
+
+@CasePathable
+public enum FlowAction<Action> {
+    case element(IdentifiedAction<UUID, Action>)
+    case pathChanged([UUID])
+
+    public var element: (id: UUID, action: Action)? {
+        guard case let .element(.element(id, action)) = self else { return nil }
+        return (id, action)
     }
 }
 
 public typealias FlowActionOf<Screen: Reducer> = FlowAction<Screen.Action>
 
-extension IdentifiedArrayOf where Element.ID == UUID {
+public protocol FlowCoordinating: Reducer {
+    associatedtype ScreenState: Equatable
+    associatedtype ScreenAction
+
+    static var flowRoutes: KeyPath<State, RouteStack<ScreenState>> { get }
+    static func flowAction(_ action: FlowAction<ScreenAction>) -> Action
+}
+
+extension IdentifiedArray where ID == UUID {
     public var currentRoute: Element? {
         self.last
     }
@@ -45,10 +116,7 @@ extension IdentifiedArrayOf where Element.ID == UUID {
     }
 }
 
-extension IdentifiedArrayOf where Element == Route<some Equatable> {
-}
-
-extension IdentifiedArrayOf {
+extension IdentifiedArray where ID == UUID {
     public mutating func push<S: Equatable>(_ state: S) where Element == Route<S> {
         self.append(Route(state))
     }
@@ -60,8 +128,9 @@ extension IdentifiedArrayOf {
     }
 
     public mutating func popToRoot() {
-        guard let first = self.first else { return }
-        self = [first]
+        while self.count > 1 {
+            self.removeLast()
+        }
     }
 
     public mutating func replace<S: Equatable>(with state: S) where Element == Route<S> {
@@ -72,21 +141,23 @@ extension IdentifiedArrayOf {
         self[id: currentRoute.id]?.state = state
     }
 
-    public var currentScreen<S: Equatable>: S? where Element == Route<S> {
+    public func currentScreen<S: Equatable>() -> S? where Element == Route<S> {
         self.last?.state
     }
 
-    public var rootScreen<S: Equatable>: S? where Element == Route<S> {
+    public func rootScreen<S: Equatable>() -> S? where Element == Route<S> {
         self.first?.state
     }
 
-    public func has<S: Equatable>(_ targetScreen: S) where Element == Route<S> -> Bool {
+    public func has<S: Equatable>(_ targetScreen: S) -> Bool where Element == Route<S> {
         self.contains { $0.state.matchesCase(of: targetScreen) }
     }
 
     public mutating func goTo<S: Equatable>(_ targetScreen: S) where Element == Route<S> {
         if let index = self.firstIndex(where: { $0.state.matchesCase(of: targetScreen) }) {
-            self.removeSubrange((index + 1)...)
+            while self.count > index + 1 {
+                self.removeLast()
+            }
         } else {
             self.append(Route(targetScreen))
         }
@@ -98,21 +169,6 @@ extension IdentifiedArrayOf {
         }
     }
 
-    public mutating func reduce<Screen: Reducer>(
-        _ flowAction: FlowAction<Screen.Action>,
-        with reducer: Screen
-    ) -> Effect<FlowAction<Screen.Action>>
-    where Element == Route<Screen.State>, Screen.State: Equatable {
-        guard let route = self[id: flowAction.id] else {
-            return .none
-        }
-
-        var routeState = route.state
-        let effect = reducer.reduce(into: &routeState, action: flowAction.action)
-        self[id: flowAction.id]?.state = routeState
-
-        return effect.map { FlowAction(id: flowAction.id, action: $0) }
-    }
 }
 
 private extension Equatable {
