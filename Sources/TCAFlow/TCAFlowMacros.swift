@@ -15,7 +15,7 @@ import Foundation
 /// }
 /// ```
 @attached(member, names: named(AppScreen), named(State), named(Action))
-public macro FlowCoordinator() = #externalMacro(module: "TCAFlowMacros", type: "FlowCoordinatorMacro")
+public macro FlowCoordinator(navigation: Bool = true) = #externalMacro(module: "TCAFlowMacros", type: "FlowCoordinatorMacro")
 
 /// @ForEachRoute 매크로 정의
 @attached(peer)

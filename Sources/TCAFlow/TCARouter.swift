@@ -20,26 +20,45 @@ public struct TCARouter<ScreenState: Equatable, ScreenAction, ScreenView: View>:
       let topRouteID = routeIDs.last
       let routeCount = routeIDs.count
       let backPath = Array(routeIDs.dropFirst().dropLast())
+      let embedInNavigationView = routes.first?.embedInNavigationView ?? true
 
-      SwiftUI.NavigationStack {
-        WithPerceptionTracking {
-          self.routeContent(routeID: topRouteID)
+      if embedInNavigationView {
+        SwiftUI.NavigationStack {
+          self.navigationContent(
+            routeID: topRouteID,
+            routeCount: routeCount,
+            backPath: backPath
+          )
         }
-        .toolbar {
-          if routeCount > 1 {
-            ToolbarItem(placement: .automatic) {
-              Button("Back") {
-                self.store.send(.pathChanged(backPath))
-              }
+      } else {
+        self.routeContent(routeID: topRouteID)
+          .animation(.easeInOut(duration: 0.1), value: routeCount)
+          .transaction { transaction in
+            if routeCount > 1 {
+              transaction.animation = .easeInOut(duration: 0.1)
             }
           }
-        }
-        .animation(.easeInOut(duration: 0.1), value: routeCount)
-        .transaction { transaction in
-          if routeCount > 1 {
-            transaction.animation = .easeInOut(duration: 0.1)
+      }
+    }
+  }
+
+  private func navigationContent(routeID: UUID?, routeCount: Int, backPath: [UUID]) -> some View {
+    WithPerceptionTracking {
+      self.routeContent(routeID: routeID)
+    }
+    .toolbar {
+      if routeCount > 1 {
+        ToolbarItem(placement: .automatic) {
+          Button("Back") {
+            self.store.send(.pathChanged(backPath))
           }
         }
+      }
+    }
+    .animation(.easeInOut(duration: 0.1), value: routeCount)
+    .transaction { transaction in
+      if routeCount > 1 {
+        transaction.animation = .easeInOut(duration: 0.1)
       }
     }
   }

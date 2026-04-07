@@ -2,7 +2,7 @@ import ComposableArchitecture
 import SwiftUI
 import TCAFlow
 
-@FlowCoordinator
+@FlowCoordinator(navigation: true)
 @Reducer
 struct AppCoordinator: Sendable {
   enum Screen {

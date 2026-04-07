@@ -11,6 +11,8 @@ public struct FlowCoordinatorMacro: MemberMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
 
+        let embedInNavigationView = try Self.embedInNavigationView(from: node)
+
         guard let structDecl = declaration.as(StructDeclSyntax.self) else {
             throw MacroExpansionErrorMessage("@FlowCoordinator는 struct에만 적용할 수 있습니다")
         }
@@ -147,7 +149,7 @@ public struct FlowCoordinatorMacro: MemberMacro {
         @ComposableArchitecture.ObservableState
         struct State: Swift.Equatable {
             var routes = TCAFlow.RouteStack<AppScreen.State>([
-                TCAFlow.Route(.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()))
+                TCAFlow.Route.root(.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()), embedInNavigationView: \(raw: embedInNavigationView))
             ])
         }
         """
@@ -162,6 +164,27 @@ public struct FlowCoordinatorMacro: MemberMacro {
         members.append(actionEnum)
 
         return members
+    }
+
+    private static func embedInNavigationView(from node: AttributeSyntax) throws -> String {
+        guard case let .argumentList(arguments)? = node.arguments else {
+            return "true"
+        }
+
+        guard let firstArgument = arguments.first else {
+            return "true"
+        }
+
+        if let label = firstArgument.label?.text, label != "navigation" {
+            throw MacroExpansionErrorMessage("@FlowCoordinator는 'navigation' argument만 지원합니다")
+        }
+
+        let value = firstArgument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard value == "true" || value == "false" else {
+            throw MacroExpansionErrorMessage("@FlowCoordinator(navigation:)은 true 또는 false만 지원합니다")
+        }
+
+        return value
     }
 }
 

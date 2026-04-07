@@ -6,10 +6,16 @@ import IdentifiedCollections
 public struct Route<State: Equatable>: Identifiable, Equatable, Hashable {
     public let id: UUID
     public var state: State
+    public var embedInNavigationView: Bool
 
-    public init(id: UUID = UUID(), _ state: State) {
+    public init(id: UUID = UUID(), _ state: State, embedInNavigationView: Bool = true) {
         self.id = id
         self.state = state
+        self.embedInNavigationView = embedInNavigationView
+    }
+
+    public static func root(_ state: State, embedInNavigationView: Bool = true) -> Self {
+        Self(state, embedInNavigationView: embedInNavigationView)
     }
 
     public func hash(into hasher: inout Hasher) {
@@ -17,7 +23,9 @@ public struct Route<State: Equatable>: Identifiable, Equatable, Hashable {
     }
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id && lhs.state == rhs.state
+        lhs.id == rhs.id
+            && lhs.state == rhs.state
+            && lhs.embedInNavigationView == rhs.embedInNavigationView
     }
 }
 
@@ -31,6 +39,12 @@ public struct RouteStack<State: Equatable>: Equatable {
 
     public init(_ routes: [Route<State>]) {
         self.routes = IdentifiedArray(uniqueElements: routes)
+    }
+}
+
+extension RouteStack: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: Route<State>...) {
+        self.init(elements)
     }
 }
 
