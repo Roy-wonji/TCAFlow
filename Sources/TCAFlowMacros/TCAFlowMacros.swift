@@ -1,9 +1,9 @@
+import Foundation
 import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-/// @FlowCoordinator 매크로 구현
 public struct FlowCoordinatorMacro: MemberMacro {
     public static func expansion(
         of node: AttributeSyntax,
@@ -11,12 +11,10 @@ public struct FlowCoordinatorMacro: MemberMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
 
-        // struct 내부에서 Screen enum 찾기
         guard let structDecl = declaration.as(StructDeclSyntax.self) else {
             throw MacroExpansionErrorMessage("@FlowCoordinator는 struct에만 적용할 수 있습니다")
         }
 
-        // Screen enum 찾기
         var screenEnum: EnumDeclSyntax?
         for member in structDecl.memberBlock.members {
             if let enumDecl = member.decl.as(EnumDeclSyntax.self),
@@ -30,14 +28,12 @@ public struct FlowCoordinatorMacro: MemberMacro {
             throw MacroExpansionErrorMessage("@FlowCoordinator는 'Screen' enum을 포함해야 합니다")
         }
 
-        // Screen cases 추출
         var screenCases: [(name: String, type: String)] = []
         for member in screenEnum.memberBlock.members {
             if let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) {
                 for element in caseDecl.elements {
                     let caseName = element.name.text
 
-                    // 연관 값에서 타입 추출 (예: case home(Home) -> "Home")
                     if let parameterClause = element.parameterClause,
                        let firstParam = parameterClause.parameters.first {
                         let typeName = firstParam.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -47,103 +43,123 @@ public struct FlowCoordinatorMacro: MemberMacro {
             }
         }
 
-        // 생성할 코드들
-        var members: [DeclSyntax] = []
-
-        // 1. AppScreen @Reducer enum 생성
-        var appScreenCases: [String] = []
-        for screenCase in screenCases {
-            appScreenCases.append("case \(screenCase.name)(\(screenCase.type).State)")
+        guard let firstScreen = screenCases.first else {
+            throw MacroExpansionErrorMessage("@FlowCoordinator.Screen은 최소 1개 이상의 case를 포함해야 합니다")
         }
 
+        var members: [DeclSyntax] = []
+
+        let appScreenCases = screenCases
+            .map { "case \($0.name)(\($0.type))" }
+            .joined(separator: "\n    ")
+
+        let stateCases = screenCases
+            .map { "case \($0.name)(\($0.type).State)" }
+            .joined(separator: "\n      ")
+
+        let actionCases = screenCases
+            .map { "case \($0.name)(\($0.type).Action)" }
+            .joined(separator: "\n      ")
+
+        let caseReducers = screenCases
+            .map { screenCase in
+                """
+                .ifCaseLet(\\Self.State.Cases.\(screenCase.name), action: \\Self.Action.Cases.\(screenCase.name)) {
+                  \(screenCase.type)()
+                }
+                """
+            }
+            .joined(separator: "\n        ")
+
+        let caseScopeCases = screenCases
+            .map { "case \($0.name)(ComposableArchitecture.StoreOf<\($0.type)>)" }
+            .joined(separator: "\n      ")
+
+        let casePathProperties = screenCases
+            .map { screenCase in
+                """
+                var \(screenCase.name): CasePaths.AnyCasePath<CaseScope, ComposableArchitecture.StoreOf<\(screenCase.type)>> {
+                  CasePaths.AnyCasePath(
+                    embed: { @Sendable in CaseScope.\(screenCase.name)($0) },
+                    extract: { guard case let .\(screenCase.name)(store) = $0 else { return nil }; return store }
+                  )
+                }
+                """
+            }
+            .joined(separator: "\n\n        ")
+
+        let storeScopes = screenCases
+            .map { screenCase in
+                """
+                case .\(screenCase.name):
+                  return .\(screenCase.name)(store.scope(state: \\.\(screenCase.name), action: \\.\(screenCase.name))!)
+                """
+            }
+            .joined(separator: "\n      ")
+
         let appScreenEnum: DeclSyntax = """
-        @Reducer
-        enum AppScreen {
-            \(raw: appScreenCases.joined(separator: "\n    "))
+        enum AppScreen: Swift.Sendable, ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer {
+            \(raw: appScreenCases)
+
+            @CasePaths.CasePathable
+            @dynamicMemberLookup
+            @ComposableArchitecture.ObservableState
+            enum State: ComposableArchitecture.CaseReducerState, CasePaths.CasePathable, CasePaths.CasePathIterable, ComposableArchitecture.ObservableState, Observation.Observable {
+              typealias StateReducer = AppScreen
+              \(raw: stateCases)
+            }
+
+            @CasePaths.CasePathable
+            enum Action: CasePaths.CasePathable, CasePaths.CasePathIterable {
+              \(raw: actionCases)
+            }
+
+            @ComposableArchitecture.ReducerBuilder<Self.State, Self.Action>
+            static var body: ComposableArchitecture.Reduce<Self.State, Self.Action> {
+              ComposableArchitecture.Reduce(
+                ComposableArchitecture.EmptyReducer<Self.State, Self.Action>()
+                \(raw: caseReducers)
+              )
+            }
+
+            @dynamicMemberLookup
+            enum CaseScope: ComposableArchitecture._CaseScopeProtocol, CasePaths.CasePathable {
+              \(raw: caseScopeCases)
+
+              struct AllCasePaths {
+                \(raw: casePathProperties)
+              }
+
+              static var allCasePaths: AllCasePaths { AllCasePaths() }
+            }
+
+            @preconcurrency @MainActor
+            static func scope(_ store: ComposableArchitecture.Store<Self.State, Self.Action>) -> CaseScope {
+              switch store.state {
+              \(raw: storeScopes)
+              }
+            }
         }
         """
         members.append(appScreenEnum)
 
-        // 2. @ObservableState struct State 생성
-        let firstScreen = screenCases.first?.name ?? "home"
         let stateStruct: DeclSyntax = """
-        @ObservableState
-        struct State: Equatable {
-            var routes: IdentifiedArrayOf<Route<AppScreen.State>> = [
-                Route(.\(raw: firstScreen)(.init()))
-            ]
+        @ComposableArchitecture.ObservableState
+        struct State: Swift.Equatable {
+            var routes = TCAFlow.RouteStack<AppScreen.State>([
+                TCAFlow.Route(.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()))
+            ])
         }
         """
         members.append(stateStruct)
 
-        // 3. Action enum 생성
-        var actionCases = ["case router(FlowActionOf<AppScreen>)"]
-        for screenCase in screenCases {
-            actionCases.append("case \(screenCase.name)(\(screenCase.type).Action)")
-        }
-
         let actionEnum: DeclSyntax = """
+        @CasePaths.CasePathable
         enum Action {
-            \(raw: actionCases.joined(separator: "\n    "))
+            case route(TCAFlow.FlowActionOf<AppScreen>)
         }
         """
         members.append(actionEnum)
-
-        // 4. body reducer 생성 (실제 네비게이션 로직 포함)
-        let bodyReducer: DeclSyntax = """
-        var body: some ReducerOf<Self> {
-            Reduce { state, action in
-                switch action {
-                // Home 액션들
-                case .home(.exploreTapped):
-                    state.routes.push(.explore(.init()))
-                    return .none
-
-                case .home(.profileTapped):
-                    state.routes.goTo(.profile(.init()))
-                    return .none
-
-                case .home(.settingsTapped):
-                    state.routes.push(.settings(.init()))
-                    return .none
-
-                // Explore 액션들
-                case .explore(.backTapped):
-                    state.routes.pop()
-                    return .none
-
-                case .explore(.goToHomeTapped):
-                    state.routes.goBackTo(.home(.init()))
-                    return .none
-
-                // Profile 액션들
-                case .profile(.backTapped):
-                    state.routes.pop()
-                    return .none
-
-                case .profile(.settingsTapped):
-                    state.routes.push(.settings(.init()))
-                    return .none
-
-                // Settings 액션들
-                case .settings(.backTapped):
-                    state.routes.pop()
-                    return .none
-
-                case .settings(.goToRootTapped):
-                    state.routes.popToRoot()
-                    return .none
-
-                default:
-                    return .none
-                }
-            }
-            .forEach(\\.routes, action: \\.router) {
-                AppScreen()
-            }
-        }
-        """
-        members.append(bodyReducer)
 
         return members
     }
