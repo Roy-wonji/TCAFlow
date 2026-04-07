@@ -1,78 +1,16 @@
 import ComposableArchitecture
 import SwiftUI
+import TCAFlow
 
+@FlowCoordinator
 @Reducer
 struct AppCoordinator: Sendable {
-  @preconcurrency @Reducer
-  enum AppScreen: Sendable {
+  enum Screen {
     case home(HomeFeature)
     case single(SingleViewFeature)
     case counter(CounterFeature)
     case summary(SummaryFeature)
     case settings(SettingsFeature)
-
-    @dynamicMemberLookup
-    enum CaseScope: ComposableArchitecture._CaseScopeProtocol, CasePaths.CasePathable {
-      case home(StoreOf<HomeFeature>)
-      case single(StoreOf<SingleViewFeature>)
-      case counter(StoreOf<CounterFeature>)
-      case summary(StoreOf<SummaryFeature>)
-      case settings(StoreOf<SettingsFeature>)
-
-      struct AllCasePaths {
-        var home: CasePaths.AnyCasePath<CaseScope, StoreOf<HomeFeature>> {
-          CasePaths.AnyCasePath(
-            embed: { @Sendable in CaseScope.home($0) },
-            extract: { guard case let .home(store) = $0 else { return nil }; return store }
-          )
-        }
-
-        var single: CasePaths.AnyCasePath<CaseScope, StoreOf<SingleViewFeature>> {
-          CasePaths.AnyCasePath(
-            embed: { @Sendable in CaseScope.single($0) },
-            extract: { guard case let .single(store) = $0 else { return nil }; return store }
-          )
-        }
-
-        var counter: CasePaths.AnyCasePath<CaseScope, StoreOf<CounterFeature>> {
-          CasePaths.AnyCasePath(
-            embed: { @Sendable in CaseScope.counter($0) },
-            extract: { guard case let .counter(store) = $0 else { return nil }; return store }
-          )
-        }
-
-        var summary: CasePaths.AnyCasePath<CaseScope, StoreOf<SummaryFeature>> {
-          CasePaths.AnyCasePath(
-            embed: { @Sendable in CaseScope.summary($0) },
-            extract: { guard case let .summary(store) = $0 else { return nil }; return store }
-          )
-        }
-
-        var settings: CasePaths.AnyCasePath<CaseScope, StoreOf<SettingsFeature>> {
-          CasePaths.AnyCasePath(
-            embed: { @Sendable in CaseScope.settings($0) },
-            extract: { guard case let .settings(store) = $0 else { return nil }; return store }
-          )
-        }
-      }
-
-      static var allCasePaths: AllCasePaths { AllCasePaths() }
-    }
-  }
-
-  @ObservableState
-  struct State: Equatable {
-    var routes: RouteStack<AppScreen.State>
-
-    init() {
-      self.routes = RouteStack([
-        Route(.home(HomeFeature.State()))
-      ])
-    }
-  }
-
-  enum Action {
-    case route(FlowActionOf<AppScreen>)
   }
 
   var body: some ReducerOf<Self> {
@@ -211,12 +149,6 @@ struct AppCoordinatorView: View {
       case .settings(let settingsStore):
         SettingsView(store: settingsStore)
           .navigationTitle("Settings")
-      }
-    }
-    .animation(.easeInOut(duration: 0.1), value: self.store.routes.count)
-    .transaction { transaction in
-      if self.store.routes.count > 1 {
-        transaction.animation = .easeInOut(duration: 0.1)
       }
     }
   }
