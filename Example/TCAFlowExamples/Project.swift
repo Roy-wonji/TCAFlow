@@ -1,0 +1,37 @@
+import ProjectDescription
+
+let project = Project(
+    name: "TCAFlowExamples",
+    packages: [
+        .remote(
+            url: "https://github.com/pointfreeco/swift-composable-architecture",
+            requirement: .upToNextMajor(from: "1.25.5")
+        ),
+        .remote(
+            url: "https://github.com/pointfreeco/swift-identified-collections",
+            requirement: .upToNextMajor(from: "1.1.1")
+        )
+    ],
+    targets: [
+        .target(
+            name: "TCAFlowExamples",
+            destinations: .iOS,
+            product: .app,
+            bundleId: "dev.tcaflow.examples",
+            deploymentTargets: .iOS("17.0"),
+            infoPlist: .extendingDefault(with: [
+                "UILaunchScreen": [:]
+            ]),
+            sources: [
+                "TCAFlowExamples/**",
+                "../../Sources/TCAFlow/TCAFlow.swift",
+                "../../Sources/TCAFlow/TCARouter.swift"
+            ],
+            resources: [],
+            dependencies: [
+                .package(product: "ComposableArchitecture"),
+                .package(product: "IdentifiedCollections")
+            ]
+        )
+    ]
+)
