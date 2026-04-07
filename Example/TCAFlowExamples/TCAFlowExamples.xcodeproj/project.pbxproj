@@ -7,15 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		115270AD3D801C6571755CA2 /* TCAFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A30E2CA2ADCBD3AB99843EC /* TCAFlow.swift */; };
 		2729C3D64FF7C4D6C3328307 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 821C9CE8DA44A1D6D4B35403 /* AppCoordinator.swift */; };
+		6CA3EC6960EF91290482F9E6 /* IdentifiedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 94700432F45F37D7063F3D84 /* IdentifiedCollections */; };
 		7AC8E02AC3D85D0E9460983E /* CounterFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC02124FD0B77D08374FAC0 /* CounterFeature.swift */; };
 		A77A22686899D233352A9925 /* SummaryFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601C3735EEF5ACE7354ABAE8 /* SummaryFeature.swift */; };
-		AD9FC335D450BE217153DE9F /* IdentifiedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 94700432F45F37D7063F3D84 /* IdentifiedCollections */; };
+		AD9FC335D450BE217153DE9F /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 2026D34F63103DE1286FB58D /* ComposableArchitecture */; };
 		AE289A947568DDB0B61B6BF7 /* SingleViewFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C94E04FD9F17FC1E8AA5243 /* SingleViewFeature.swift */; };
 		B01D943BADB2F948227611C4 /* HomeFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E0F512BAFF59741B76BEDF /* HomeFeature.swift */; };
-		D2599A3887566186328DD06A /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 2026D34F63103DE1286FB58D /* ComposableArchitecture */; };
-		D4C87F3E482A80D589E751AB /* TCARouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE67AB24F0D8C94CC0FA566 /* TCARouter.swift */; };
+		D2599A3887566186328DD06A /* TCAFlow in Frameworks */ = {isa = PBXBuildFile; productRef = C69E762E360A2F4CF6D0D114 /* TCAFlow */; };
 		F2E1B5B534766F304A5D480E /* TCAFlowExamplesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */; };
 		F8FBFF4CF0A8FB00C2ED1762 /* SettingsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662136E6874876C73ADFA7A6 /* SettingsFeature.swift */; };
 /* End PBXBuildFile section */
@@ -34,16 +33,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		257EDB19611523568C091C51 /* TCAFlow */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TCAFlow; path = ../..; sourceTree = "<group>"; };
 		59E0F512BAFF59741B76BEDF /* HomeFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFeature.swift; sourceTree = "<group>"; };
 		601C3735EEF5ACE7354ABAE8 /* SummaryFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryFeature.swift; sourceTree = "<group>"; };
 		662136E6874876C73ADFA7A6 /* SettingsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeature.swift; sourceTree = "<group>"; };
 		7C94E04FD9F17FC1E8AA5243 /* SingleViewFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleViewFeature.swift; sourceTree = "<group>"; };
 		821C9CE8DA44A1D6D4B35403 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
-		8A30E2CA2ADCBD3AB99843EC /* TCAFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCAFlow.swift; sourceTree = "<group>"; };
 		9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCAFlowExamplesApp.swift; sourceTree = "<group>"; };
 		9F97BEA477CA1EBEABA7F79E /* TCAFlowExamples-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TCAFlowExamples-Info.plist"; sourceTree = "<group>"; };
 		C73A07C36A59F1F207F9D7D6 /* TCAFlowExamples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TCAFlowExamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		CCE67AB24F0D8C94CC0FA566 /* TCARouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCARouter.swift; sourceTree = "<group>"; };
 		FBC02124FD0B77D08374FAC0 /* CounterFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterFeature.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -52,23 +50,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D2599A3887566186328DD06A /* ComposableArchitecture in Frameworks */,
-				AD9FC335D450BE217153DE9F /* IdentifiedCollections in Frameworks */,
+				D2599A3887566186328DD06A /* TCAFlow in Frameworks */,
+				AD9FC335D450BE217153DE9F /* ComposableArchitecture in Frameworks */,
+				6CA3EC6960EF91290482F9E6 /* IdentifiedCollections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		285A93B49F73888317C61FF8 /* TCAFlow */ = {
-			isa = PBXGroup;
-			children = (
-				8A30E2CA2ADCBD3AB99843EC /* TCAFlow.swift */,
-				CCE67AB24F0D8C94CC0FA566 /* TCARouter.swift */,
-			);
-			path = TCAFlow;
-			sourceTree = "<group>";
-		};
 		5D5672BF4F6629D568164D45 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -77,11 +67,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6523899D70AA115092F1C44A /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				257EDB19611523568C091C51 /* TCAFlow */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
 		6830BDB436C3C7FA54ECEB94 = {
 			isa = PBXGroup;
 			children = (
 				789738181AD67A0C967F0824 /* Project */,
 				5D5672BF4F6629D568164D45 /* Products */,
+				6523899D70AA115092F1C44A /* Packages */,
 			);
 			sourceTree = "<group>";
 		};
@@ -103,19 +102,9 @@
 			isa = PBXGroup;
 			children = (
 				C213593284BFA266BD5F79F1 /* Derived */,
-				A9B1D539392ABB5CF20EB73F /* Sources */,
 				7499A1323F5EAA09F8CB6657 /* TCAFlowExamples */,
 			);
 			name = Project;
-			sourceTree = "<group>";
-		};
-		A9B1D539392ABB5CF20EB73F /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				285A93B49F73888317C61FF8 /* TCAFlow */,
-			);
-			name = Sources;
-			path = ../../Sources;
 			sourceTree = "<group>";
 		};
 		C213593284BFA266BD5F79F1 /* Derived */ = {
@@ -152,6 +141,7 @@
 			);
 			name = TCAFlowExamples;
 			packageProductDependencies = (
+				C69E762E360A2F4CF6D0D114 /* TCAFlow */,
 				2026D34F63103DE1286FB58D /* ComposableArchitecture */,
 				94700432F45F37D7063F3D84 /* IdentifiedCollections */,
 			);
@@ -181,6 +171,7 @@
 			packageReferences = (
 				B757D2E5FC0AF2AA141EAB71 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 				8678CA4F5BCFAEF44BFBA0D8 /* XCRemoteSwiftPackageReference "swift-identified-collections" */,
+				C9687812C6D989FB8C38A2E1 /* XCLocalSwiftPackageReference "../.." */,
 			);
 			productRefGroup = 5D5672BF4F6629D568164D45 /* Products */;
 			projectDirPath = "";
@@ -213,8 +204,6 @@
 				AE289A947568DDB0B61B6BF7 /* SingleViewFeature.swift in Sources */,
 				A77A22686899D233352A9925 /* SummaryFeature.swift in Sources */,
 				F2E1B5B534766F304A5D480E /* TCAFlowExamplesApp.swift in Sources */,
-				115270AD3D801C6571755CA2 /* TCAFlow.swift in Sources */,
-				D4C87F3E482A80D589E751AB /* TCARouter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -227,6 +216,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Derived/InfoPlists/TCAFlowExamples-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -306,6 +296,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Derived/InfoPlists/TCAFlowExamples-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -412,6 +403,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		C9687812C6D989FB8C38A2E1 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		8678CA4F5BCFAEF44BFBA0D8 /* XCRemoteSwiftPackageReference "swift-identified-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -439,6 +437,10 @@
 		94700432F45F37D7063F3D84 /* IdentifiedCollections */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = IdentifiedCollections;
+		};
+		C69E762E360A2F4CF6D0D114 /* TCAFlow */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TCAFlow;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

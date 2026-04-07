@@ -3,6 +3,7 @@ import ProjectDescription
 let project = Project(
     name: "TCAFlowExamples",
     packages: [
+        .local(path: "../.."),
         .remote(
             url: "https://github.com/pointfreeco/swift-composable-architecture",
             requirement: .upToNextMajor(from: "1.25.5")
@@ -23,15 +24,17 @@ let project = Project(
                 "UILaunchScreen": [:]
             ]),
             sources: [
-                "TCAFlowExamples/**",
-                "../../Sources/TCAFlow/TCAFlow.swift",
-                "../../Sources/TCAFlow/TCARouter.swift"
+                "TCAFlowExamples/**"
             ],
             resources: [],
             dependencies: [
+                .package(product: "TCAFlow"),
                 .package(product: "ComposableArchitecture"),
                 .package(product: "IdentifiedCollections")
-            ]
+            ],
+            settings: .settings(base: [
+                "ENABLE_DEBUG_DYLIB": "NO"
+            ])
         )
     ]
 )
