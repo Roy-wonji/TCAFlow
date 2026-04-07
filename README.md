@@ -13,6 +13,33 @@ TCACoordinators처럼 route stack을 reducer state에서 관리하지만, 화면
 - iOS 16+ `NavigationStack` 기반 router
 - `@SwiftUI.Bindable var store`를 쓰는 modern TCA example 포함
 
+## TCACoordinators와 차이점
+
+| 항목 | TCACoordinators | TCAFlow |
+| --- | --- | --- |
+| 화면 state 제약 | 보통 hashable route state 중심 | `Equatable`만 요구 |
+| Coordinator 선언 | screen enum, route state, action 연결을 직접 작성 | `@FlowCoordinator`가 `AppScreen`, `State`, `Action` 생성 |
+| Root navigation 옵션 | route 설정에서 직접 처리 | `@FlowCoordinator(navigation: true/false)`로 선택 |
+| Router 연결 | 라이브러리 전용 router action/store 패턴 | `TCARouter(self.store.scope(state: \.routes, action: \.route))` |
+| TCA 버전 방향 | 기존 coordinator 패턴 | TCA 1.25+ `@ObservableState`, key-path scoping 기준 |
+| 화면 state 타입 | `Hashable`이 부담될 수 있음 | `CLLocationCoordinate2D`, class reference 등 `Equatable`로 감싼 state 사용 가능 |
+
+TCAFlow는 TCACoordinators의 "coordinator가 route stack을 소유한다"는 아이디어를 유지하면서, 최신 TCA API와 macro 기반 boilerplate 제거에 초점을 둡니다.
+
+```swift
+// TCACoordinators 스타일에서는 screen/router 보일러플레이트를 더 직접 관리하는 편입니다.
+
+// TCAFlow
+@FlowCoordinator(navigation: true)
+@Reducer
+struct AppCoordinator: Sendable {
+  enum Screen {
+    case home(HomeFeature)
+    case detail(DetailFeature)
+  }
+}
+```
+
 ## Requirements
 
 - Swift 6.0+
@@ -260,6 +287,7 @@ example은 다음 흐름을 포함합니다.
 - [docs/README.md](docs/README.md)
 - [docs/GettingStarted.md](docs/GettingStarted.md)
 - [docs/APIReference.md](docs/APIReference.md)
+- [docs/TCACoordinatorsComparison.md](docs/TCACoordinatorsComparison.md)
 - [docs/FlowCoordinatorMacro.md](docs/FlowCoordinatorMacro.md)
 - [docs/ExampleApp.md](docs/ExampleApp.md)
 
