@@ -9,7 +9,7 @@ TCAFlow는 TCA 1.25+의 `@Reducer`, `@ObservableState`, `Store.scope(state:actio
 - [Getting Started](GettingStarted.md): 설치, coordinator 작성, router 연결
 - [API Reference](APIReference.md): `Route`, `RouteStack`, `FlowAction`, `TCARouter`
 - [TCACoordinators Comparison](TCACoordinatorsComparison.md): TCACoordinators와 TCAFlow 차이점
-- [FlowCoordinator Macro](FlowCoordinatorMacro.md): `@FlowCoordinator`가 생성하는 코드와 사용 규칙
+- [FlowCoordinator Macro](FlowCoordinatorMacro.md): `HomeCoordinator -> HomeScreen` 같은 생성 규칙과 nested coordinator 사용법
 - [Example App](ExampleApp.md): example iOS 앱 구조와 실행 방법
 
 ## 최소 요구사항

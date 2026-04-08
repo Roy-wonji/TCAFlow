@@ -3,7 +3,13 @@ import Foundation
 /// Generates TCAFlow coordinator boilerplate from a nested `Screen` enum.
 ///
 /// Use this macro when you want to write only the route cases and keep the generated
-/// `@Reducer` screen enum, `State`, and `Action` out of the example code:
+/// screen enum, `State`, and `Action` out of the example code.
+///
+/// The generated screen enum name is derived from the coordinator type name:
+///
+/// - `AppCoordinator` -> `AppScreen`
+/// - `HomeCoordinator` -> `HomeScreen`
+/// - `ProfileFlow` -> `ProfileFlowScreen`
 ///
 /// ```swift
 /// @FlowCoordinator
@@ -14,7 +20,7 @@ import Foundation
 ///   }
 /// }
 /// ```
-@attached(member, names: named(AppScreen), named(State), named(Action))
+@attached(member, names: arbitrary, named(State), named(Action))
 public macro FlowCoordinator(navigation: Bool = true) = #externalMacro(module: "TCAFlowMacros", type: "FlowCoordinatorMacro")
 
 /// @ForEachRoute 매크로 정의

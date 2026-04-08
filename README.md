@@ -18,7 +18,7 @@ TCACoordinators처럼 route stack을 reducer state에서 관리하지만, 화면
 | 항목 | TCACoordinators | TCAFlow |
 | --- | --- | --- |
 | 화면 state 제약 | 보통 hashable route state 중심 | `Equatable`만 요구 |
-| Coordinator 선언 | screen enum, route state, action 연결을 직접 작성 | `@FlowCoordinator`가 `AppScreen`, `State`, `Action` 생성 |
+| Coordinator 선언 | screen enum, route state, action 연결을 직접 작성 | `@FlowCoordinator`가 `AppScreen` 또는 `HomeScreen` 같은 screen enum과 `State`, `Action` 생성 |
 | Root navigation 옵션 | route 설정에서 직접 처리 | `@FlowCoordinator(navigation: true/false)`로 선택 |
 | Router 연결 | 라이브러리 전용 router action/store 패턴 | `TCARouter(self.store.scope(state: \.routes, action: \.route))` |
 | TCA 버전 방향 | 기존 coordinator 패턴 | TCA 1.25+ `@ObservableState`, key-path scoping 기준 |
@@ -121,12 +121,17 @@ import TCAFlow
 struct AppCoordinator: Sendable {
   enum Screen {
     case home(HomeFeature)
+    case profile(ProfileCoordinator)
     case detail(DetailFeature)
   }
 
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
+      case .route(.element(.element(_, .home(.profileButtonTapped)))):
+        state.routes.push(.profile(.init()))
+        return .none
+
       case .route(.element(.element(_, .home(.detailButtonTapped)))):
         state.routes.push(.detail(DetailFeature.State()))
         return .none
@@ -211,6 +216,7 @@ var routes: RouteStack<AppScreen.State> = [
 `@FlowCoordinator`가 생성한 `State`에는 `routes`가 들어 있습니다.
 
 ```swift
+state.routes.push(.profile(.init()))
 state.routes.push(.detail(DetailFeature.State()))
 _ = state.routes.pop()
 state.routes.popToRoot()
@@ -229,10 +235,10 @@ state.routes.goBackTo(.home(HomeFeature.State()))
 
 `@FlowCoordinator`는 아래 멤버를 생성합니다.
 
-- `AppScreen`
-- `AppScreen.State`
-- `AppScreen.Action`
-- `AppScreen.CaseScope`
+- `<CoordinatorName>Screen`
+- `<CoordinatorName>Screen.State`
+- `<CoordinatorName>Screen.Action`
+- `<CoordinatorName>Screen.CaseScope`
 - `State`
 - `Action`
 
@@ -252,7 +258,39 @@ struct AppCoordinator: Sendable {
 }
 ```
 
+`AppCoordinator`면 `AppScreen`, `HomeCoordinator`면 `HomeScreen`이 생성됩니다.
+
 첫 번째 `Screen` case가 root route가 됩니다.
+
+## Nested Coordinator
+
+다른 coordinator를 screen case로 넣을 수 있습니다.
+
+```swift
+@FlowCoordinator(navigation: true)
+@Reducer
+struct HomeCoordinator: Sendable {
+  enum Screen {
+    case home(HomeFeature)
+    case profile(ProfileCoordinator)
+  }
+}
+```
+
+child coordinator가 parent `NavigationStack` 흐름에 이어서 push/pop 되어야 하면 child는 `navigation: false`가 맞습니다.
+
+```swift
+@FlowCoordinator(navigation: false)
+@Reducer
+struct ProfileCoordinator: Sendable {
+  enum Screen {
+    case profileHome(ProfileHomeFeature)
+    case profileDetail(ProfileDetailFeature)
+  }
+}
+```
+
+child가 자기 own `NavigationStack`을 가져야 하면 `navigation: true`도 그대로 동작합니다. example 앱에 이 케이스가 포함되어 있습니다.
 
 ## Example App
 

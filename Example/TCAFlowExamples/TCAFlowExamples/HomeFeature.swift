@@ -8,6 +8,7 @@ struct HomeFeature: Sendable {
 
     enum Action {
         case pushOneViewButtonTapped
+        case profileCoordinatorButtonTapped
         case startFlowButtonTapped
         case settingsButtonTapped
     }
@@ -35,6 +36,11 @@ struct HomeView: View {
 
             Button("Push One View") {
                 self.store.send(.pushOneViewButtonTapped)
+            }
+            .buttonStyle(.bordered)
+
+            Button("Open Nested Coordinator") {
+                self.store.send(.profileCoordinatorButtonTapped)
             }
             .buttonStyle(.bordered)
 

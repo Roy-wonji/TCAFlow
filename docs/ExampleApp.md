@@ -38,6 +38,7 @@ example 앱의 coordinator는 `AppCoordinator`입니다.
 struct AppCoordinator: Sendable {
   enum Screen {
     case home(HomeFeature)
+    case profile(ProfileCoordinator)
     case single(SingleViewFeature)
     case counter(CounterFeature)
     case summary(SummaryFeature)
@@ -49,6 +50,7 @@ struct AppCoordinator: Sendable {
 현재 example은 다음 흐름을 보여줍니다.
 
 - `Home` -> `SingleView`: 화면 하나만 push하고 pop하는 흐름
+- `Home` -> `ProfileCoordinator`: `@FlowCoordinator(navigation: true)` 인 nested coordinator 흐름
 - `Home` -> `Counter` -> `Summary`: 여러 화면을 stack에 쌓는 흐름
 - `Summary` -> `Settings`: 특정 화면으로 이동하는 흐름
 - `Counter`/`Summary` -> root: `popToRoot` 흐름
@@ -64,6 +66,9 @@ TCARouter(
   switch screen.case {
   case .home(let store):
     HomeView(store: store)
+
+  case .profile(let store):
+    ProfileCoordinatorView(store: store)
 
   case .single(let store):
     SingleView(store: store)

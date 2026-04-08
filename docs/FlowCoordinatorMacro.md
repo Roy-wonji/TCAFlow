@@ -2,6 +2,12 @@
 
 `@FlowCoordinator`는 coordinator feature 안의 nested `Screen` enum을 읽어 TCA routing boilerplate를 생성합니다.
 
+생성되는 screen enum 이름은 coordinator 이름에서 `Coordinator` suffix를 제거하고 `Screen`을 붙인 형태입니다.
+
+- `AppCoordinator` -> `AppScreen`
+- `HomeCoordinator` -> `HomeScreen`
+- `ProfileFlow` -> `ProfileFlowScreen`
+
 ## 입력 코드
 
 작성자는 화면 목록만 선언합니다.
@@ -35,12 +41,12 @@ struct AppCoordinator: Sendable {
 
 macro는 coordinator 안에 다음 멤버를 생성합니다.
 
-- `AppScreen`: `CaseReducer`/`Reducer` screen reducer enum
-- `AppScreen.State`: 각 화면 state를 담는 enum
-- `AppScreen.Action`: 각 화면 action을 담는 enum
-- `AppScreen.CaseScope`: `TCARouter` view builder에서 사용하는 screen store enum
-- `State`: `RouteStack<AppScreen.State>`를 가진 coordinator state
-- `Action`: `case route(FlowActionOf<AppScreen>)`를 가진 coordinator action
+- `<CoordinatorName>Screen`: `CaseReducer`/`Reducer` screen reducer enum
+- `<CoordinatorName>Screen.State`: 각 화면 state를 담는 enum
+- `<CoordinatorName>Screen.Action`: 각 화면 action을 담는 enum
+- `<CoordinatorName>Screen.CaseScope`: `TCARouter` view builder에서 사용하는 screen store enum
+- `State`: `RouteStack<<CoordinatorName>Screen.State>`를 가진 coordinator state
+- `Action`: `case route(FlowActionOf<<CoordinatorName>Screen>)`를 가진 coordinator action
 
 개념적으로는 아래 코드가 생성됩니다.
 
@@ -74,6 +80,8 @@ enum Action {
 ```
 
 실제 생성 코드는 TCA의 case reducer, case path, observation 요구사항에 맞춰 더 많은 protocol conformance를 포함합니다.
+
+`HomeCoordinator`라면 위 예제의 `AppScreen` 자리에 `HomeScreen`이 생성됩니다.
 
 ## 규칙
 
@@ -128,6 +136,42 @@ var routes: RouteStack<AppScreen.State> = [
   .root(.home(HomeFeature.State()), embedInNavigationView: false)
 ]
 ```
+
+## Nested Coordinator
+
+다른 coordinator를 screen case로 넣을 수 있습니다.
+
+```swift
+@FlowCoordinator(navigation: true)
+@Reducer
+struct HomeCoordinator: Sendable {
+  enum Screen {
+    case home(HomeFeature)
+    case profile(ProfileCoordinator)
+  }
+}
+```
+
+parent reducer에서는 generated screen state를 바로 push할 수 있습니다.
+
+```swift
+state.routes.push(.profile(.init()))
+```
+
+child coordinator가 parent stack 안에서 이어서 동작해야 하면 child를 `navigation: false`로 두는 방식이 가장 단순합니다.
+
+```swift
+@FlowCoordinator(navigation: false)
+@Reducer
+struct ProfileCoordinator: Sendable {
+  enum Screen {
+    case profileHome(ProfileHomeFeature)
+    case profileDetail(ProfileDetailFeature)
+  }
+}
+```
+
+child가 독립적인 `NavigationStack`을 가져야 하면 `navigation: true`도 그대로 사용할 수 있습니다. example 앱에는 `@FlowCoordinator(navigation: true)`인 nested `ProfileCoordinator` 예제가 포함되어 있습니다.
 
 ## Action 처리 패턴
 

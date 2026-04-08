@@ -7,6 +7,7 @@ import TCAFlow
 struct AppCoordinator: Sendable {
   enum Screen {
     case home(HomeFeature)
+    case profile(ProfileCoordinator)
     case single(SingleViewFeature)
     case counter(CounterFeature)
     case summary(SummaryFeature)
@@ -27,7 +28,10 @@ struct AppCoordinator: Sendable {
         case .element(.element(let id, let screenAction)):
         switch screenAction {
         case .home(.pushOneViewButtonTapped):
-          state.routes.push(.single(SingleViewFeature.State()))
+            state.routes.push(.single(.init()))
+
+        case .home(.profileCoordinatorButtonTapped):
+            state.routes.push(.profile(.init()))
 
         case .home(.startFlowButtonTapped):
           state.routes.push(
@@ -59,7 +63,7 @@ struct AppCoordinator: Sendable {
           state.routes.popToRoot()
 
         case .summary(.settingsButtonTapped):
-          state.routes.goTo(.settings(SettingsFeature.State()))
+            state.routes.goTo(.settings(.init()))
 
         case .summary(.backButtonTapped):
           _ = state.routes.pop()
@@ -92,6 +96,12 @@ struct AppCoordinator: Sendable {
             childState.isNotificationsEnabled = isEnabled
             state.routes.routes[id: id]?.state = .settings(childState)
           }
+
+        case .profile(let profileAction):
+          if case .profile(var childState) = state.routes.routes[id: id]?.state {
+            Self.reduceProfileCoordinator(state: &childState, action: profileAction)
+            state.routes.routes[id: id]?.state = .profile(childState)
+          }
           }
         }
 
@@ -100,8 +110,6 @@ struct AppCoordinator: Sendable {
     }
   }
 }
-
-extension AppCoordinator.AppScreen.State: Equatable {}
 
 final class DemoSession: Equatable, Sendable {
   let name: String
@@ -112,6 +120,33 @@ final class DemoSession: Equatable, Sendable {
 
   static func == (lhs: DemoSession, rhs: DemoSession) -> Bool {
     lhs === rhs || lhs.name == rhs.name
+  }
+}
+
+private extension AppCoordinator {
+  static func reduceProfileCoordinator(
+    state: inout ProfileCoordinator.State,
+    action: ProfileCoordinator.Action
+  ) {
+    switch action {
+    case .route(let routeAction):
+      switch routeAction {
+      case .pathChanged(let path):
+        let routeIDs = [state.routes.routes.first?.id].compactMap { $0 } + path
+        while let last = state.routes.routes.last, !routeIDs.contains(last.id) {
+          _ = state.routes.pop()
+        }
+
+      case .element(.element(_, let screenAction)):
+        switch screenAction {
+        case .profileHome(.detailButtonTapped):
+          state.routes.push(.profileDetail(.init()))
+
+        case .profileDetail(.closeButtonTapped):
+          _ = state.routes.pop()
+        }
+      }
+    }
   }
 }
 
@@ -133,6 +168,10 @@ struct AppCoordinatorView: View {
       case .home(let homeStore):
         HomeView(store: homeStore)
           .navigationTitle("TCAFlow")
+
+      case .profile(let profileStore):
+        ProfileCoordinatorView(store: profileStore)
+          .navigationTitle("Profile")
 
       case .single(let singleStore):
         SingleView(store: singleStore)

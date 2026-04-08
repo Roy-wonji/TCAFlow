@@ -17,6 +17,8 @@ public struct FlowCoordinatorMacro: MemberMacro {
             throw MacroExpansionErrorMessage("@FlowCoordinator는 struct에만 적용할 수 있습니다")
         }
 
+        let screenTypeName = Self.screenTypeName(for: structDecl.name.text)
+
         var screenEnum: EnumDeclSyntax?
         for member in structDecl.memberBlock.members {
             if let enumDecl = member.decl.as(EnumDeclSyntax.self),
@@ -100,14 +102,14 @@ public struct FlowCoordinatorMacro: MemberMacro {
             .joined(separator: "\n      ")
 
         let appScreenEnum: DeclSyntax = """
-        enum AppScreen: Swift.Sendable, ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer {
+        enum \(raw: screenTypeName): Swift.Sendable, ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer {
             \(raw: appScreenCases)
 
             @CasePaths.CasePathable
             @dynamicMemberLookup
             @ComposableArchitecture.ObservableState
-            enum State: ComposableArchitecture.CaseReducerState, CasePaths.CasePathable, CasePaths.CasePathIterable, ComposableArchitecture.ObservableState, Observation.Observable {
-              typealias StateReducer = AppScreen
+            enum State: Swift.Equatable, ComposableArchitecture.CaseReducerState, CasePaths.CasePathable, CasePaths.CasePathIterable, ComposableArchitecture.ObservableState, Observation.Observable {
+              typealias StateReducer = \(raw: screenTypeName)
               \(raw: stateCases)
             }
 
@@ -148,8 +150,8 @@ public struct FlowCoordinatorMacro: MemberMacro {
         let stateStruct: DeclSyntax = """
         @ComposableArchitecture.ObservableState
         struct State: Swift.Equatable {
-            var routes = TCAFlow.RouteStack<AppScreen.State>([
-                TCAFlow.Route.root(.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()), embedInNavigationView: \(raw: embedInNavigationView))
+            var routes = TCAFlow.RouteStack<\(raw: screenTypeName).State>([
+                TCAFlow.Route.root(\(raw: screenTypeName).State.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()), embedInNavigationView: \(raw: embedInNavigationView))
             ])
         }
         """
@@ -158,7 +160,7 @@ public struct FlowCoordinatorMacro: MemberMacro {
         let actionEnum: DeclSyntax = """
         @CasePaths.CasePathable
         enum Action {
-            case route(TCAFlow.FlowActionOf<AppScreen>)
+            case route(TCAFlow.FlowActionOf<\(raw: screenTypeName)>)
         }
         """
         members.append(actionEnum)
@@ -185,6 +187,16 @@ public struct FlowCoordinatorMacro: MemberMacro {
         }
 
         return value
+    }
+
+    private static func screenTypeName(for coordinatorName: String) -> String {
+        let baseName: String
+        if coordinatorName.hasSuffix("Coordinator") {
+            baseName = String(coordinatorName.dropLast("Coordinator".count))
+        } else {
+            baseName = coordinatorName
+        }
+        return "\(baseName)Screen"
     }
 }
 
