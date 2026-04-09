@@ -18,7 +18,8 @@ public struct FlowCoordinatorMacro: MemberMacro {
             throw MacroExpansionErrorMessage("@FlowCoordinator는 struct에만 적용할 수 있습니다")
         }
 
-        let screenTypeName = Self.screenTypeName(for: structDecl.name.text)
+        let coordinatorName = structDecl.name.text
+        let screenTypeName = Self.screenTypeName(for: coordinatorName)
 
         var screenEnum: EnumDeclSyntax?
         for member in structDecl.memberBlock.members {
@@ -29,23 +30,31 @@ public struct FlowCoordinatorMacro: MemberMacro {
             }
         }
 
-        guard let screenEnum = screenEnum else {
-            throw MacroExpansionErrorMessage("@FlowCoordinator는 'Screen' enum을 포함해야 합니다")
-        }
-
+        // Screen enum 처리: 내부 정의 또는 extension 지원
         var screenCases: [(name: String, type: String)] = []
-        for member in screenEnum.memberBlock.members {
-            if let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) {
-                for element in caseDecl.elements {
-                    let caseName = element.name.text
 
-                    if let parameterClause = element.parameterClause,
-                       let firstParam = parameterClause.parameters.first {
-                        let typeName = firstParam.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
-                        screenCases.append((name: caseName, type: typeName))
+        if let screenEnum = screenEnum {
+            // 기존 방식: 내부 Screen enum에서 case 추출
+            for member in screenEnum.memberBlock.members {
+                if let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) {
+                    for element in caseDecl.elements {
+                        let caseName = element.name.text
+
+                        if let parameterClause = element.parameterClause,
+                           let firstParam = parameterClause.parameters.first {
+                            let typeName = firstParam.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                            screenCases.append((name: caseName, type: typeName))
+                        }
                     }
                 }
             }
+        } else {
+            // extension으로 Screen을 정의할 수 있도록 빈 enum과 기본 구조만 생성
+            return try Self.generateExtensionFriendlyStructure(
+                coordinatorName: coordinatorName,
+                screenTypeName: screenTypeName,
+                embedInNavigationView: embedInNavigationView
+            )
         }
 
         guard let firstScreen = screenCases.first else {
@@ -199,6 +208,69 @@ public struct FlowCoordinatorMacro: MemberMacro {
         }
         return "\(baseName)Screen"
     }
+
+    /// Extension으로 Screen을 정의할 수 있는 기본 구조 생성
+    private static func generateExtensionFriendlyStructure(
+        coordinatorName: String,
+        screenTypeName: String,
+        embedInNavigationView: String
+    ) throws -> [DeclSyntax] {
+
+        var members: [DeclSyntax] = []
+
+        // 1. 빈 Screen enum 정의 (extension에서 case 추가 가능)
+        let emptyScreenEnum: DeclSyntax = """
+        enum \(raw: screenTypeName): Swift.Sendable, Swift.Equatable {
+            // Screen cases should be defined in extension
+            // Example:
+            // extension \(raw: coordinatorName) {
+            //   enum Screen {
+            //     case home(HomeFeature.State)
+            //     case detail(DetailFeature.State)
+            //   }
+            // }
+        }
+        """
+        members.append(emptyScreenEnum)
+
+        // 2. State 구조체 (RouteStack 타입만 정의, 초기값은 extension에서)
+        let stateStruct: DeclSyntax = """
+        @ComposableArchitecture.ObservableState
+        struct State: Swift.Equatable {
+            var routes: TCAFlow.RouteStack<\(raw: screenTypeName)>
+
+            init(routes: TCAFlow.RouteStack<\(raw: screenTypeName)> = []) {
+                self.routes = routes
+            }
+        }
+        """
+        members.append(stateStruct)
+
+        // 3. Action enum (기본 구조)
+        let actionEnum: DeclSyntax = """
+        @CasePaths.CasePathable
+        enum Action {
+            case route(TCAFlow.FlowAction<\(raw: screenTypeName)Action>)
+        }
+        """
+        members.append(actionEnum)
+
+        // 4. Action enum 정의 (extension에서 정의할 수 있도록 빈 구조)
+        let actionEnumDef: DeclSyntax = """
+        @CasePaths.CasePathable
+        enum \(raw: screenTypeName)Action: Swift.Equatable {
+            // Actions should be defined in extension
+            // Example:
+            // extension \(raw: screenTypeName)Action {
+            //   case home(HomeFeature.Action)
+            //   case detail(DetailFeature.Action)
+            // }
+        }
+        """
+        members.append(actionEnumDef)
+
+        return members
+    }
 }
 
 /// 매크로 오류 메시지
@@ -308,6 +380,62 @@ public struct ForEachRouteMacro: PeerMacro {
     }
 }
 
+/// FlowScreen 매크로 - Screen enum을 extension으로 정의
+public struct FlowScreenMacro: MemberMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else {
+            throw MacroExpansionErrorMessage("@FlowScreen은 struct에만 적용할 수 있습니다")
+        }
+
+        let coordinatorName = structDecl.name.text
+        let screenTypeName = Self.screenTypeName(for: coordinatorName)
+
+        // 빈 Screen enum 정의만 생성 (실제 case는 extension으로 정의)
+        let screenEnumStub: DeclSyntax = """
+        enum \(raw: screenTypeName): Swift.Sendable {
+            // Screen cases are defined in extensions
+        }
+        """
+
+        return [screenEnumStub]
+    }
+
+    private static func screenTypeName(for coordinatorName: String) -> String {
+        let baseName: String
+        if coordinatorName.hasSuffix("Coordinator") {
+            baseName = String(coordinatorName.dropLast("Coordinator".count))
+        } else {
+            baseName = coordinatorName
+        }
+        return "\(baseName)Screen"
+    }
+}
+
+/// 개별 Screen case 추가 매크로
+public struct FlowScreenCaseMacro: ExtensionMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingExtensionsOf type: some TypeSyntaxProtocol,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [ExtensionDeclSyntax] {
+
+        // 이 매크로는 Screen enum에 case를 추가하는 extension을 생성
+        guard let enumDecl = declaration.as(EnumDeclSyntax.self) else {
+            throw MacroExpansionErrorMessage("@FlowScreenCase는 enum에만 적용할 수 있습니다")
+        }
+
+        // extension 생성 로직 (나중에 구현)
+        return []
+    }
+}
+
 /// 컴파일러 플러그인 등록
 @main
 struct TCAFlowPlugin: CompilerPlugin {
@@ -317,5 +445,7 @@ struct TCAFlowPlugin: CompilerPlugin {
         RouteStackExtensionsMacro.self,
         ViewTransitionsMacro.self,
         ForEachRouteMacro.self,
+        FlowScreenMacro.self,
+        FlowScreenCaseMacro.self,
     ]
 }
