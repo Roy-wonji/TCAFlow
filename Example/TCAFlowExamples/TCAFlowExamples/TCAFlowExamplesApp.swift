@@ -423,7 +423,7 @@ struct NestedCoordinatorView: View {
           NestedStep2View(store: store)
       }
     }
-    .navigationBarHidden(true)
+    .navigationTitle("Nested Coordinator")
   }
 }
 
