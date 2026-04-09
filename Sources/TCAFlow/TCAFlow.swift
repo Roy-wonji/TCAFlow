@@ -297,25 +297,8 @@ private extension Equatable {
 // MARK: - RouteStack Utilities
 
 extension Reducer {
-    /// 🚀 TCAFlow 개선: RouteStack의 child reducer들을 자동으로 연결하고 pathChanged도 처리합니다.
-    /// 이제 각 route의 액션이 자동으로 해당 Feature reducer에서 처리됩니다!
-    ///
-    /// 사용법:
-    /// ```swift
-    /// var body: some ReducerOf<Self> {
-    ///   Reduce { state, action in
-    ///     switch action {
-    ///     case .route(.routeAction(let id, let screenAction)):
-    ///       // Coordinator 레벨에서 처리할 액션들만 여기서 처리
-    ///       // (navigation, delegation 등)
-    ///       return handleScreenAction(screenAction, id: id, state: &state)
-    ///     case .route:
-    ///       return .none  // pathChanged는 자동 처리됨
-    ///     }
-    ///   }
-    ///   .forEachRoute(\.routes, action: \.route)  // 🎯 child reducer 자동 연결!
-    /// }
-    /// ```
+    /// 🚀 TCAFlow 개선: RouteStack의 pathChanged 액션을 자동으로 처리합니다.
+    /// 기본 버전 - pathChanged만 처리
     public func forEachRoute<Screen: CaseReducer>(
         _ routeStackKeyPath: WritableKeyPath<State, RouteStack<Screen.State>>,
         action routeActionKeyPath: AnyCasePath<Action, FlowAction<Screen>>
@@ -337,6 +320,64 @@ extension Reducer {
                     state[keyPath: routeStackKeyPath].pop()
                 }
                 return .none
+            }
+        }
+    }
+
+    /// 🚀 TCAFlow 개선: RouteStack의 child reducer들을 자동으로 연결하고 pathChanged도 처리합니다.
+    /// 이제 각 route의 액션이 자동으로 해당 Feature reducer에서 처리됩니다!
+    ///
+    /// 사용법:
+    /// ```swift
+    /// var body: some ReducerOf<Self> {
+    ///   Reduce { state, action in
+    ///     switch action {
+    ///     case .route(.routeAction(let id, let screenAction)):
+    ///       // Coordinator 레벨에서 처리할 액션들만 여기서 처리
+    ///       // (navigation, delegation 등)
+    ///       return handleScreenAction(screenAction, id: id, state: &state)
+    ///     case .route:
+    ///       return .none  // pathChanged는 자동 처리됨
+    ///     }
+    ///   }
+    ///   .forEachRoute(\.routes, action: \.route) { Screen() }  // 🎯 child reducer 자동 연결!
+    /// }
+    /// ```
+    public func forEachRoute<Screen: CaseReducer>(
+        _ routeStackKeyPath: WritableKeyPath<State, RouteStack<Screen.State>>,
+        action routeActionKeyPath: AnyCasePath<Action, FlowAction<Screen>>,
+        @ReducerBuilder<Screen.State, Screen.Action> destination: @escaping () -> Screen
+    ) -> some ReducerOf<Self> {
+        CombineReducers {
+            self
+
+            // 🎯 Child reducer들을 자동으로 연결
+            Reduce<State, Action> { state, action in
+                guard let flowAction = routeActionKeyPath.extract(from: action) else {
+                    return .none
+                }
+
+                switch flowAction {
+                case let .routeAction(id, screenAction):
+                    // child reducer로 액션 전달을 위한 준비
+                    // 실제 처리는 .forEach에서 담당
+                    return .none
+
+                case let .pathChanged(path):
+                    // 경로 변경 자동 처리
+                    let routeIDs = [state[keyPath: routeStackKeyPath].routes.first?.id].compactMap { $0 } + path
+                    while let last = state[keyPath: routeStackKeyPath].routes.last,
+                          !routeIDs.contains(last.id) {
+                        state[keyPath: routeStackKeyPath].pop()
+                    }
+                    return .none
+                }
+            }
+            .forEach(
+                routeStackKeyPath.appending(path: \.routes),
+                action: routeActionKeyPath.appending(path: /FlowAction<Screen>.routeAction)
+            ) {
+                destination()
             }
         }
     }
