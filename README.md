@@ -12,6 +12,8 @@ TCACoordinators처럼 route stack을 reducer state에서 관리하지만, 화면
 - `TCARouter` SwiftUI view 제공
 - iOS 16+ `NavigationStack` 기반 router
 - `@SwiftUI.Bindable var store`를 쓰는 modern TCA example 포함
+- **매크로 없이도 사용 가능한 RouteStack 유틸리티** 🆕
+- **FlowAction 헬퍼로 깔끔한 라우트 액션 처리** 🆕
 
 ## TCACoordinators와 차이점
 
@@ -231,6 +233,65 @@ state.routes.goBackTo(.home(HomeFeature.State()))
 
 `goBackTo`는 target screen과 같은 enum case가 나올 때까지 pop합니다.
 
+## RouteStack 유틸리티 (매크로 없이 사용)
+
+매크로를 사용할 수 없는 환경에서도 TCAFlow의 라우팅 기능을 깔끔하게 사용할 수 있도록 유틸리티를 제공합니다.
+
+### handleRoutePath
+
+`pathChanged` 액션을 자동으로 처리하는 확장입니다.
+
+```swift
+struct AppCoordinator: Reducer {
+  // State, Screen, Action 정의...
+
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .route(let routeAction):
+        // routeAction만 처리, pathChanged는 자동 처리됨
+        guard let (id, screenAction) = routeAction.routeInfo else {
+          return .none
+        }
+        return handleScreenAction(screenAction, id: id, state: &state)
+      }
+    }
+    .handleRoutePath(\.routes, action: \.route) // 🎯 pathChanged 자동 처리!
+  }
+}
+```
+
+### FlowAction 헬퍼
+
+라우트 액션을 더 쉽게 처리할 수 있는 헬퍼 프로퍼티들을 제공합니다.
+
+```swift
+// RouteAction 정보 추출
+if let (id, screenAction) = routeAction.routeInfo {
+  return handleScreenAction(screenAction, id: id, state: &state)
+}
+
+// PathChanged 확인
+if routeAction.isPathChanged {
+  return .none // 자동 처리됨
+}
+
+// PathChanged 경로 추출
+if let path = routeAction.pathChangeRoute {
+  // 커스텀 경로 처리 로직
+}
+```
+
+### 매크로 vs 수동 구현 비교
+
+| 항목 | `@FlowCoordinator` 매크로 | 수동 구현 + 유틸리티 |
+| --- | --- | --- |
+| 보일러플레이트 | Screen enum만 정의 | State, Action, Screen 모두 정의 |
+| pathChanged 처리 | 수동 작성 필요 | `.handleRoutePath()`로 자동 |
+| 커스터마이징 | 제한적 | 완전한 제어 |
+| 학습 곡선 | 낮음 | 중간 |
+| 사용 권장 | ✅ 대부분의 경우 | 특수한 요구사항이 있는 경우 |
+
 ## FlowCoordinator Macro
 
 `@FlowCoordinator`는 아래 멤버를 생성합니다.
@@ -317,6 +378,10 @@ example은 다음 흐름을 포함합니다.
 - `Home` -> `Counter` -> `Summary`: stack flow
 - `Summary` -> `Settings`: target screen 이동
 - `Counter`/`Summary` -> root: `popToRoot`
+
+추가 예제 파일:
+- `Example/ForEachRouteExample.swift`: 매크로 없이 깔끔하게 사용하는 패턴들
+- `Example/ErrorFixes.swift`: TCAFlow 사용 시 자주 발생하는 에러와 해결법
 
 ## Documentation
 
