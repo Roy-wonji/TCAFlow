@@ -5,7 +5,7 @@ import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import SwiftUI
 
-public struct FlowCoordinatorMacro: MemberMacro {
+public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
     public static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
@@ -14,15 +14,31 @@ public struct FlowCoordinatorMacro: MemberMacro {
 
         let embedInNavigationView = try Self.embedInNavigationView(from: node)
 
-        guard let structDecl = declaration.as(StructDeclSyntax.self) else {
-            throw MacroExpansionErrorMessage("@FlowCoordinator는 struct에만 적용할 수 있습니다")
+        // struct 또는 extension 지원
+        let coordinatorName: String
+        if let structDecl = declaration.as(StructDeclSyntax.self) {
+            coordinatorName = structDecl.name.text
+        } else if let extensionDecl = declaration.as(ExtensionDeclSyntax.self) {
+            coordinatorName = extensionDecl.extendedType.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            throw MacroExpansionErrorMessage("@FlowCoordinator는 struct 또는 extension에만 적용할 수 있습니다")
         }
 
-        let coordinatorName = structDecl.name.text
         let screenTypeName = Self.screenTypeName(for: coordinatorName)
 
+        // Screen enum 찾기 (struct 또는 extension에서)
         var screenEnum: EnumDeclSyntax?
-        for member in structDecl.memberBlock.members {
+        let memberBlock: MemberBlockSyntax
+
+        if let structDecl = declaration.as(StructDeclSyntax.self) {
+            memberBlock = structDecl.memberBlock
+        } else if let extensionDecl = declaration.as(ExtensionDeclSyntax.self) {
+            memberBlock = extensionDecl.memberBlock
+        } else {
+            throw MacroExpansionErrorMessage("지원하지 않는 선언 타입입니다")
+        }
+
+        for member in memberBlock.members {
             if let enumDecl = member.decl.as(EnumDeclSyntax.self),
                enumDecl.name.text == "Screen" {
                 screenEnum = enumDecl
@@ -176,6 +192,21 @@ public struct FlowCoordinatorMacro: MemberMacro {
         members.append(actionEnum)
 
         return members
+    }
+
+    // MARK: - ExtensionMacro 구현
+
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingExtensionsOf type: some TypeSyntaxProtocol,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [ExtensionDeclSyntax] {
+
+        // extension에서는 추가 extension을 생성하지 않음
+        // 대신 해당 extension 내부의 Screen enum을 처리함
+        return []
     }
 
     private static func embedInNavigationView(from node: AttributeSyntax) throws -> String {

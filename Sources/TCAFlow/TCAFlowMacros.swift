@@ -21,6 +21,7 @@ import Foundation
 /// }
 /// ```
 @attached(member, names: arbitrary, named(State), named(Action))
+@attached(extension, conformances: FlowCoordinating, names: arbitrary)
 public macro FlowCoordinator(navigation: Bool = true) = #externalMacro(module: "TCAFlowMacros", type: "FlowCoordinatorMacro")
 
 /// @ForEachRoute 매크로 정의
