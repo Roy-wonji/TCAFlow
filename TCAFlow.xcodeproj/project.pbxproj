@@ -1,0 +1,797 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A754F29C51B0EDE138D94F1 /* CasePathsCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA6ED83506C84A83EEC3B738 /* CasePathsCore.framework */; };
+		0E5750F9DB49901FCE92A57B /* Sharing2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C89960638E15D9F90D4A629 /* Sharing2.framework */; };
+		0E64FE62ABD6291A8887C9AC /* Sharing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FF6DE4B97F68B7B96592C9B /* Sharing.framework */; };
+		0FA08A9ECADB447F27240AEA /* IssueReporting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 127C9EAE3E6CF6DFE08395C4 /* IssueReporting.framework */; };
+		123571D50FEB71AD1DE1C3D0 /* Sharing1.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1C8A47F581A268A163456B5 /* Sharing1.framework */; };
+		14E5F56DA023D25DB0670B90 /* TCAFlow.docc in Sources */ = {isa = PBXBuildFile; fileRef = 145454A126E49E414AC5E6EA /* TCAFlow.docc */; };
+		18D6DE873FD0F6DAA8219705 /* InternalCollectionsUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3FC986912420B4956C92F76 /* InternalCollectionsUtilities.framework */; };
+		22E28B35175B12482ED03147 /* SwiftOperators.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7B4A8061539F30662A684E8 /* SwiftOperators.framework */; };
+		28E6DA6CF80F6F7789E05534 /* ComposableArchitecture.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1266B50609DB8D855AB5DCEB /* ComposableArchitecture.framework */; };
+		46129584148E086C92415B2A /* SwiftSyntax600.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD9AED6F7ED69584EDC936DC /* SwiftSyntax600.framework */; };
+		4A8336F726C890A908FECEF6 /* SwiftUINavigation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E728AD7D6FB0D03817EB643 /* SwiftUINavigation.framework */; };
+		4AA6BD949B97860013FAF3E2 /* TCAFlowMacros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB636DB63858B9D77ACA228 /* TCAFlowMacros.swift */; };
+		4B56E7CAE06AC4E402EB2DE6 /* SwiftSyntaxMacroExpansion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DD2773A2F24565250742B0B /* SwiftSyntaxMacroExpansion.framework */; };
+		4E4F761B0BA656429EDBC169 /* SwiftSyntaxMacros.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3686B3020893B8569AFDBA91 /* SwiftSyntaxMacros.framework */; };
+		502E8C31601E0DDBF32FED5A /* UIKitNavigationShim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9B433C5D9C2ADE7CFF55BC5 /* UIKitNavigationShim.framework */; };
+		5A4C392EBFD535A5E81468B2 /* PerceptionCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78D11C34BACB9ABB4829B278 /* PerceptionCore.framework */; };
+		5A647F4504D9E59B59CEBA07 /* OrderedCollections.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 335DB0D1F8DF62DCE65C2148 /* OrderedCollections.framework */; };
+		6E0CA6936D21E17AA9DEAA9B /* CasePaths.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 85AB70315AD1BF149DABCD84 /* CasePaths.framework */; };
+		6E611042409C3ECF4BDE995A /* IssueReportingPackageSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C930C643B21A3D048F5E357 /* IssueReportingPackageSupport.framework */; };
+		6FDC258F09854377FDF7AFEC /* _SwiftSyntaxCShims.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE7EC2305197CC2C3BDF9BBF /* _SwiftSyntaxCShims.framework */; };
+		73B63F0A7FA2717E6EF49C75 /* SwiftSyntax509.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E6F945C6E0D2D305ACC5F82 /* SwiftSyntax509.framework */; };
+		73E2C2FA9F16DFDB0B1A58D1 /* SwiftSyntax.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D317410AEDB3A5AA4AB7B0A3 /* SwiftSyntax.framework */; };
+		7EE8515B499895D4B8F8B77D /* SwiftParserDiagnostics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 859E921411251B5E13D2F7E2 /* SwiftParserDiagnostics.framework */; };
+		80229FDCA6608367B902F08C /* SwiftDiagnostics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD552507F3DA15F0C95238BF /* SwiftDiagnostics.framework */; };
+		80C9061A13AFE824C7D9E9B7 /* CustomDump.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 35048C44548313FC9281B832 /* CustomDump.framework */; };
+		811BE23A1A550E2CF73C3C21 /* SwiftParser.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B3970DD36FBB3CF886224CA /* SwiftParser.framework */; };
+		81527036ADC6118900660394 /* ConcurrencyExtras.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98CF7AA35C81D903B57A5302 /* ConcurrencyExtras.framework */; };
+		A0510A075921DA0513DB1447 /* TCARouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7CFA7773BD3C6C27A715F9 /* TCARouter.swift */; };
+		A22E7C77ED913C2C8D917178 /* TCAFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA4B8D1A5EEA09C7006E8D0D /* TCAFlow.swift */; };
+		A7EE492164BE1070777533A6 /* SwiftSyntaxBuilder.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69BB28CCAA4CEFBC1DF54B49 /* SwiftSyntaxBuilder.framework */; };
+		A8A9636F9A52584CDFAF5895 /* Clocks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC20899AD5FF6BA44627C3F9 /* Clocks.framework */; };
+		AC550247C587C7D4C980078F /* SwiftCompilerPlugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3FA9053191228D1EAC16791 /* SwiftCompilerPlugin.framework */; };
+		AD904E4A9422DE91C32CDAF6 /* SwiftBasicFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 583C2AB9E5AA6303EADB1647 /* SwiftBasicFormat.framework */; };
+		BE6324300D5F17B7E3310849 /* SwiftSyntax510.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A74EB714DF9E4AA5E2A21A9 /* SwiftSyntax510.framework */; };
+		C4C8CA41E90BDCA6C0DFCC26 /* Perception.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF91AB9BC65BC48C51C07AED /* Perception.framework */; };
+		C615ED5F9CFE343CD3B6AB0E /* SwiftCompilerPluginMessageHandling.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6C29555A380E6497D6DAD95 /* SwiftCompilerPluginMessageHandling.framework */; };
+		C9BB0C50D82E01B87F2B0841 /* UIKitNavigation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D706D06516E579A97C445CB /* UIKitNavigation.framework */; };
+		C9E4C43F3082F4DFB6CF0F29 /* DependenciesMacros.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3901E966951FAE44344AD681 /* DependenciesMacros.framework */; };
+		D357F4C97C33204D2A91EFBB /* SwiftNavigation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2193AEA79B41C82B3C66EFDE /* SwiftNavigation.framework */; };
+		DCB74B1C491137DEC2BD0C13 /* IdentifiedCollections.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2BF62BC8A7AB5AF320A5A97 /* IdentifiedCollections.framework */; };
+		DF071E31351E45D6548CF9C1 /* XCTestDynamicOverlay.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5B98108B9E43CB8C2321948 /* XCTestDynamicOverlay.framework */; };
+		E72B8453EF547D05ED876529 /* TCAFlowMacros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB6A384C766217AA12FC843 /* TCAFlowMacros.swift */; };
+		E852A9C771BF71F6D0B0A6AF /* CombineSchedulers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0124C362FC9F0C99906CE7C1 /* CombineSchedulers.framework */; };
+		E8C51D93F741F679F93BC9A8 /* Dependencies.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE0E865611BB673B8E24D787 /* Dependencies.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B1808927260AD0829A31FFD0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2DD725BB0376C59E11BC702E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E648F201AF5748D5652510D0;
+			remoteInfo = TCAFlowMacros;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		77BAB53978A1CB0A4D3E2E77 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9292E8DA5283045603BD1AD7 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0124C362FC9F0C99906CE7C1 /* CombineSchedulers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CombineSchedulers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0551AE02A747051F8A465D8C /* TCAFlowMacros-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TCAFlowMacros-Info.plist"; sourceTree = "<group>"; };
+		0DD2773A2F24565250742B0B /* SwiftSyntaxMacroExpansion.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntaxMacroExpansion.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E6F945C6E0D2D305ACC5F82 /* SwiftSyntax509.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntax509.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1266B50609DB8D855AB5DCEB /* ComposableArchitecture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ComposableArchitecture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		127C9EAE3E6CF6DFE08395C4 /* IssueReporting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = IssueReporting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		145454A126E49E414AC5E6EA /* TCAFlow.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = TCAFlow.docc; sourceTree = "<group>"; };
+		2193AEA79B41C82B3C66EFDE /* SwiftNavigation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftNavigation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2BB6A384C766217AA12FC843 /* TCAFlowMacros.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCAFlowMacros.swift; sourceTree = "<group>"; };
+		335DB0D1F8DF62DCE65C2148 /* OrderedCollections.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = OrderedCollections.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		35048C44548313FC9281B832 /* CustomDump.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CustomDump.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3686B3020893B8569AFDBA91 /* SwiftSyntaxMacros.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntaxMacros.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3901E966951FAE44344AD681 /* DependenciesMacros.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DependenciesMacros.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		583C2AB9E5AA6303EADB1647 /* SwiftBasicFormat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftBasicFormat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C930C643B21A3D048F5E357 /* IssueReportingPackageSupport.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = IssueReportingPackageSupport.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5D710B64887F94D7C538ABF8 /* TCAFlow-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TCAFlow-Info.plist"; sourceTree = "<group>"; };
+		69BB28CCAA4CEFBC1DF54B49 /* SwiftSyntaxBuilder.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntaxBuilder.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B3970DD36FBB3CF886224CA /* SwiftParser.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftParser.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6D7CFA7773BD3C6C27A715F9 /* TCARouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCARouter.swift; sourceTree = "<group>"; };
+		6DFB38C0AACD96DEBACA1F16 /* TCAFlow.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TCAFlow.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E728AD7D6FB0D03817EB643 /* SwiftUINavigation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftUINavigation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FF6DE4B97F68B7B96592C9B /* Sharing.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Sharing.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		78D11C34BACB9ABB4829B278 /* PerceptionCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PerceptionCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		859E921411251B5E13D2F7E2 /* SwiftParserDiagnostics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftParserDiagnostics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		85AB70315AD1BF149DABCD84 /* CasePaths.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CasePaths.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8AB636DB63858B9D77ACA228 /* TCAFlowMacros.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCAFlowMacros.swift; sourceTree = "<group>"; };
+		8C89960638E15D9F90D4A629 /* Sharing2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Sharing2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D706D06516E579A97C445CB /* UIKitNavigation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = UIKitNavigation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		98CF7AA35C81D903B57A5302 /* ConcurrencyExtras.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConcurrencyExtras.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A74EB714DF9E4AA5E2A21A9 /* SwiftSyntax510.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntax510.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A3FC986912420B4956C92F76 /* InternalCollectionsUtilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = InternalCollectionsUtilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA6ED83506C84A83EEC3B738 /* CasePathsCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CasePathsCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD552507F3DA15F0C95238BF /* SwiftDiagnostics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftDiagnostics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA4B8D1A5EEA09C7006E8D0D /* TCAFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCAFlow.swift; sourceTree = "<group>"; };
+		BD9AED6F7ED69584EDC936DC /* SwiftSyntax600.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntax600.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1C8A47F581A268A163456B5 /* Sharing1.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Sharing1.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC20899AD5FF6BA44627C3F9 /* Clocks.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Clocks.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D317410AEDB3A5AA4AB7B0A3 /* SwiftSyntax.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntax.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6C29555A380E6497D6DAD95 /* SwiftCompilerPluginMessageHandling.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftCompilerPluginMessageHandling.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9B433C5D9C2ADE7CFF55BC5 /* UIKitNavigationShim.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = UIKitNavigationShim.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE0E865611BB673B8E24D787 /* Dependencies.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Dependencies.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2BF62BC8A7AB5AF320A5A97 /* IdentifiedCollections.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = IdentifiedCollections.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E5B98108B9E43CB8C2321948 /* XCTestDynamicOverlay.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = XCTestDynamicOverlay.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7B4A8061539F30662A684E8 /* SwiftOperators.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftOperators.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE7EC2305197CC2C3BDF9BBF /* _SwiftSyntaxCShims.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = _SwiftSyntaxCShims.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF91AB9BC65BC48C51C07AED /* Perception.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Perception.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F3FA9053191228D1EAC16791 /* SwiftCompilerPlugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftCompilerPlugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F4010E5A7551245273B7193D /* TCAFlowMacros */ = {isa = PBXFileReference; includeInIndex = 0; path = TCAFlowMacros; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5DEF7BF437D1FBC2C5FF95CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD904E4A9422DE91C32CDAF6 /* SwiftBasicFormat.framework in Frameworks */,
+				AC550247C587C7D4C980078F /* SwiftCompilerPlugin.framework in Frameworks */,
+				C615ED5F9CFE343CD3B6AB0E /* SwiftCompilerPluginMessageHandling.framework in Frameworks */,
+				80229FDCA6608367B902F08C /* SwiftDiagnostics.framework in Frameworks */,
+				22E28B35175B12482ED03147 /* SwiftOperators.framework in Frameworks */,
+				811BE23A1A550E2CF73C3C21 /* SwiftParser.framework in Frameworks */,
+				7EE8515B499895D4B8F8B77D /* SwiftParserDiagnostics.framework in Frameworks */,
+				73E2C2FA9F16DFDB0B1A58D1 /* SwiftSyntax.framework in Frameworks */,
+				73B63F0A7FA2717E6EF49C75 /* SwiftSyntax509.framework in Frameworks */,
+				BE6324300D5F17B7E3310849 /* SwiftSyntax510.framework in Frameworks */,
+				46129584148E086C92415B2A /* SwiftSyntax600.framework in Frameworks */,
+				A7EE492164BE1070777533A6 /* SwiftSyntaxBuilder.framework in Frameworks */,
+				4B56E7CAE06AC4E402EB2DE6 /* SwiftSyntaxMacroExpansion.framework in Frameworks */,
+				4E4F761B0BA656429EDBC169 /* SwiftSyntaxMacros.framework in Frameworks */,
+				6FDC258F09854377FDF7AFEC /* _SwiftSyntaxCShims.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C2BAD915227AF8CE897F2492 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E0CA6936D21E17AA9DEAA9B /* CasePaths.framework in Frameworks */,
+				0A754F29C51B0EDE138D94F1 /* CasePathsCore.framework in Frameworks */,
+				A8A9636F9A52584CDFAF5895 /* Clocks.framework in Frameworks */,
+				E852A9C771BF71F6D0B0A6AF /* CombineSchedulers.framework in Frameworks */,
+				28E6DA6CF80F6F7789E05534 /* ComposableArchitecture.framework in Frameworks */,
+				81527036ADC6118900660394 /* ConcurrencyExtras.framework in Frameworks */,
+				80C9061A13AFE824C7D9E9B7 /* CustomDump.framework in Frameworks */,
+				E8C51D93F741F679F93BC9A8 /* Dependencies.framework in Frameworks */,
+				C9E4C43F3082F4DFB6CF0F29 /* DependenciesMacros.framework in Frameworks */,
+				DCB74B1C491137DEC2BD0C13 /* IdentifiedCollections.framework in Frameworks */,
+				18D6DE873FD0F6DAA8219705 /* InternalCollectionsUtilities.framework in Frameworks */,
+				0FA08A9ECADB447F27240AEA /* IssueReporting.framework in Frameworks */,
+				6E611042409C3ECF4BDE995A /* IssueReportingPackageSupport.framework in Frameworks */,
+				5A647F4504D9E59B59CEBA07 /* OrderedCollections.framework in Frameworks */,
+				C4C8CA41E90BDCA6C0DFCC26 /* Perception.framework in Frameworks */,
+				5A4C392EBFD535A5E81468B2 /* PerceptionCore.framework in Frameworks */,
+				0E64FE62ABD6291A8887C9AC /* Sharing.framework in Frameworks */,
+				123571D50FEB71AD1DE1C3D0 /* Sharing1.framework in Frameworks */,
+				0E5750F9DB49901FCE92A57B /* Sharing2.framework in Frameworks */,
+				D357F4C97C33204D2A91EFBB /* SwiftNavigation.framework in Frameworks */,
+				4A8336F726C890A908FECEF6 /* SwiftUINavigation.framework in Frameworks */,
+				C9BB0C50D82E01B87F2B0841 /* UIKitNavigation.framework in Frameworks */,
+				502E8C31601E0DDBF32FED5A /* UIKitNavigationShim.framework in Frameworks */,
+				DF071E31351E45D6548CF9C1 /* XCTestDynamicOverlay.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		121842163D267DFB66C43815 = {
+			isa = PBXGroup;
+			children = (
+				51B51A544B244D4BB0CD84FE /* Products */,
+				508E174458CBEF737E92F719 /* Project */,
+			);
+			sourceTree = "<group>";
+		};
+		39F3B9280247E930C9C6FD6B /* TCAFlowMacros */ = {
+			isa = PBXGroup;
+			children = (
+				8AB636DB63858B9D77ACA228 /* TCAFlowMacros.swift */,
+			);
+			path = TCAFlowMacros;
+			sourceTree = "<group>";
+		};
+		508E174458CBEF737E92F719 /* Project */ = {
+			isa = PBXGroup;
+			children = (
+				8506E5D28C9D5D29E01EE161 /* Derived */,
+				7799B821398127F4FBFAE69A /* Sources */,
+			);
+			name = Project;
+			sourceTree = "<group>";
+		};
+		51B51A544B244D4BB0CD84FE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE7EC2305197CC2C3BDF9BBF /* _SwiftSyntaxCShims.framework */,
+				85AB70315AD1BF149DABCD84 /* CasePaths.framework */,
+				AA6ED83506C84A83EEC3B738 /* CasePathsCore.framework */,
+				CC20899AD5FF6BA44627C3F9 /* Clocks.framework */,
+				0124C362FC9F0C99906CE7C1 /* CombineSchedulers.framework */,
+				1266B50609DB8D855AB5DCEB /* ComposableArchitecture.framework */,
+				98CF7AA35C81D903B57A5302 /* ConcurrencyExtras.framework */,
+				35048C44548313FC9281B832 /* CustomDump.framework */,
+				DE0E865611BB673B8E24D787 /* Dependencies.framework */,
+				3901E966951FAE44344AD681 /* DependenciesMacros.framework */,
+				E2BF62BC8A7AB5AF320A5A97 /* IdentifiedCollections.framework */,
+				A3FC986912420B4956C92F76 /* InternalCollectionsUtilities.framework */,
+				127C9EAE3E6CF6DFE08395C4 /* IssueReporting.framework */,
+				5C930C643B21A3D048F5E357 /* IssueReportingPackageSupport.framework */,
+				335DB0D1F8DF62DCE65C2148 /* OrderedCollections.framework */,
+				EF91AB9BC65BC48C51C07AED /* Perception.framework */,
+				78D11C34BACB9ABB4829B278 /* PerceptionCore.framework */,
+				6FF6DE4B97F68B7B96592C9B /* Sharing.framework */,
+				C1C8A47F581A268A163456B5 /* Sharing1.framework */,
+				8C89960638E15D9F90D4A629 /* Sharing2.framework */,
+				583C2AB9E5AA6303EADB1647 /* SwiftBasicFormat.framework */,
+				F3FA9053191228D1EAC16791 /* SwiftCompilerPlugin.framework */,
+				D6C29555A380E6497D6DAD95 /* SwiftCompilerPluginMessageHandling.framework */,
+				AD552507F3DA15F0C95238BF /* SwiftDiagnostics.framework */,
+				2193AEA79B41C82B3C66EFDE /* SwiftNavigation.framework */,
+				E7B4A8061539F30662A684E8 /* SwiftOperators.framework */,
+				6B3970DD36FBB3CF886224CA /* SwiftParser.framework */,
+				859E921411251B5E13D2F7E2 /* SwiftParserDiagnostics.framework */,
+				D317410AEDB3A5AA4AB7B0A3 /* SwiftSyntax.framework */,
+				0E6F945C6E0D2D305ACC5F82 /* SwiftSyntax509.framework */,
+				9A74EB714DF9E4AA5E2A21A9 /* SwiftSyntax510.framework */,
+				BD9AED6F7ED69584EDC936DC /* SwiftSyntax600.framework */,
+				69BB28CCAA4CEFBC1DF54B49 /* SwiftSyntaxBuilder.framework */,
+				0DD2773A2F24565250742B0B /* SwiftSyntaxMacroExpansion.framework */,
+				3686B3020893B8569AFDBA91 /* SwiftSyntaxMacros.framework */,
+				6E728AD7D6FB0D03817EB643 /* SwiftUINavigation.framework */,
+				6DFB38C0AACD96DEBACA1F16 /* TCAFlow.framework */,
+				F4010E5A7551245273B7193D /* TCAFlowMacros */,
+				8D706D06516E579A97C445CB /* UIKitNavigation.framework */,
+				D9B433C5D9C2ADE7CFF55BC5 /* UIKitNavigationShim.framework */,
+				E5B98108B9E43CB8C2321948 /* XCTestDynamicOverlay.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7799B821398127F4FBFAE69A /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				B595CA7E485DF77D05BFDE19 /* TCAFlow */,
+				39F3B9280247E930C9C6FD6B /* TCAFlowMacros */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		8506E5D28C9D5D29E01EE161 /* Derived */ = {
+			isa = PBXGroup;
+			children = (
+				CECD752E2F9C0979DA1C5001 /* InfoPlists */,
+			);
+			path = Derived;
+			sourceTree = "<group>";
+		};
+		B595CA7E485DF77D05BFDE19 /* TCAFlow */ = {
+			isa = PBXGroup;
+			children = (
+				145454A126E49E414AC5E6EA /* TCAFlow.docc */,
+				BA4B8D1A5EEA09C7006E8D0D /* TCAFlow.swift */,
+				2BB6A384C766217AA12FC843 /* TCAFlowMacros.swift */,
+				6D7CFA7773BD3C6C27A715F9 /* TCARouter.swift */,
+			);
+			path = TCAFlow;
+			sourceTree = "<group>";
+		};
+		CECD752E2F9C0979DA1C5001 /* InfoPlists */ = {
+			isa = PBXGroup;
+			children = (
+				5D710B64887F94D7C538ABF8 /* TCAFlow-Info.plist */,
+				0551AE02A747051F8A465D8C /* TCAFlowMacros-Info.plist */,
+			);
+			path = InfoPlists;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B176912D811360215C722AD4 /* TCAFlow */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 08C386F4513FE71401CE1553 /* Build configuration list for PBXNativeTarget "TCAFlow" */;
+			buildPhases = (
+				285657B8AEA738E4F990A4EC /* Copy Swift Macro executable into $BUILT_PRODUCT_DIR */,
+				756A76B9D86BA80AD7906ADD /* Sources */,
+				F1A1FD9A3485D54C72EAE726 /* Resources */,
+				C2BAD915227AF8CE897F2492 /* Frameworks */,
+				77BAB53978A1CB0A4D3E2E77 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A0A770ABE6C30FBD8EFD941E /* PBXTargetDependency */,
+			);
+			name = TCAFlow;
+			packageProductDependencies = (
+			);
+			productName = TCAFlow;
+			productReference = 6DFB38C0AACD96DEBACA1F16 /* TCAFlow.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		E648F201AF5748D5652510D0 /* TCAFlowMacros */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BDA3A1F8C1D305CF3BC4E428 /* Build configuration list for PBXNativeTarget "TCAFlowMacros" */;
+			buildPhases = (
+				FB13B3E0D0838229D2CF0BED /* Sources */,
+				0FA489B6669848B7C181CE05 /* Resources */,
+				5DEF7BF437D1FBC2C5FF95CF /* Frameworks */,
+				9292E8DA5283045603BD1AD7 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TCAFlowMacros;
+			packageProductDependencies = (
+			);
+			productName = TCAFlowMacros;
+			productReference = F4010E5A7551245273B7193D /* TCAFlowMacros */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2DD725BB0376C59E11BC702E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 5E293D8662C3E16A38101D73 /* Build configuration list for PBXProject "TCAFlow" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 121842163D267DFB66C43815;
+			productRefGroup = 51B51A544B244D4BB0CD84FE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B176912D811360215C722AD4 /* TCAFlow */,
+				E648F201AF5748D5652510D0 /* TCAFlowMacros */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0FA489B6669848B7C181CE05 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1A1FD9A3485D54C72EAE726 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		285657B8AEA738E4F990A4EC /* Copy Swift Macro executable into $BUILT_PRODUCT_DIR */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				$BUILD_DIR/$CONFIGURATION/TCAFlowMacros,
+			);
+			name = "Copy Swift Macro executable into $BUILT_PRODUCT_DIR";
+			outputPaths = (
+				$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/TCAFlowMacros,
+				"$BUILD_DIR/Debug-$EFFECTIVE_PLATFORM_NAME/TCAFlowMacros",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#  This build phase serves two purposes:\n#  - Force Xcode build system to compile the macOS executable transitively when compiling for non-macOS destinations\n#  - Place the artifacts in the \"Debug\" directory where the built artifacts for the active destination live. We default to \"Debug\" because otherwise the Xcode editor fails to resolve the macro references.\nif [[ -f \"$BUILD_DIR/$CONFIGURATION/TCAFlowMacros\" && ! -f \"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/TCAFlowMacros\" ]]; then\n    mkdir -p \"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/\"\n    cp \"$BUILD_DIR/$CONFIGURATION/TCAFlowMacros\" \"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/TCAFlowMacros\"\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		756A76B9D86BA80AD7906ADD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14E5F56DA023D25DB0670B90 /* TCAFlow.docc in Sources */,
+				A22E7C77ED913C2C8D917178 /* TCAFlow.swift in Sources */,
+				E72B8453EF547D05ED876529 /* TCAFlowMacros.swift in Sources */,
+				A0510A075921DA0513DB1447 /* TCARouter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB13B3E0D0838229D2CF0BED /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4AA6BD949B97860013FAF3E2 /* TCAFlowMacros.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A0A770ABE6C30FBD8EFD941E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = TCAFlowMacros;
+			target = E648F201AF5748D5652510D0 /* TCAFlowMacros */;
+			targetProxy = B1808927260AD0829A31FFD0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		15BC7D911737266C86C58456 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include",
+				);
+				INFOPLIST_FILE = "Derived/InfoPlists/TCAFlowMacros-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-L$(DT_TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"$(inherited)",
+					"-Xcc",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcaflow.macros;
+				PRODUCT_NAME = TCAFlowMacros;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		47EAD55B4539E9D57EB4C33E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		50544BBB4B3D6072BC8FC55A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/.build/checkouts/swift-navigation/Sources/UIKitNavigationShim/include",
+					"$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include",
+				);
+				INFOPLIST_FILE = "Derived/InfoPlists/TCAFlow-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+					"-fmodule-map-file=$(SRCROOT)/.build/tuist-derived/UIKitNavigationShim/UIKitNavigationShim.modulemap",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-L$(DT_TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"$(inherited)",
+					"-Xcc",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+					"-Xcc",
+					"-fmodule-map-file=$(SRCROOT)/.build/tuist-derived/UIKitNavigationShim/UIKitNavigationShim.modulemap",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/CasePathsMacros#CasePathsMacros",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/ComposableArchitectureMacros#ComposableArchitectureMacros",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/DependenciesMacrosPlugin#DependenciesMacrosPlugin",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/PerceptionMacros#PerceptionMacros",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/TCAFlowMacros#TCAFlowMacros",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcaflow.framework;
+				PRODUCT_NAME = TCAFlow;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		62A39EA90B03CFF95E7480D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/.build/checkouts/swift-navigation/Sources/UIKitNavigationShim/include",
+					"$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include",
+				);
+				INFOPLIST_FILE = "Derived/InfoPlists/TCAFlow-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+					"-fmodule-map-file=$(SRCROOT)/.build/tuist-derived/UIKitNavigationShim/UIKitNavigationShim.modulemap",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-L$(DT_TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"$(inherited)",
+					"-Xcc",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+					"-Xcc",
+					"-fmodule-map-file=$(SRCROOT)/.build/tuist-derived/UIKitNavigationShim/UIKitNavigationShim.modulemap",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/CasePathsMacros#CasePathsMacros",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/ComposableArchitectureMacros#ComposableArchitectureMacros",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/DependenciesMacrosPlugin#DependenciesMacrosPlugin",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/PerceptionMacros#PerceptionMacros",
+					"-load-plugin-executable",
+					"$BUILD_DIR/Debug$EFFECTIVE_PLATFORM_NAME/TCAFlowMacros#TCAFlowMacros",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcaflow.framework;
+				PRODUCT_NAME = TCAFlow;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		AFD47C82BD13B97E70A3FE32 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include",
+				);
+				INFOPLIST_FILE = "Derived/InfoPlists/TCAFlowMacros-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-L$(DT_TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"$(inherited)",
+					"-Xcc",
+					"-fmodule-map-file=$(SRCROOT)/.build/checkouts/swift-syntax/Sources/_SwiftSyntaxCShims/include/module.modulemap",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcaflow.macros;
+				PRODUCT_NAME = TCAFlowMacros;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B11993E0C4F11BCBE80C18F6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		08C386F4513FE71401CE1553 /* Build configuration list for PBXNativeTarget "TCAFlow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				62A39EA90B03CFF95E7480D1 /* Debug */,
+				50544BBB4B3D6072BC8FC55A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5E293D8662C3E16A38101D73 /* Build configuration list for PBXProject "TCAFlow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				47EAD55B4539E9D57EB4C33E /* Debug */,
+				B11993E0C4F11BCBE80C18F6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BDA3A1F8C1D305CF3BC4E428 /* Build configuration list for PBXNativeTarget "TCAFlowMacros" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15BC7D911737266C86C58456 /* Debug */,
+				AFD47C82BD13B97E70A3FE32 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2DD725BB0376C59E11BC702E /* Project object */;
+}

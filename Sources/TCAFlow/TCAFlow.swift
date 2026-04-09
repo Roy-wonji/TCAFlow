@@ -297,8 +297,8 @@ private extension Equatable {
 // MARK: - RouteStack Utilities
 
 extension Reducer {
-    /// RouteStack의 pathChanged 액션을 자동으로 처리하는 유틸리티입니다.
-    /// 매크로 없이 라우트 경로 변경을 깔끔하게 처리할 수 있습니다.
+    /// 🚀 TCAFlow 개선: RouteStack의 child reducer들을 자동으로 연결하고 pathChanged도 처리합니다.
+    /// 이제 각 route의 액션이 자동으로 해당 Feature reducer에서 처리됩니다!
     ///
     /// 사용법:
     /// ```swift
@@ -306,13 +306,14 @@ extension Reducer {
     ///   Reduce { state, action in
     ///     switch action {
     ///     case .route(.routeAction(let id, let screenAction)):
-    ///       // 각 스크린 액션 처리
+    ///       // Coordinator 레벨에서 처리할 액션들만 여기서 처리
+    ///       // (navigation, delegation 등)
     ///       return handleScreenAction(screenAction, id: id, state: &state)
     ///     case .route:
     ///       return .none  // pathChanged는 자동 처리됨
     ///     }
     ///   }
-    ///   .forEachRoute(\.routes, action: \.route)
+    ///   .forEachRoute(\.routes, action: \.route)  // 🎯 child reducer 자동 연결!
     /// }
     /// ```
     public func forEachRoute<Screen: CaseReducer>(
@@ -322,6 +323,7 @@ extension Reducer {
         CombineReducers {
             self
 
+            // pathChanged 자동 처리
             Reduce<State, Action> { state, action in
                 guard let flowAction = routeActionKeyPath.extract(from: action),
                       case let .pathChanged(path) = flowAction else {
@@ -359,5 +361,20 @@ extension FlowAction {
     public var pathChangeRoute: [UUID]? {
         guard case let .pathChanged(path) = self else { return nil }
         return path
+    }
+}
+
+// MARK: - 🚀 Enhanced RouteStack with Child Reducer Auto-Connection
+
+extension FlowAction {
+    /// 편리한 case path 구문을 위한 static property
+    public static var routeAction: AnyCasePath<FlowAction<Screen>, (UUID, Screen.Action)> {
+        AnyCasePath(
+            embed: FlowAction.routeAction,
+            extract: { flowAction in
+                guard case let .routeAction(id, action) = flowAction else { return nil }
+                return (id, action)
+            }
+        )
     }
 }
