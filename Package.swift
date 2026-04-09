@@ -1,6 +1,5 @@
 // swift-tools-version: 6.0
 import PackageDescription
-import CompilerPluginSupport
 
 let package = Package(
     name: "TCAFlow",
@@ -18,28 +17,23 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.25.5"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
     ],
     targets: [
-        .macro(
-            name: "TCAFlowMacros",
-            dependencies: [
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
-            ],
-            path: "Sources/TCAFlowMacros"
-        ),
         .target(
             name: "TCAFlow",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                "TCAFlowMacros"
             ],
-            path: "Sources/TCAFlow"
+            path: "Sources/TCAFlow",
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+                .unsafeFlags(["-suppress-warnings"])
+            ]
         ),
         .testTarget(
             name: "TCAFlowTests",
-            dependencies: ["TCAFlow"]
+            dependencies: ["TCAFlow"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
         ),
     ]
 )
