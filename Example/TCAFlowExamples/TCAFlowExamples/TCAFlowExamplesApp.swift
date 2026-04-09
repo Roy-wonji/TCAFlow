@@ -472,6 +472,18 @@ struct NestedStep1View: View {
     }
     .padding()
     .navigationTitle("Nested Step 1")
+    .toolbar {
+      ToolbarItem(placement: .navigationBarLeading) {
+        Button {
+          store.send(.backToMain)
+        } label: {
+          HStack(spacing: 4) {
+            Image(systemName: "chevron.left")
+            Text("Back")
+          }
+        }
+      }
+    }
   }
 }
 
