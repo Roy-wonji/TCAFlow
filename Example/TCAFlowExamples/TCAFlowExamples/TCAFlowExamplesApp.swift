@@ -354,7 +354,7 @@ struct NestedCoordinator {
     var routes: [Route<NestedScreen.State>]
 
     init() {
-      self.routes = [.root(.step1(.init()), embedInNavigationView: false)]
+      self.routes = [.root(.step1(.init()), embedInNavigationView: true)]
     }
   }
 
@@ -423,7 +423,6 @@ struct NestedCoordinatorView: View {
           NestedStep2View(store: store)
       }
     }
-    .navigationTitle("Nested")
   }
 }
 

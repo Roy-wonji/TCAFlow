@@ -115,8 +115,8 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
 
 // MARK: - _StackReplacement
 /// When a nested TCAFlowRouter with embedInNavigationView:true is inside a parent NavigationStack,
-/// it presents itself as a fullScreenCover (with no animation) → looks like a stack replacement.
-/// This avoids the SwiftUI limitation of NavigationStack-in-NavigationStack causing immediate pop.
+/// it renders its own NavigationStack directly and hides the parent navigation bar.
+/// Supports edge swipe-back gesture to dismiss back to the parent coordinator.
 
 @MainActor
 private struct _StackReplacement<Screen, ScreenAction, ScreenContent: View>: View {
@@ -124,32 +124,16 @@ private struct _StackReplacement<Screen, ScreenAction, ScreenContent: View>: Vie
     let scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
     let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
 
-    @State private var isPresented = false
-
     var body: some View {
-        Color.clear
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onAppear { isPresented = true }
-            #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
-            .fullScreenCover(isPresented: $isPresented) {
-                _NavStackHost(
-                    store: store,
-                    scopedScreenStore: scopedScreenStore,
-                    screenContent: screenContent
-                )
-                .environment(\._isInsideNavStack, false)
-            }
-            .transaction { $0.disablesAnimations = true }
-            #else
-            .sheet(isPresented: $isPresented) {
-                _NavStackHost(
-                    store: store,
-                    scopedScreenStore: scopedScreenStore,
-                    screenContent: screenContent
-                )
-                .environment(\._isInsideNavStack, false)
-            }
-            #endif
+        _NavStackHost(
+            store: store,
+            scopedScreenStore: scopedScreenStore,
+            screenContent: screenContent
+        )
+        .environment(\._isInsideNavStack, true)
+        #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+        .navigationBarHidden(true)
+        #endif
     }
 }
 
