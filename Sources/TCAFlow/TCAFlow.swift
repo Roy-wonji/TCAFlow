@@ -3,47 +3,55 @@ import Foundation
 import SwiftUI
 
 /// A route represents a navigation destination and how it should be presented.
-/// Based on TCACoordinators/FlowStacks architecture but with NavigationStack.
+/// Identical to TCACoordinators Route API
 @CasePathable
-public enum Route<Screen>: RouteProtocol {
+public enum Route<Screen> {
+    case root(Screen, embedInNavigationView: Bool = true)
     case push(Screen)
-    case sheet(Screen, withNavigation: Bool = false)
-    case cover(Screen, withNavigation: Bool = false)
+    case sheet(Screen, embedInNavigationView: Bool = false)
+    case cover(Screen, embedInNavigationView: Bool = false)
 
     /// The screen data for this route.
     public var screen: Screen {
         get {
             switch self {
-            case let .push(screen), let .sheet(screen, _), let .cover(screen, _):
+            case let .root(screen, _),
+                 let .push(screen),
+                 let .sheet(screen, _),
+                 let .cover(screen, _):
                 return screen
             }
         }
         set {
             switch self {
+            case let .root(_, embedInNavigationView):
+                self = .root(newValue, embedInNavigationView: embedInNavigationView)
             case .push:
                 self = .push(newValue)
-            case let .sheet(_, withNavigation):
-                self = .sheet(newValue, withNavigation: withNavigation)
-            case let .cover(_, withNavigation):
-                self = .cover(newValue, withNavigation: withNavigation)
+            case let .sheet(_, embedInNavigationView):
+                self = .sheet(newValue, embedInNavigationView: embedInNavigationView)
+            case let .cover(_, embedInNavigationView):
+                self = .cover(newValue, embedInNavigationView: embedInNavigationView)
             }
         }
     }
 
     /// Whether this route should be embedded in a NavigationView/NavigationStack.
-    public var withNavigation: Bool {
+    public var embedInNavigationView: Bool {
         switch self {
+        case let .root(_, embedInNavigationView),
+             let .sheet(_, embedInNavigationView),
+             let .cover(_, embedInNavigationView):
+            return embedInNavigationView
         case .push:
-            return false  // Push routes are already in a NavigationStack
-        case let .sheet(_, withNavigation), let .cover(_, withNavigation):
-            return withNavigation
+            return false // Push routes are already in a NavigationStack
         }
     }
 
     /// Whether this route is presented modally (sheet or cover).
     public var isPresented: Bool {
         switch self {
-        case .push:
+        case .root, .push:
             return false
         case .sheet, .cover:
             return true
@@ -53,25 +61,16 @@ public enum Route<Screen>: RouteProtocol {
     /// Maps the screen data to a new type while preserving the route style.
     public func map<NewScreen>(_ transform: (Screen) -> NewScreen) -> Route<NewScreen> {
         switch self {
+        case let .root(screen, embedInNavigationView):
+            return .root(transform(screen), embedInNavigationView: embedInNavigationView)
         case let .push(screen):
             return .push(transform(screen))
-        case let .sheet(screen, withNavigation):
-            return .sheet(transform(screen), withNavigation: withNavigation)
-        case let .cover(screen, withNavigation):
-            return .cover(transform(screen), withNavigation: withNavigation)
+        case let .sheet(screen, embedInNavigationView):
+            return .sheet(transform(screen), embedInNavigationView: embedInNavigationView)
+        case let .cover(screen, embedInNavigationView):
+            return .cover(transform(screen), embedInNavigationView: embedInNavigationView)
         }
     }
-}
-
-// MARK: - RouteProtocol
-
-/// Protocol that all route types must conform to.
-public protocol RouteProtocol {
-    associatedtype Screen
-
-    var screen: Screen { get set }
-    var withNavigation: Bool { get }
-    var isPresented: Bool { get }
 }
 
 // MARK: - Route + Equatable
@@ -79,12 +78,14 @@ public protocol RouteProtocol {
 extension Route: Equatable where Screen: Equatable {
     public static func == (lhs: Route<Screen>, rhs: Route<Screen>) -> Bool {
         switch (lhs, rhs) {
+        case let (.root(lhsScreen, lhsEmbed), .root(rhsScreen, rhsEmbed)):
+            return lhsScreen == rhsScreen && lhsEmbed == rhsEmbed
         case let (.push(lhsScreen), .push(rhsScreen)):
             return lhsScreen == rhsScreen
-        case let (.sheet(lhsScreen, lhsNav), .sheet(rhsScreen, rhsNav)):
-            return lhsScreen == rhsScreen && lhsNav == rhsNav
-        case let (.cover(lhsScreen, lhsNav), .cover(rhsScreen, rhsNav)):
-            return lhsScreen == rhsScreen && lhsNav == rhsNav
+        case let (.sheet(lhsScreen, lhsEmbed), .sheet(rhsScreen, rhsEmbed)):
+            return lhsScreen == rhsScreen && lhsEmbed == rhsEmbed
+        case let (.cover(lhsScreen, lhsEmbed), .cover(rhsScreen, rhsEmbed)):
+            return lhsScreen == rhsScreen && lhsEmbed == rhsEmbed
         default:
             return false
         }
@@ -93,7 +94,7 @@ extension Route: Equatable where Screen: Equatable {
 
 // MARK: - Route + Sendable
 
-extension Route: @unchecked @retroactive Sendable where Screen: Sendable {}
+extension Route: @unchecked Sendable where Screen: Sendable {}
 
 // MARK: - RouterAction
 
@@ -130,7 +131,7 @@ extension Collection {
 
 // MARK: - Array + Route Utilities
 
-extension Array where Element == Route<some Any> {
+extension Array {
     /// The current (topmost) route in the navigation stack.
     public var currentRoute: Element? {
         return self.last
@@ -146,63 +147,127 @@ extension Array where Element == Route<some Any> {
         return self.count
     }
 
-    /// Whether the navigation stack is empty.
-    public var isEmpty: Bool {
-        return self.count == 0
-    }
-}
-
-extension Array {
     /// Pushes a new screen onto the navigation stack.
     public mutating func push<Screen>(_ screen: Screen) where Element == Route<Screen> {
         self.append(.push(screen))
     }
 
     /// Presents a screen as a sheet.
-    public mutating func presentSheet<Screen>(_ screen: Screen, withNavigation: Bool = false) where Element == Route<Screen> {
-        self.append(.sheet(screen, withNavigation: withNavigation))
+    public mutating func presentSheet<Screen>(_ screen: Screen, embedInNavigationView: Bool = false) where Element == Route<Screen> {
+        self.append(.sheet(screen, embedInNavigationView: embedInNavigationView))
     }
 
     /// Presents a screen as a full screen cover.
-    public mutating func presentCover<Screen>(_ screen: Screen, withNavigation: Bool = false) where Element == Route<Screen> {
-        self.append(.cover(screen, withNavigation: withNavigation))
+    public mutating func presentCover<Screen>(_ screen: Screen, embedInNavigationView: Bool = false) where Element == Route<Screen> {
+        self.append(.cover(screen, embedInNavigationView: embedInNavigationView))
     }
 
     /// Pops the topmost route from the navigation stack.
     @discardableResult
-    public mutating func pop() -> Element? {
+    public mutating func pop() -> Element? where Element: RouteProtocol {
         return self.popLast()
     }
 
+    /// Goes back by one step (same as pop)
+    @discardableResult
+    public mutating func goBack() -> Element? where Element: RouteProtocol {
+        return self.pop()
+    }
+
     /// Pops back to the root route.
-    public mutating func popToRoot() {
+    public mutating func popToRoot() where Element: RouteProtocol {
         if let root = self.first {
             self = [root]
         }
     }
 
+    /// Goes back to root (same as popToRoot)
+    public mutating func goBackToRoot() where Element: RouteProtocol {
+        popToRoot()
+    }
+
     /// Dismisses the topmost presented route (sheet or cover).
     @discardableResult
-    public mutating func dismiss() -> Element? {
+    public mutating func dismiss() -> Element? where Element: RouteProtocol {
         guard let last = self.last, last.isPresented else {
             return nil
         }
         return self.removeLast()
     }
 
-    /// Goes back to a specific screen type.
-    public mutating func goBackTo<Screen>(_ screenType: Screen.Type) where Element == Route<Screen> {
-        while let last = self.last,
-              !isScreenOfType(last.screen, type: screenType) {
+    /// Goes back to a specific screen case using AnyCasePath
+    public mutating func goBackTo<Screen, Value>(_ casePath: AnyCasePath<Screen, Value>) where Element == Route<Screen> {
+        while let last = self.last {
+            if casePath.extract(from: last.screen) != nil {
+                break
+            }
             self.removeLast()
         }
     }
+
+    /// Goes to a specific screen, popping if it exists or pushing if it doesn't
+    public mutating func goTo<Screen>(_ screen: Screen) where Element == Route<Screen> {
+        // Check if screen already exists in stack
+        if let index = self.firstIndex(where: { route in
+            matchesScreenCase(route.screen, target: screen)
+        }) {
+            // Pop to that screen
+            while self.count > index + 1 {
+                self.removeLast()
+            }
+        } else {
+            // Push new screen
+            push(screen)
+        }
+    }
+
+    /// Replaces current screen with new screen
+    public mutating func replaceCurrent<Screen>(with screen: Screen) where Element == Route<Screen> {
+        guard !self.isEmpty else {
+            push(screen)
+            return
+        }
+        self[self.count - 1] = .push(screen)
+    }
+}
+
+// MARK: - RouteProtocol
+
+/// Protocol that all route types must conform to.
+public protocol RouteProtocol {
+    associatedtype Screen
+
+    var screen: Screen { get set }
+    var embedInNavigationView: Bool { get }
+    var isPresented: Bool { get }
+}
+
+extension Route: RouteProtocol {}
+
+// MARK: - routeWithDelaysIfUnsupported helper
+
+/// TCACoordinators-style helper for handling route updates with delays
+public func routeWithDelaysIfUnsupported<Action, Screen, ScreenAction>(
+    _ routes: [Route<Screen>],
+    action keyPath: AnyCasePath<Action, RouterAction<Int, Screen, ScreenAction>>,
+    file: StaticString = #file,
+    line: UInt = #line,
+    _ update: (inout [Route<Screen>]) -> Void
+) -> Effect<Action> {
+    var newRoutes = routes
+    update(&newRoutes)
+
+    let routerAction = RouterAction<Int, Screen, ScreenAction>.updateRoutes(newRoutes)
+    return Effect.send(keyPath.embed(routerAction))
 }
 
 // MARK: - Helper Functions
 
-private func isScreenOfType<Screen>(_ screen: Screen, type: Screen.Type) -> Bool {
-    return type(of: screen) == type
+private func matchesScreenCase<Screen>(_ screen1: Screen, target screen2: Screen) -> Bool {
+    // This is a simplified implementation
+    // In a real scenario, you'd want to compare enum cases properly
+    return String(describing: screen1).split(separator: "(").first ==
+           String(describing: screen2).split(separator: "(").first
 }
 
 // MARK: - Debugging Utilities

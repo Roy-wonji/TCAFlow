@@ -3,15 +3,15 @@ import SwiftUI
 import Perception
 
 /// A SwiftUI view that renders a navigation flow based on an array of routes.
-/// Usage: TCAFlowRouter(store) { screens in switch screens.case { ... } }
+/// Usage: TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screens in ... }
 @MainActor
 public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
     private let store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>
-    private let screenView: (CaseScope<Screen>) -> ScreenContent
+    private let screenView: (Screen.CaseScope) -> ScreenContent
 
     public init(
         _ store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>,
-        @ViewBuilder screenView: @escaping (CaseScope<Screen>) -> ScreenContent
+        @ViewBuilder screenView: @escaping (Screen.CaseScope) -> ScreenContent
     ) {
         self.store = store
         self.screenView = screenView
@@ -22,16 +22,23 @@ public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
             let routes = store.state
 
             if let rootRoute = routes.first {
-                NavigationStack {
-                    makeScreen(for: rootRoute, at: 0)
-                        .navigationDestination(for: Int.self) { index in
-                            if index > 0 && index < routes.count {
-                                makeScreen(for: routes[index], at: index)
+                if rootRoute.embedInNavigationView {
+                    NavigationStack {
+                        makeScreen(for: rootRoute, at: 0)
+                            .navigationDestination(for: Int.self) { index in
+                                if index > 0 && index < routes.count {
+                                    makeScreen(for: routes[index], at: index)
+                                }
                             }
+                    }
+                    .overlay {
+                        presentedScreens(routes: routes)
+                    }
+                } else {
+                    makeScreen(for: rootRoute, at: 0)
+                        .overlay {
+                            presentedScreens(routes: routes)
                         }
-                }
-                .overlay {
-                    presentedScreens(routes: routes)
                 }
             } else {
                 Text("No Routes")
@@ -42,10 +49,11 @@ public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
 
     @ViewBuilder
     private func makeScreen(for route: Route<Screen.State>, at index: Int) -> some View {
-        let caseScope = CaseScope<Screen>(
-            route: route,
-            index: index,
-            store: store
+        let caseScope = Screen.scope(
+            store.scope(
+                state: { _ in route.screen },
+                action: { RouterAction.routeAction(index, $0) }
+            )
         )
         screenView(caseScope)
     }
@@ -72,7 +80,7 @@ public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
     private func presentedContent(for route: Route<Screen.State>, at index: Int) -> some View {
         let content = makeScreen(for: route, at: index)
 
-        if route.withNavigation {
+        if route.embedInNavigationView {
             NavigationStack {
                 content
                     .toolbar {
@@ -86,37 +94,6 @@ public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
         } else {
             content
         }
-    }
-}
-
-// MARK: - CaseScope (TCACoordinators style)
-
-/// Provides TCACoordinators-style case access pattern
-/// Usage: switch screens.case { case .login(let store): ... }
-public struct CaseScope<Screen: CaseReducer> {
-    private let route: Route<Screen.State>
-    private let index: Int
-    private let store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>
-
-    internal init(
-        route: Route<Screen.State>,
-        index: Int,
-        store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>
-    ) {
-        self.route = route
-        self.index = index
-        self.store = store
-    }
-
-    /// The screen case for pattern matching
-    /// Usage: switch screens.case { case .login(let store): ... }
-    public var `case`: Screen {
-        return Screen.scope(
-            store.scope(
-                state: { _ in self.route.screen },
-                action: { RouterAction.routeAction(self.index, $0) }
-            )
-        )
     }
 }
 

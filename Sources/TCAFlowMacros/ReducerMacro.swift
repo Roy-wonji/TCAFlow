@@ -4,7 +4,7 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-/// @Reducer macro similar to TCACoordinators but without hashable requirement
+/// @Reducer macro that matches TCACoordinators behavior for Screen enums
 public struct ReducerMacro: MemberMacro, ExtensionMacro {
     public static func expansion(
         of node: AttributeSyntax,
@@ -19,13 +19,20 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
         let enumName = enumDecl.name.text
         let accessModifier = Self.accessModifier(for: declaration)
 
+        // Parse macro arguments
+        let stateOptions = try Self.parseStateOptions(from: node)
+
         // Extract cases from the enum
-        var cases: [(name: String, associatedType: String?)] = []
+        var cases: [(name: String, associatedType: String)] = []
         for member in enumDecl.memberBlock.members {
             if let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) {
                 for element in caseDecl.elements {
                     let caseName = element.name.text
-                    let associatedType = element.parameterClause?.parameters.first?.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard let parameterClause = element.parameterClause,
+                          let firstParam = parameterClause.parameters.first else {
+                        throw MacroExpansionErrorMessage("All cases in @Reducer enum must have associated types")
+                    }
+                    let associatedType = firstParam.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
                     cases.append((name: caseName, associatedType: associatedType))
                 }
             }
@@ -38,82 +45,102 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
         var members: [DeclSyntax] = []
 
         // Generate State enum
-        let stateCases = cases.compactMap { caseInfo in
-            guard let associatedType = caseInfo.associatedType else { return nil }
-            return "case \(caseInfo.name)(\(associatedType).State)"
+        let stateCases = cases.map { caseInfo in
+            "case \(caseInfo.name)(\(caseInfo.associatedType).State)"
         }.joined(separator: "\n      ")
 
-        if !stateCases.isEmpty {
-            let stateEnum: DeclSyntax = """
-            @CasePathable
-            @dynamicMemberLookup
-            @ComposableArchitecture.ObservableState
-            \(raw: accessModifier)enum State: ComposableArchitecture.CaseReducerState {
-              \(raw: accessModifier)typealias StateReducer = \(raw: enumName)
-              \(raw: stateCases)
-            }
-            """
-            members.append(stateEnum)
-        } else {
-            // No associated types, create empty state conforming to CaseReducerState
-            let emptyStateEnum: DeclSyntax = """
-            @CasePathable
-            @dynamicMemberLookup
-            @ComposableArchitecture.ObservableState
-            \(raw: accessModifier)enum State: ComposableArchitecture.CaseReducerState {
-              \(raw: accessModifier)typealias StateReducer = \(raw: enumName)
-            }
-            """
-            members.append(emptyStateEnum)
+        // Determine state conformances based on options
+        var stateConformances = ["ComposableArchitecture.CaseReducerState"]
+        if stateOptions.contains("equatable") {
+            stateConformances.append("Swift.Equatable")
         }
+        let stateConformanceList = stateConformances.joined(separator: ", ")
+
+        let stateEnum: DeclSyntax = """
+        @CasePaths.CasePathable
+        @dynamicMemberLookup
+        @ComposableArchitecture.ObservableState
+        \(raw: accessModifier)enum State: \(raw: stateConformanceList) {
+          \(raw: accessModifier)typealias StateReducer = \(raw: enumName)
+          \(raw: stateCases)
+        }
+        """
+        members.append(stateEnum)
 
         // Generate Action enum
-        let actionCases = cases.compactMap { caseInfo in
-            guard let associatedType = caseInfo.associatedType else { return nil }
-            return "case \(caseInfo.name)(\(associatedType).Action)"
+        let actionCases = cases.map { caseInfo in
+            "case \(caseInfo.name)(\(caseInfo.associatedType).Action)"
         }.joined(separator: "\n      ")
 
-        if !actionCases.isEmpty {
-            let actionEnum: DeclSyntax = """
-            @CasePathable
-            \(raw: accessModifier)enum Action {
-              \(raw: actionCases)
-            }
-            """
-            members.append(actionEnum)
+        let actionEnum: DeclSyntax = """
+        @CasePaths.CasePathable
+        \(raw: accessModifier)enum Action {
+          \(raw: actionCases)
         }
+        """
+        members.append(actionEnum)
 
         // Generate body with case reducers
-        let caseReducers = cases.compactMap { caseInfo in
-            guard let associatedType = caseInfo.associatedType else { return nil }
-            return """
+        let caseReducers = cases.map { caseInfo in
+            """
             .ifCaseLet(\\Self.State.\(caseInfo.name), action: \\Self.Action.\(caseInfo.name)) {
-              \(associatedType)()
+              \(caseInfo.associatedType)()
             }
             """
         }.joined(separator: "\n        ")
 
-        if !caseReducers.isEmpty {
-            let bodyComputed: DeclSyntax = """
-            \(raw: accessModifier)static var body: some ComposableArchitecture.Reducer<Self.State, Self.Action> {
-              ComposableArchitecture.EmptyReducer<Self.State, Self.Action>()
-              \(raw: caseReducers)
-            }
-            """
-            members.append(bodyComputed)
-
-            // Generate scope method for TCACoordinators compatibility
-            let scopeMethod: DeclSyntax = """
-            @preconcurrency
-            @MainActor
-            \(raw: accessModifier)static func scope(_ store: ComposableArchitecture.Store<Self.State, Self.Action>) -> Self {
-              switch store.state {
-              \(raw: generateScopeCases(cases: cases))
-              }
-            }
-            """
-            members.append(scopeMethod)
+        let bodyComputed: DeclSyntax = """
+        \(raw: accessModifier)static var body: some ComposableArchitecture.Reducer<Self.State, Self.Action> {
+          ComposableArchitecture.EmptyReducer<Self.State, Self.Action>()
+          \(raw: caseReducers)
         }
+        """
+        members.append(bodyComputed)
+
+        // Generate CaseScope for TCACoordinators-style pattern matching
+        let caseScopeMembers = cases.map { caseInfo in
+            "case \(caseInfo.name)(ComposableArchitecture.StoreOf<\(caseInfo.associatedType)>)"
+        }.joined(separator: "\n      ")
+
+        let caseScopeProperties = cases.map { caseInfo in
+            """
+            var \(caseInfo.name): CasePaths.AnyCasePath<CaseScope, ComposableArchitecture.StoreOf<\(caseInfo.associatedType)>> {
+              CasePaths.AnyCasePath(
+                embed: { @Sendable in CaseScope.\(caseInfo.name)($0) },
+                extract: { guard case let .\(caseInfo.name)(store) = $0 else { return nil }; return store }
+              )
+            }
+            """
+        }.joined(separator: "\n\n        ")
+
+        let storeScopes = cases.map { caseInfo in
+            """
+            case .\(caseInfo.name):
+              return .\(caseInfo.name)(store.scope(state: \\.\(caseInfo.name), action: \\.\(caseInfo.name)))
+            """
+        }.joined(separator: "\n          ")
+
+        let caseScopeEnum: DeclSyntax = """
+        @dynamicMemberLookup
+        \(raw: accessModifier)enum CaseScope: ComposableArchitecture._CaseScopeProtocol, CasePaths.CasePathable {
+          \(raw: caseScopeMembers)
+
+          \(raw: accessModifier)struct AllCasePaths {
+            \(raw: caseScopeProperties)
+          }
+
+          \(raw: accessModifier)static var allCasePaths: AllCasePaths { AllCasePaths() }
+        }
+
+        @preconcurrency
+        @MainActor
+        \(raw: accessModifier)static func scope(_ store: ComposableArchitecture.Store<Self.State, Self.Action>) -> CaseScope {
+          switch store.state {
+          \(raw: storeScopes)
+          }
+        }
+        """
+        members.append(caseScopeEnum)
 
         return members
     }
@@ -132,13 +159,32 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
 
         let enumName = enumDecl.name.text
 
-        // Generate CaseReducer, Reducer, and CaseReducerState conformance
-        let reducerConformanceExtension = try ExtensionDeclSyntax("extension \(raw: enumName): ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer, ComposableArchitecture.CaseReducerState") {
-            // Add StateReducer typealias for CaseReducerState conformance
-            "public typealias StateReducer = \(raw: enumName)"
+        // Generate CaseReducer and Reducer conformances
+        let reducerConformanceExtension = try ExtensionDeclSyntax("extension \(raw: enumName): ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer") {
+            // Empty body - conformance is provided by generated members
         }
 
         return [reducerConformanceExtension]
+    }
+
+    // Parse macro arguments like @Reducer(state: .equatable)
+    private static func parseStateOptions(from node: AttributeSyntax) throws -> Set<String> {
+        var options: Set<String> = []
+
+        guard case let .argumentList(arguments) = node.arguments else {
+            return options
+        }
+
+        for argument in arguments {
+            if let label = argument.label?.text, label == "state" {
+                let expression = argument.expression.description.trimmingCharacters(in: .whitespacesAndNewlines)
+                if expression == ".equatable" {
+                    options.insert("equatable")
+                }
+            }
+        }
+
+        return options
     }
 
     private static func accessModifier(for declaration: some DeclGroupSyntax) -> String {
@@ -158,18 +204,6 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
         }
 
         return ""
-    }
-
-    private static func generateScopeCases(cases: [(name: String, associatedType: String?)]) -> String {
-        let scopeCases = cases.compactMap { caseInfo in
-            guard let associatedType = caseInfo.associatedType else { return nil }
-            return """
-            case .\(caseInfo.name):
-              return .\(caseInfo.name)(store.scope(state: \\.\(caseInfo.name), action: \\.\(caseInfo.name))!)
-            """
-        }.joined(separator: "\n        ")
-
-        return scopeCases
     }
 }
 
