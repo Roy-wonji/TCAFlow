@@ -551,5 +551,7 @@ struct TCAFlowPlugin: CompilerPlugin {
         ForEachRouteMacro.self,
         FlowScreenMacro.self,
         FlowScreenCaseMacro.self,
+        ReducerMacro.self,
+        ScreenReducerMacro.self,
     ]
 }

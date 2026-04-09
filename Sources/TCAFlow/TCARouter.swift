@@ -1,128 +1,240 @@
-@_spi(Internals) import ComposableArchitecture
+import ComposableArchitecture
 import SwiftUI
+import Perception
 
-public struct TCARouter<Screen: CaseReducer, ScreenView: View>: View where Screen.State: Equatable {
-  private let store: Store<RouteStack<Screen.State>, FlowAction<Screen>>
-  private let screenView: (Store<Screen.State, Screen.Action>) -> ScreenView
+/// A SwiftUI view that renders a navigation flow based on an array of routes.
+/// Based on TCACoordinators TCARouter but using NavigationStack directly.
+@MainActor
+public struct TCARouter<Screen, ScreenAction, ID: Hashable, ScreenContent: View>: View {
+    private let store: Store<[Route<Screen>], RouterAction<ID, Screen, ScreenAction>>
+    private let screenView: (Store<Screen, ScreenAction>) -> ScreenContent
 
-  public init(
-    _ store: Store<RouteStack<Screen.State>, FlowAction<Screen>>,
-    @ViewBuilder screenView: @escaping (Store<Screen.State, Screen.Action>) -> ScreenView
-  ) {
-    self.store = store
-    self.screenView = screenView
-  }
+    public init(
+        _ store: Store<[Route<Screen>], RouterAction<ID, Screen, ScreenAction>>,
+        @ViewBuilder screenView: @escaping (Store<Screen, ScreenAction>) -> ScreenContent
+    ) {
+        self.store = store
+        self.screenView = screenView
+    }
 
-  public var body: some View {
-    WithPerceptionTracking {
-      let routes = self.store.state.routes
-      let routeIDs = routes.map(\.id)
-      let topRouteID = routeIDs.last
-      let routeCount = routeIDs.count
-      let backPath = Array(routeIDs.dropFirst().dropLast())
-      let embedInNavigationView = routes.first?.embedInNavigationView ?? true
+    public var body: some View {
+        WithPerceptionTracking {
+            let routes = store.withState { $0 }
 
-      if embedInNavigationView {
-        SwiftUI.NavigationStack {
-          self.navigationContent(
-            routeID: topRouteID,
-            routeCount: routeCount,
-            backPath: backPath
-          )
-        }
-      } else {
-        self.routeContent(routeID: topRouteID)
-          .animation(.easeInOut(duration: 0.1), value: routeCount)
-          .transaction { transaction in
-            if routeCount > 1 {
-              transaction.animation = .easeInOut(duration: 0.1)
+            if let rootRoute = routes.first {
+                NavigationStack {
+                    makeScreen(for: rootRoute, at: 0)
+                        .navigationDestination(for: RouteDestination<Screen>.self) { destination in
+                            makeScreen(for: destination.route, at: destination.index)
+                        }
+                }
+                .overlay {
+                    presentedScreens(routes: routes)
+                }
+            } else {
+                Text("No Routes")
+                    .foregroundStyle(.secondary)
             }
-          }
-      }
-    }
-  }
-
-  private func navigationContent(routeID: UUID?, routeCount: Int, backPath: [UUID]) -> some View {
-    WithPerceptionTracking {
-      self.routeContent(routeID: routeID)
-    }
-    .toolbar {
-      if routeCount > 1 {
-        ToolbarItem(placement: .automatic) {
-          Button("Back") {
-            self.store.send(.pathChanged(backPath))
-          }
         }
-      }
     }
-    .animation(.easeInOut(duration: 0.1), value: routeCount)
-    .transaction { transaction in
-      if routeCount > 1 {
-        transaction.animation = .easeInOut(duration: 0.1)
-      }
-    }
-  }
 
-  @ViewBuilder
-  private func routeContent(routeID: UUID?) -> some View {
-    if let routeID {
-      self.makeScreen(routeID: routeID)
-        .id(routeID)
-    } else {
-      Text("No Routes")
-        .foregroundStyle(.secondary)
-    }
-  }
-
-  @ViewBuilder
-  private func makeScreen(routeID: UUID) -> some View {
-    WithPerceptionTracking {
-      if let route = self.store.state.routes[id: routeID] {
-        let childStore = self.store.scope(
-          state: { _ in route.state },
-          action: { FlowAction<Screen>.routeAction(id: routeID, action: $0) }
+    @ViewBuilder
+    private func makeScreen(for route: Route<Screen>, at index: Int) -> some View {
+        let childStore = store.scope(
+            state: { _ in route.screen },
+            action: { RouterAction.routeAction(self.routeID(for: index), $0) }
         )
-        self.screenView(childStore)
-      } else {
-        EmptyView()
-      }
+        screenView(childStore)
     }
-  }
+
+    @ViewBuilder
+    private func presentedScreens(routes: [Route<Screen>]) -> some View {
+        ForEach(Array(routes.enumerated()), id: \.offset) { index, route in
+            if route.isPresented {
+                Color.clear
+                    .sheet(isPresented: .constant(route.isSheet)) {
+                        presentedContent(for: route, at: index)
+                    }
+                    .fullScreenCover(isPresented: .constant(route.isCover)) {
+                        presentedContent(for: route, at: index)
+                    }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func presentedContent(for route: Route<Screen>, at index: Int) -> some View {
+        let content = makeScreen(for: route, at: index)
+
+        if route.withNavigation {
+            NavigationStack {
+                content
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Done") {
+                                store.send(.updateRoutes(Array(store.state.dropLast())))
+                            }
+                        }
+                    }
+            }
+        } else {
+            content
+        }
+    }
+
+    // Helper to determine route ID based on index
+    private func routeID(for index: Int) -> ID {
+        if ID.self == Int.self {
+            return index as! ID
+        } else {
+            // For non-Int IDs, we need additional logic
+            // This is a simplified implementation
+            fatalError("Non-Int ID types not yet supported in this implementation")
+        }
+    }
 }
 
-extension View {
-  public func slideTransition() -> some View {
-    self.transition(
-      .asymmetric(
-        insertion: .move(edge: .trailing),
-        removal: .move(edge: .leading)
-      )
-    )
-  }
+// MARK: - RouteDestination
 
-  public func fadeTransition() -> some View {
-    self.transition(.opacity)
-  }
+/// A wrapper type for NavigationStack destinations
+public struct RouteDestination<Screen>: Hashable where Screen: Hashable {
+    public let route: Route<Screen>
+    public let index: Int
 
-  public func scaleTransition() -> some View {
-    self.transition(.scale.combined(with: .opacity))
-  }
+    public init(route: Route<Screen>, index: Int) {
+        self.route = route
+        self.index = index
+    }
 
-  public func leadingTransition() -> some View {
-    self.transition(
-      .asymmetric(
-        insertion: .move(edge: .leading).combined(with: .opacity),
-        removal: .move(edge: .trailing).combined(with: .opacity)
-      )
-    )
-  }
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(index)
+    }
 
-  public func bottomTransition() -> some View {
-    self.transition(
-      .asymmetric(
-        insertion: .move(edge: .bottom).combined(with: .opacity),
-        removal: .move(edge: .top).combined(with: .opacity)
-      )
-    )
-  }
+    public static func == (lhs: RouteDestination<Screen>, rhs: RouteDestination<Screen>) -> Bool {
+        return lhs.index == rhs.index
+    }
+}
+
+// MARK: - Route Helpers
+
+extension Route {
+    /// Whether this route is a sheet presentation.
+    public var isSheet: Bool {
+        if case .sheet = self { return true }
+        return false
+    }
+
+    /// Whether this route is a cover presentation.
+    public var isCover: Bool {
+        if case .cover = self { return true }
+        return false
+    }
+}
+
+// MARK: - Indexed TCARouter
+
+/// Convenience initializer for indexed routing (using Int as ID)
+public struct IndexedTCARouter<Screen, ScreenAction, ScreenContent: View>: View {
+    private let tcaRouter: TCARouter<Screen, ScreenAction, Int, ScreenContent>
+
+    public init(
+        _ store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
+        @ViewBuilder screenView: @escaping (Store<Screen, ScreenAction>) -> ScreenContent
+    ) {
+        self.tcaRouter = TCARouter(store, screenView: screenView)
+    }
+
+    public var body: some View {
+        tcaRouter
+    }
+}
+
+// MARK: - Type Aliases
+
+/// Convenience type alias for indexed router actions.
+public typealias IndexedRouterAction<Screen, ScreenAction> = RouterAction<Int, Screen, ScreenAction>
+
+/// Convenience type alias for indexed router actions with reducer.
+public typealias IndexedRouterActionOf<R: Reducer> = RouterAction<Int, R.State, R.Action>
+
+/// Convenience type alias for identified router actions.
+public typealias IdentifiedRouterAction<Screen: Identifiable, ScreenAction> = RouterAction<Screen.ID, Screen, ScreenAction>
+
+/// Convenience type alias for identified router actions with reducer.
+public typealias IdentifiedRouterActionOf<R: Reducer> = RouterAction<R.State.ID, R.State, R.Action> where R.State: Identifiable
+
+// MARK: - Observation Support
+
+extension TCARouter {
+    /// Alternative implementation for when Screen is not ObservableState
+    public init<LocalState, LocalAction>(
+        _ store: Store<[Route<Screen>], RouterAction<ID, Screen, ScreenAction>>,
+        @ViewBuilder screenView: @escaping (Store<Screen, ScreenAction>) -> ScreenContent
+    ) where Screen == LocalState, ScreenAction == LocalAction {
+        self.store = store
+        self.screenView = screenView
+    }
+}
+
+// MARK: - Router Action Extensions
+
+extension RouterAction.AllCasePaths {
+    /// Subscript for accessing route actions by ID
+    public subscript<ID: Hashable, Screen, ScreenAction>(
+        id: ID
+    ) -> AnyCasePath<RouterAction<ID, Screen, ScreenAction>, ScreenAction> {
+        AnyCasePath(
+            embed: { RouterAction.routeAction(id, $0) },
+            extract: {
+                guard case let .routeAction(routeId, action) = $0, routeId == id else { return nil }
+                return action
+            }
+        )
+    }
+}
+
+// MARK: - Convenience Functions
+
+extension Store where State == [Route<some Any>] {
+    /// Pushes a new screen onto the navigation stack
+    public func push<Screen>(_ screen: Screen) where State == [Route<Screen>] {
+        var routes = self.state
+        routes.push(screen)
+        self.send(.updateRoutes(routes) as! Action)
+    }
+
+    /// Presents a screen as a sheet
+    public func presentSheet<Screen>(_ screen: Screen, withNavigation: Bool = false) where State == [Route<Screen>] {
+        var routes = self.state
+        routes.presentSheet(screen, withNavigation: withNavigation)
+        self.send(.updateRoutes(routes) as! Action)
+    }
+
+    /// Presents a screen as a full screen cover
+    public func presentCover<Screen>(_ screen: Screen, withNavigation: Bool = false) where State == [Route<Screen>] {
+        var routes = self.state
+        routes.presentCover(screen, withNavigation: withNavigation)
+        self.send(.updateRoutes(routes) as! Action)
+    }
+
+    /// Pops the topmost route
+    public func pop() {
+        var routes = self.state
+        routes.pop()
+        self.send(.updateRoutes(routes) as! Action)
+    }
+
+    /// Pops to root
+    public func popToRoot() {
+        var routes = self.state
+        routes.popToRoot()
+        self.send(.updateRoutes(routes) as! Action)
+    }
+
+    /// Dismisses the topmost presented route
+    public func dismiss() {
+        var routes = self.state
+        routes.dismiss()
+        self.send(.updateRoutes(routes) as! Action)
+    }
 }

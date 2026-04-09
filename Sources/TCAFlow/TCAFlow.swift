@@ -1,421 +1,241 @@
 import ComposableArchitecture
 import Foundation
-import IdentifiedCollections
+import SwiftUI
 
-@ObservableState
-public struct Route<State: Equatable>: Identifiable, Equatable, Hashable {
-    public let id: UUID
-    public var state: State
-    public var embedInNavigationView: Bool
-
-    public init(id: UUID = UUID(), _ state: State, embedInNavigationView: Bool = true) {
-        self.id = id
-        self.state = state
-        self.embedInNavigationView = embedInNavigationView
-    }
-
-    public static func root(_ state: State, embedInNavigationView: Bool = true) -> Self {
-        Self(state, embedInNavigationView: embedInNavigationView)
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(self.id)
-    }
-
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
-            && lhs.state == rhs.state
-            && lhs.embedInNavigationView == rhs.embedInNavigationView
-    }
-}
-
-@ObservableState
-public struct RouteStack<State: Equatable>: Equatable {
-    public var routes: IdentifiedArrayOf<Route<State>>
-
-    public init(_ routes: IdentifiedArrayOf<Route<State>> = []) {
-        self.routes = routes
-    }
-
-    public init(_ routes: [Route<State>]) {
-        self.routes = IdentifiedArray(uniqueElements: routes)
-    }
-}
-
-extension RouteStack: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: Route<State>...) {
-        self.init(elements)
-    }
-}
-
-extension RouteStack {
-    public var currentRoute: Route<State>? {
-        self.routes.currentRoute
-    }
-
-    public var rootRoute: Route<State>? {
-        self.routes.rootRoute
-    }
-
-    public var depth: Int {
-        self.routes.depth
-    }
-
-    public var count: Int {
-        self.routes.count
-    }
-
-    public var isEmpty: Bool {
-        self.routes.isEmpty
-    }
-
-    public mutating func push(_ state: State) {
-        self.routes.push(state)
-    }
-
-    @discardableResult
-    public mutating func pop() -> Route<State>? {
-        self.routes.pop()
-    }
-
-    public mutating func popToRoot() {
-        self.routes.popToRoot()
-    }
-
-    public mutating func replace(with state: State) {
-        self.routes.replace(with: state)
-    }
-
-    public mutating func goTo(_ targetScreen: State) {
-        self.routes.goTo(targetScreen)
-    }
-
-    public mutating func goBackTo(_ targetScreen: State) {
-        self.routes.goBackTo(targetScreen)
-    }
-}
-
+/// A route represents a navigation destination and how it should be presented.
+/// Based on TCACoordinators/FlowStacks architecture but with NavigationStack.
 @CasePathable
-public enum FlowAction<Screen: CaseReducer> {
-    case routeAction(id: UUID, action: Screen.Action)
-    case pathChanged([UUID])
+public enum Route<Screen>: RouteProtocol {
+    case push(Screen)
+    case sheet(Screen, withNavigation: Bool = false)
+    case cover(Screen, withNavigation: Bool = false)
 
-    // MARK: - 하위 호환성을 위한 computed property
+    /// The screen data for this route.
+    public var screen: Screen {
+        get {
+            switch self {
+            case let .push(screen), let .sheet(screen, _), let .cover(screen, _):
+                return screen
+            }
+        }
+        set {
+            switch self {
+            case .push:
+                self = .push(newValue)
+            case let .sheet(_, withNavigation):
+                self = .sheet(newValue, withNavigation: withNavigation)
+            case let .cover(_, withNavigation):
+                self = .cover(newValue, withNavigation: withNavigation)
+            }
+        }
+    }
 
-    /// 하위 호환성을 위한 기존 element property
-    public var element: (id: UUID, action: Screen.Action)? {
+    /// Whether this route should be embedded in a NavigationView/NavigationStack.
+    public var withNavigation: Bool {
+        switch self {
+        case .push:
+            return false  // Push routes are already in a NavigationStack
+        case let .sheet(_, withNavigation), let .cover(_, withNavigation):
+            return withNavigation
+        }
+    }
+
+    /// Whether this route is presented modally (sheet or cover).
+    public var isPresented: Bool {
+        switch self {
+        case .push:
+            return false
+        case .sheet, .cover:
+            return true
+        }
+    }
+
+    /// Maps the screen data to a new type while preserving the route style.
+    public func map<NewScreen>(_ transform: (Screen) -> NewScreen) -> Route<NewScreen> {
+        switch self {
+        case let .push(screen):
+            return .push(transform(screen))
+        case let .sheet(screen, withNavigation):
+            return .sheet(transform(screen), withNavigation: withNavigation)
+        case let .cover(screen, withNavigation):
+            return .cover(transform(screen), withNavigation: withNavigation)
+        }
+    }
+}
+
+// MARK: - RouteProtocol
+
+/// Protocol that all route types must conform to.
+public protocol RouteProtocol {
+    associatedtype Screen
+
+    var screen: Screen { get set }
+    var withNavigation: Bool { get }
+    var isPresented: Bool { get }
+}
+
+// MARK: - Route + Equatable
+
+extension Route: Equatable where Screen: Equatable {
+    public static func == (lhs: Route<Screen>, rhs: Route<Screen>) -> Bool {
+        switch (lhs, rhs) {
+        case let (.push(lhsScreen), .push(rhsScreen)):
+            return lhsScreen == rhsScreen
+        case let (.sheet(lhsScreen, lhsNav), .sheet(rhsScreen, rhsNav)):
+            return lhsScreen == rhsScreen && lhsNav == rhsNav
+        case let (.cover(lhsScreen, lhsNav), .cover(rhsScreen, rhsNav)):
+            return lhsScreen == rhsScreen && lhsNav == rhsNav
+        default:
+            return false
+        }
+    }
+}
+
+// MARK: - Route + Sendable
+
+extension Route: @unchecked @retroactive Sendable where Screen: Sendable {}
+
+// MARK: - RouterAction
+
+/// Action type for handling route updates and screen actions.
+/// Based on TCACoordinators RouterAction structure.
+@CasePathable
+public enum RouterAction<ID: Hashable, Screen, ScreenAction> {
+    case updateRoutes([Route<Screen>])
+    case routeAction(ID, ScreenAction)
+}
+
+// MARK: - RouterAction Extensions
+
+extension RouterAction {
+    public var updateRoutesValue: [Route<Screen>]? {
+        guard case let .updateRoutes(routes) = self else { return nil }
+        return routes
+    }
+
+    public var routeActionValue: (ID, ScreenAction)? {
         guard case let .routeAction(id, action) = self else { return nil }
         return (id, action)
     }
+}
 
-    // MARK: - 개선된 패턴 매칭을 위한 편의 메서드
+// MARK: - Collection + Safe Subscript
 
-    /// 특정 스크린 액션과 매칭하는지 확인
-    public func isScreenAction<T>(_ action: T) -> Bool where T: Equatable {
-        guard case let .routeAction(_, screenAction) = self,
-              let typedAction = screenAction as? T else { return false }
-        return typedAction == action
-    }
-
-    /// 스크린 액션 타입과 매칭하는지 확인
-    public func isScreenActionType<T>(_: T.Type) -> Bool {
-        guard case let .routeAction(_, screenAction) = self else { return false }
-        return screenAction is T
-    }
-
-    /// 특정 ID의 스크린 액션과 매칭
-    public func matchesRoute(id targetID: UUID, action targetAction: Screen.Action) -> Bool where Screen.Action: Equatable {
-        guard case let .routeAction(id, action) = self else { return false }
-        return id == targetID && action == targetAction
-    }
-
-    /// 스크린 액션만 추출 (ID 무시)
-    public var screenAction: Screen.Action? {
-        guard case let .routeAction(_, action) = self else { return nil }
-        return action
-    }
-
-    /// 스크린 ID만 추출
-    public var routeID: UUID? {
-        guard case let .routeAction(id, _) = self else { return nil }
-        return id
+extension Collection {
+    /// Safe subscript that returns nil if index is out of bounds.
+    public subscript(safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 }
 
-// MARK: - 패턴 매칭을 위한 편의 확장
+// MARK: - Array + Route Utilities
 
-extension FlowAction {
-    /// if case 문을 간단하게 만들어주는 정적 메서드들
-
-    /// 특정 액션 타입으로 케스팅이 가능한지 확인
-    public static func ~=<T>(pattern: T, value: FlowAction) -> Bool where T: Equatable {
-        return value.isScreenAction(pattern)
-    }
-}
-
-// MARK: - 매크로에서 생성된 Action과의 편의 매칭
-
-extension FlowAction {
-    /// 매크로에서 생성된 스크린 액션과 매칭하기 위한 헬퍼 (CasePaths 지원)
-    public func matches<ScreenAction, Value>(_ casePath: AnyCasePath<ScreenAction, Value>) -> Value? {
-        guard let screenAction = self.screenAction as? ScreenAction else { return nil }
-        return casePath.extract(from: screenAction)
-    }
-
-    /// 특정 케이스인지 확인
-    public func isCase<ScreenAction, Value>(_ casePath: AnyCasePath<ScreenAction, Value>) -> Bool {
-        return matches(casePath) != nil
-    }
-}
-
-// MARK: - 간편한 패턴 매칭을 위한 케이스 분해 메서드
-
-extension FlowAction {
-    /// 화면 액션과 ID를 분해하여 클로저에 전달 - 깔끔한 API
-    @discardableResult
-    public func ifRouteAction<T>(
-        _ handler: (UUID, Screen.Action) -> T
-    ) -> T? {
-        guard case let .routeAction(id, action) = self else { return nil }
-        return handler(id, action)
-    }
-
-    /// 특정 화면의 액션인 경우에만 클로저 실행
-    @discardableResult
-    public func ifScreenAction<T, ScreenAction>(
-        as screenActionType: ScreenAction.Type,
-        _ handler: (UUID, ScreenAction) -> T
-    ) -> T? {
-        guard case let .routeAction(id, action) = self,
-              let screenAction = action as? ScreenAction else { return nil }
-        return handler(id, screenAction)
-    }
-
-    /// ID는 무시하고 화면 액션만 처리
-    @discardableResult
-    public func ifScreenAction<T>(
-        _ handler: (Screen.Action) -> T
-    ) -> T? {
-        guard let action = screenAction else { return nil }
-        return handler(action)
-    }
-
-    // MARK: - 하위 호환성을 위한 별칭 메서드
-    @discardableResult
-    public func ifElement<T>(
-        _ handler: (UUID, Screen.Action) -> T
-    ) -> T? {
-        return ifRouteAction(handler)
-    }
-}
-
-public typealias FlowActionOf<Screen: CaseReducer> = FlowAction<Screen>
-
-public protocol FlowCoordinating: Reducer {
-    associatedtype ScreenReducer: CaseReducer where ScreenReducer.State: Equatable
-
-    static var flowRoutes: KeyPath<State, RouteStack<ScreenReducer.State>> { get }
-    static func flowAction(_ action: FlowAction<ScreenReducer>) -> Action
-}
-
-extension IdentifiedArray where ID == UUID {
+extension Array where Element == Route<some Any> {
+    /// The current (topmost) route in the navigation stack.
     public var currentRoute: Element? {
-        self.last
+        return self.last
     }
 
+    /// The root (first) route in the navigation stack.
     public var rootRoute: Element? {
-        self.first
+        return self.first
     }
 
+    /// The depth of the navigation stack.
     public var depth: Int {
-        self.count
+        return self.count
+    }
+
+    /// Whether the navigation stack is empty.
+    public var isEmpty: Bool {
+        return self.count == 0
     }
 }
 
-extension IdentifiedArray where ID == UUID {
-    public mutating func push<S: Equatable>(_ state: S) where Element == Route<S> {
-        self.append(Route(state))
+extension Array {
+    /// Pushes a new screen onto the navigation stack.
+    public mutating func push<Screen>(_ screen: Screen) where Element == Route<Screen> {
+        self.append(.push(screen))
     }
 
+    /// Presents a screen as a sheet.
+    public mutating func presentSheet<Screen>(_ screen: Screen, withNavigation: Bool = false) where Element == Route<Screen> {
+        self.append(.sheet(screen, withNavigation: withNavigation))
+    }
+
+    /// Presents a screen as a full screen cover.
+    public mutating func presentCover<Screen>(_ screen: Screen, withNavigation: Bool = false) where Element == Route<Screen> {
+        self.append(.cover(screen, withNavigation: withNavigation))
+    }
+
+    /// Pops the topmost route from the navigation stack.
     @discardableResult
     public mutating func pop() -> Element? {
-        guard !self.isEmpty else { return nil }
+        return self.popLast()
+    }
+
+    /// Pops back to the root route.
+    public mutating func popToRoot() {
+        if let root = self.first {
+            self = [root]
+        }
+    }
+
+    /// Dismisses the topmost presented route (sheet or cover).
+    @discardableResult
+    public mutating func dismiss() -> Element? {
+        guard let last = self.last, last.isPresented else {
+            return nil
+        }
         return self.removeLast()
     }
 
-    public mutating func popToRoot() {
-        while self.count > 1 {
+    /// Goes back to a specific screen type.
+    public mutating func goBackTo<Screen>(_ screenType: Screen.Type) where Element == Route<Screen> {
+        while let last = self.last,
+              !isScreenOfType(last.screen, type: screenType) {
             self.removeLast()
         }
     }
-
-    public mutating func replace<S: Equatable>(with state: S) where Element == Route<S> {
-        guard let currentRoute else {
-            self.push(state)
-            return
-        }
-        self[id: currentRoute.id]?.state = state
-    }
-
-    public func currentScreen<S: Equatable>() -> S? where Element == Route<S> {
-        self.last?.state
-    }
-
-    public func rootScreen<S: Equatable>() -> S? where Element == Route<S> {
-        self.first?.state
-    }
-
-    public func has<S: Equatable>(_ targetScreen: S) -> Bool where Element == Route<S> {
-        self.contains { $0.state.matchesCase(of: targetScreen) }
-    }
-
-    public mutating func goTo<S: Equatable>(_ targetScreen: S) where Element == Route<S> {
-        if let index = self.firstIndex(where: { $0.state.matchesCase(of: targetScreen) }) {
-            while self.count > index + 1 {
-                self.removeLast()
-            }
-        } else {
-            self.append(Route(targetScreen))
-        }
-    }
-
-    public mutating func goBackTo<S: Equatable>(_ targetScreen: S) where Element == Route<S> {
-        while let last = self.last, !last.state.matchesCase(of: targetScreen) {
-            self.removeLast()
-        }
-    }
-
 }
 
-private extension Equatable {
-    func matchesCase(of other: Self) -> Bool {
-        String(describing: self).split(separator: "(").first
-            == String(describing: other).split(separator: "(").first
-    }
+// MARK: - Helper Functions
+
+private func isScreenOfType<Screen>(_ screen: Screen, type: Screen.Type) -> Bool {
+    return type(of: screen) == type
 }
 
-// MARK: - RouteStack Utilities
+// MARK: - Debugging Utilities
 
-extension Reducer {
-    /// 🚀 TCAFlow 개선: RouteStack의 pathChanged 액션을 자동으로 처리합니다.
-    /// 기본 버전 - pathChanged만 처리
-    public func forEachRoute<Screen: CaseReducer>(
-        _ routeStackKeyPath: WritableKeyPath<State, RouteStack<Screen.State>>,
-        action routeActionKeyPath: AnyCasePath<Action, FlowAction<Screen>>
-    ) -> some ReducerOf<Self> {
-        CombineReducers {
-            self
+#if DEBUG
+/// Runtime warning function for debugging.
+public func runtimeWarn(
+    _ message: @autoclosure () -> String,
+    category: String? = nil,
+    file: StaticString = #file,
+    line: UInt = #line
+) {
+    let message = message()
+    let category = category ?? "TCAFlow"
 
-            // pathChanged 자동 처리
-            Reduce<State, Action> { state, action in
-                guard let flowAction = routeActionKeyPath.extract(from: action),
-                      case let .pathChanged(path) = flowAction else {
-                    return .none
-                }
-
-                // 경로 변경 자동 처리
-                let routeIDs = [state[keyPath: routeStackKeyPath].routes.first?.id].compactMap { $0 } + path
-                while let last = state[keyPath: routeStackKeyPath].routes.last,
-                      !routeIDs.contains(last.id) {
-                    state[keyPath: routeStackKeyPath].pop()
-                }
-                return .none
-            }
-        }
-    }
-
-    /// 🚀 TCAFlow 개선: RouteStack의 child reducer들을 자동으로 연결하고 pathChanged도 처리합니다.
-    /// 이제 각 route의 액션이 자동으로 해당 Feature reducer에서 처리됩니다!
-    ///
-    /// 사용법:
-    /// ```swift
-    /// var body: some ReducerOf<Self> {
-    ///   Reduce { state, action in
-    ///     switch action {
-    ///     case .route(.routeAction(let id, let screenAction)):
-    ///       // Coordinator 레벨에서 처리할 액션들만 여기서 처리
-    ///       // (navigation, delegation 등)
-    ///       return handleScreenAction(screenAction, id: id, state: &state)
-    ///     case .route:
-    ///       return .none  // pathChanged는 자동 처리됨
-    ///     }
-    ///   }
-    ///   .forEachRoute(\.routes, action: \.route) { Screen() }  // 🎯 child reducer 자동 연결!
-    /// }
-    /// ```
-    public func forEachRoute<Screen: CaseReducer>(
-        _ routeStackKeyPath: WritableKeyPath<State, RouteStack<Screen.State>>,
-        action routeActionKeyPath: AnyCasePath<Action, FlowAction<Screen>>,
-        @ReducerBuilder<Screen.State, Screen.Action> destination: @escaping () -> Screen
-    ) -> some ReducerOf<Self> {
-        CombineReducers {
-            self
-
-            // 🎯 Child reducer들을 자동으로 연결
-            Reduce<State, Action> { state, action in
-                guard let flowAction = routeActionKeyPath.extract(from: action) else {
-                    return .none
-                }
-
-                switch flowAction {
-                case let .routeAction(id, screenAction):
-                    // child reducer로 액션 전달을 위한 준비
-                    // 실제 처리는 .forEach에서 담당
-                    return .none
-
-                case let .pathChanged(path):
-                    // 경로 변경 자동 처리
-                    let routeIDs = [state[keyPath: routeStackKeyPath].routes.first?.id].compactMap { $0 } + path
-                    while let last = state[keyPath: routeStackKeyPath].routes.last,
-                          !routeIDs.contains(last.id) {
-                        state[keyPath: routeStackKeyPath].pop()
-                    }
-                    return .none
-                }
-            }
-            .forEach(
-                routeStackKeyPath.appending(path: \.routes),
-                action: routeActionKeyPath.appending(path: /FlowAction<Screen>.routeAction)
-            ) {
-                destination()
-            }
-        }
-    }
+    #if canImport(os)
+    import os
+    os_log(
+        .fault,
+        dso: #dsohandle,
+        log: OSLog(subsystem: "com.tcaflow", category: category),
+        "%@",
+        message
+    )
+    #else
+    print("[\(category)] \(message)")
+    #endif
 }
-
-// MARK: - RouteStack Action Helpers
-
-extension FlowAction {
-    /// RouteAction에서 ID와 액션을 추출하는 헬퍼
-    public var routeInfo: (id: UUID, action: Screen.Action)? {
-        guard case let .routeAction(id, action) = self else { return nil }
-        return (id: id, action: action)
-    }
-
-    /// PathChanged인지 확인하는 헬퍼
-    public var isPathChanged: Bool {
-        if case .pathChanged = self { return true }
-        return false
-    }
-
-    /// PathChanged의 경로를 추출하는 헬퍼
-    public var pathChangeRoute: [UUID]? {
-        guard case let .pathChanged(path) = self else { return nil }
-        return path
-    }
-}
-
-// MARK: - 🚀 Enhanced RouteStack with Child Reducer Auto-Connection
-
-extension FlowAction {
-    /// 편리한 case path 구문을 위한 static property
-    public static var routeAction: AnyCasePath<FlowAction<Screen>, (UUID, Screen.Action)> {
-        AnyCasePath(
-            embed: FlowAction.routeAction,
-            extract: { flowAction in
-                guard case let .routeAction(id, action) = flowAction else { return nil }
-                return (id, action)
-            }
-        )
-    }
-}
+#else
+public func runtimeWarn(
+    _ message: @autoclosure () -> String,
+    category: String? = nil,
+    file: StaticString = #file,
+    line: UInt = #line
+) {}
+#endif

@@ -1,0 +1,128 @@
+@_spi(Internals) import ComposableArchitecture
+import SwiftUI
+
+public struct TCARouter<Screen: CaseReducer, ScreenView: View>: View where Screen.State: Equatable {
+  private let store: Store<RouteStack<Screen.State>, FlowAction<Screen>>
+  private let screenView: (Store<Screen.State, Screen.Action>) -> ScreenView
+
+  public init(
+    _ store: Store<RouteStack<Screen.State>, FlowAction<Screen>>,
+    @ViewBuilder screenView: @escaping (Store<Screen.State, Screen.Action>) -> ScreenView
+  ) {
+    self.store = store
+    self.screenView = screenView
+  }
+
+  public var body: some View {
+    WithPerceptionTracking {
+      let routes = self.store.state.routes
+      let routeIDs = routes.map(\.id)
+      let topRouteID = routeIDs.last
+      let routeCount = routeIDs.count
+      let backPath = Array(routeIDs.dropFirst().dropLast())
+      let embedInNavigationView = routes.first?.embedInNavigationView ?? true
+
+      if embedInNavigationView {
+        SwiftUI.NavigationStack {
+          self.navigationContent(
+            routeID: topRouteID,
+            routeCount: routeCount,
+            backPath: backPath
+          )
+        }
+      } else {
+        self.routeContent(routeID: topRouteID)
+          .animation(.easeInOut(duration: 0.1), value: routeCount)
+          .transaction { transaction in
+            if routeCount > 1 {
+              transaction.animation = .easeInOut(duration: 0.1)
+            }
+          }
+      }
+    }
+  }
+
+  private func navigationContent(routeID: UUID?, routeCount: Int, backPath: [UUID]) -> some View {
+    WithPerceptionTracking {
+      self.routeContent(routeID: routeID)
+    }
+    .toolbar {
+      if routeCount > 1 {
+        ToolbarItem(placement: .automatic) {
+          Button("Back") {
+            self.store.send(.pathChanged(backPath))
+          }
+        }
+      }
+    }
+    .animation(.easeInOut(duration: 0.1), value: routeCount)
+    .transaction { transaction in
+      if routeCount > 1 {
+        transaction.animation = .easeInOut(duration: 0.1)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func routeContent(routeID: UUID?) -> some View {
+    if let routeID {
+      self.makeScreen(routeID: routeID)
+        .id(routeID)
+    } else {
+      Text("No Routes")
+        .foregroundStyle(.secondary)
+    }
+  }
+
+  @ViewBuilder
+  private func makeScreen(routeID: UUID) -> some View {
+    WithPerceptionTracking {
+      if let route = self.store.state.routes[id: routeID] {
+        let childStore = self.store.scope(
+          state: { _ in route.state },
+          action: { FlowAction<Screen>.routeAction(id: routeID, action: $0) }
+        )
+        self.screenView(childStore)
+      } else {
+        EmptyView()
+      }
+    }
+  }
+}
+
+extension View {
+  public func slideTransition() -> some View {
+    self.transition(
+      .asymmetric(
+        insertion: .move(edge: .trailing),
+        removal: .move(edge: .leading)
+      )
+    )
+  }
+
+  public func fadeTransition() -> some View {
+    self.transition(.opacity)
+  }
+
+  public func scaleTransition() -> some View {
+    self.transition(.scale.combined(with: .opacity))
+  }
+
+  public func leadingTransition() -> some View {
+    self.transition(
+      .asymmetric(
+        insertion: .move(edge: .leading).combined(with: .opacity),
+        removal: .move(edge: .trailing).combined(with: .opacity)
+      )
+    )
+  }
+
+  public func bottomTransition() -> some View {
+    self.transition(
+      .asymmetric(
+        insertion: .move(edge: .bottom).combined(with: .opacity),
+        removal: .move(edge: .top).combined(with: .opacity)
+      )
+    )
+  }
+}
