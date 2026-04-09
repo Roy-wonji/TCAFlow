@@ -1,13 +1,13 @@
 @_spi(Internals) import ComposableArchitecture
 import SwiftUI
 
-public struct TCARouter<ScreenState: Equatable, ScreenAction, ScreenView: View>: View {
-  private let store: Store<RouteStack<ScreenState>, FlowAction<ScreenAction>>
-  private let screenView: (Store<ScreenState, ScreenAction>) -> ScreenView
+public struct TCARouter<Screen: CaseReducer, ScreenView: View>: View where Screen.State: Equatable {
+  private let store: Store<RouteStack<Screen.State>, FlowAction<Screen>>
+  private let screenView: (Store<Screen.State, Screen.Action>) -> ScreenView
 
   public init(
-    _ store: Store<RouteStack<ScreenState>, FlowAction<ScreenAction>>,
-    @ViewBuilder screenView: @escaping (Store<ScreenState, ScreenAction>) -> ScreenView
+    _ store: Store<RouteStack<Screen.State>, FlowAction<Screen>>,
+    @ViewBuilder screenView: @escaping (Store<Screen.State, Screen.Action>) -> ScreenView
   ) {
     self.store = store
     self.screenView = screenView
@@ -80,7 +80,7 @@ public struct TCARouter<ScreenState: Equatable, ScreenAction, ScreenView: View>:
       if let route = self.store.state.routes[id: routeID] {
         let childStore = self.store.scope(
           state: { _ in route.state },
-          action: { FlowAction.routeAction(id: routeID, action: $0) }
+          action: { FlowAction<Screen>.routeAction(id: routeID, action: $0) }
         )
         self.screenView(childStore)
       } else {

@@ -96,14 +96,14 @@ extension RouteStack {
 }
 
 @CasePathable
-public enum FlowAction<Action> {
-    case routeAction(id: UUID, action: Action)
+public enum FlowAction<Screen: CaseReducer> {
+    case routeAction(id: UUID, action: Screen.Action)
     case pathChanged([UUID])
 
     // MARK: - 하위 호환성을 위한 computed property
 
     /// 하위 호환성을 위한 기존 element property
-    public var element: (id: UUID, action: Action)? {
+    public var element: (id: UUID, action: Screen.Action)? {
         guard case let .routeAction(id, action) = self else { return nil }
         return (id, action)
     }
@@ -124,13 +124,13 @@ public enum FlowAction<Action> {
     }
 
     /// 특정 ID의 스크린 액션과 매칭
-    public func matchesRoute(id targetID: UUID, action targetAction: Action) -> Bool where Action: Equatable {
+    public func matchesRoute(id targetID: UUID, action targetAction: Screen.Action) -> Bool where Screen.Action: Equatable {
         guard case let .routeAction(id, action) = self else { return false }
         return id == targetID && action == targetAction
     }
 
     /// 스크린 액션만 추출 (ID 무시)
-    public var screenAction: Action? {
+    public var screenAction: Screen.Action? {
         guard case let .routeAction(_, action) = self else { return nil }
         return action
     }
@@ -174,7 +174,7 @@ extension FlowAction {
     /// 화면 액션과 ID를 분해하여 클로저에 전달 - 깔끔한 API
     @discardableResult
     public func ifRouteAction<T>(
-        _ handler: (UUID, Action) -> T
+        _ handler: (UUID, Screen.Action) -> T
     ) -> T? {
         guard case let .routeAction(id, action) = self else { return nil }
         return handler(id, action)
@@ -194,7 +194,7 @@ extension FlowAction {
     /// ID는 무시하고 화면 액션만 처리
     @discardableResult
     public func ifScreenAction<T>(
-        _ handler: (Action) -> T
+        _ handler: (Screen.Action) -> T
     ) -> T? {
         guard let action = screenAction else { return nil }
         return handler(action)
@@ -203,20 +203,19 @@ extension FlowAction {
     // MARK: - 하위 호환성을 위한 별칭 메서드
     @discardableResult
     public func ifElement<T>(
-        _ handler: (UUID, Action) -> T
+        _ handler: (UUID, Screen.Action) -> T
     ) -> T? {
         return ifRouteAction(handler)
     }
 }
 
-public typealias FlowActionOf<Screen: Reducer> = FlowAction<Screen.Action>
+public typealias FlowActionOf<Screen: CaseReducer> = FlowAction<Screen>
 
 public protocol FlowCoordinating: Reducer {
-    associatedtype ScreenState: Equatable
-    associatedtype ScreenAction
+    associatedtype ScreenReducer: CaseReducer where ScreenReducer.State: Equatable
 
-    static var flowRoutes: KeyPath<State, RouteStack<ScreenState>> { get }
-    static func flowAction(_ action: FlowAction<ScreenAction>) -> Action
+    static var flowRoutes: KeyPath<State, RouteStack<ScreenReducer.State>> { get }
+    static func flowAction(_ action: FlowAction<ScreenReducer>) -> Action
 }
 
 extension IdentifiedArray where ID == UUID {
@@ -316,9 +315,9 @@ extension Reducer {
     ///   .forEachRoute(\.routes, action: \.route)
     /// }
     /// ```
-    public func forEachRoute<RouteState: Equatable, RouteAction>(
-        _ routeStackKeyPath: WritableKeyPath<State, RouteStack<RouteState>>,
-        action routeActionKeyPath: AnyCasePath<Action, FlowAction<RouteAction>>
+    public func forEachRoute<Screen: CaseReducer>(
+        _ routeStackKeyPath: WritableKeyPath<State, RouteStack<Screen.State>>,
+        action routeActionKeyPath: AnyCasePath<Action, FlowAction<Screen>>
     ) -> some ReducerOf<Self> {
         CombineReducers {
             self
@@ -345,7 +344,7 @@ extension Reducer {
 
 extension FlowAction {
     /// RouteAction에서 ID와 액션을 추출하는 헬퍼
-    public var routeInfo: (id: UUID, action: Action)? {
+    public var routeInfo: (id: UUID, action: Screen.Action)? {
         guard case let .routeAction(id, action) = self else { return nil }
         return (id: id, action: action)
     }

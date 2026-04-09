@@ -218,7 +218,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
                 case action(SomeAction)
 
                 // 👇 이 case를 추가하세요
-                case route(TCAFlow.FlowAction<\(raw: screenTypeName).Action>)
+                case route(TCAFlow.FlowAction<\(raw: screenTypeName)>)
             }
             */
             """
@@ -228,7 +228,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
             let actionEnum: DeclSyntax = """
             @CasePaths.CasePathable
             enum Action {
-                case route(TCAFlow.FlowAction<\(raw: screenTypeName).Action>)
+                case route(TCAFlow.FlowAction<\(raw: screenTypeName)>)
             }
             """
             members.append(actionEnum)
