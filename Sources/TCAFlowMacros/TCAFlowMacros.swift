@@ -3,6 +3,7 @@ import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
+import SwiftUI
 
 public struct FlowCoordinatorMacro: MemberMacro {
     public static func expansion(
@@ -209,10 +210,112 @@ struct MacroExpansionErrorMessage: Error, CustomStringConvertible {
     }
 }
 
+/// Nested coordinator를 위한 extension 매크로
+public struct NestedCoordinatorExtensionMacro: MemberMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+
+        // nested coordinator reducer 함수 자동 생성
+        let nestedReducerMethod: DeclSyntax = """
+        static func reduceNestedCoordinator<T: FlowCoordinating>(
+            state: inout T.State,
+            action: T.Action
+        ) -> ComposableArchitecture.Effect<T.Action> {
+            return .none
+        }
+        """
+
+        return [nestedReducerMethod]
+    }
+}
+
+/// RouteStack extension 매크로 - 단순화된 버전
+public struct RouteStackExtensionsMacro: MemberMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+
+        let extensionMethods: [DeclSyntax] = [
+            """
+            public var currentRoute: Route<State>? {
+                self.routes.currentRoute
+            }
+            """,
+            """
+            public var depth: Int {
+                self.routes.depth
+            }
+            """,
+            """
+            public mutating func push(_ state: State) {
+                self.routes.push(state)
+            }
+            """
+        ]
+
+        return extensionMethods
+    }
+}
+
+/// View transition extension 매크로 - 단순화된 버전
+public struct ViewTransitionsMacro: MemberMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+
+        let transitionMethods: [DeclSyntax] = [
+            """
+            public func slideTransition() -> some View {
+                self.transition(
+                    .asymmetric(
+                        insertion: .move(edge: .trailing),
+                        removal: .move(edge: .leading)
+                    )
+                )
+            }
+            """,
+            """
+            public func fadeTransition() -> some View {
+                self.transition(.opacity)
+            }
+            """,
+            """
+            public func scaleTransition() -> some View {
+                self.transition(.scale.combined(with: .opacity))
+            }
+            """
+        ]
+
+        return transitionMethods
+    }
+}
+
+/// ForEachRoute 매크로 (미구현)
+public struct ForEachRouteMacro: PeerMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingPeersOf declaration: some DeclSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+        return []
+    }
+}
+
 /// 컴파일러 플러그인 등록
 @main
 struct TCAFlowPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         FlowCoordinatorMacro.self,
+        NestedCoordinatorExtensionMacro.self,
+        RouteStackExtensionsMacro.self,
+        ViewTransitionsMacro.self,
+        ForEachRouteMacro.self,
     ]
 }

@@ -123,6 +123,7 @@ final class DemoSession: Equatable, Sendable {
   }
 }
 
+@NestedCoordinatorExtension
 private extension AppCoordinator {
   static func reduceProfileCoordinator(
     state: inout ProfileCoordinator.State,
