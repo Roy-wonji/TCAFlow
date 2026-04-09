@@ -13,6 +13,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
     ) throws -> [DeclSyntax] {
 
         let embedInNavigationView = try Self.embedInNavigationView(from: node)
+        let accessModifier = Self.accessModifier(for: declaration)
 
         // struct 또는 extension 지원
         let coordinatorName: String
@@ -137,40 +138,41 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
             .joined(separator: "\n      ")
 
         let appScreenEnum: DeclSyntax = """
-        enum \(raw: screenTypeName): Swift.Sendable, ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer {
+        \(raw: accessModifier)enum \(raw: screenTypeName): Swift.Sendable, ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer {
             \(raw: appScreenCases)
 
             @CasePaths.CasePathable
             @dynamicMemberLookup
             @ComposableArchitecture.ObservableState
-            enum State: ComposableArchitecture.CaseReducerState, CasePaths.CasePathable, CasePaths.CasePathIterable, ComposableArchitecture.ObservableState, Observation.Observable {
-              typealias StateReducer = \(raw: screenTypeName)
+            \(raw: accessModifier)enum State: ComposableArchitecture.CaseReducerState, CasePaths.CasePathable, CasePaths.CasePathIterable, ComposableArchitecture.ObservableState, Observation.Observable {
+              \(raw: accessModifier)typealias StateReducer = \(raw: screenTypeName)
               \(raw: stateCases)
             }
 
             @CasePaths.CasePathable
-            enum Action: CasePaths.CasePathable, CasePaths.CasePathIterable {
+            \(raw: accessModifier)enum Action: CasePaths.CasePathable, CasePaths.CasePathIterable {
               \(raw: actionCases)
             }
 
-            static var body: some ComposableArchitecture.Reducer<Self.State, Self.Action> {
+            \(raw: accessModifier)static var body: some ComposableArchitecture.Reducer<Self.State, Self.Action> {
               ComposableArchitecture.EmptyReducer<Self.State, Self.Action>()
               \(raw: caseReducers)
             }
 
             @dynamicMemberLookup
-            enum CaseScope: ComposableArchitecture._CaseScopeProtocol, CasePaths.CasePathable {
+            \(raw: accessModifier)enum CaseScope: ComposableArchitecture._CaseScopeProtocol, CasePaths.CasePathable {
               \(raw: caseScopeCases)
 
-              struct AllCasePaths {
+              \(raw: accessModifier)struct AllCasePaths {
                 \(raw: casePathProperties)
               }
 
-              static var allCasePaths: AllCasePaths { AllCasePaths() }
+              \(raw: accessModifier)static var allCasePaths: AllCasePaths { AllCasePaths() }
             }
 
-            @preconcurrency @MainActor
-            static func scope(_ store: ComposableArchitecture.Store<Self.State, Self.Action>) -> CaseScope {
+            @preconcurrency
+            @MainActor
+            \(raw: accessModifier)static func scope(_ store: ComposableArchitecture.Store<Self.State, Self.Action>) -> CaseScope {
               switch store.state {
               \(raw: storeScopes)
               }
@@ -181,10 +183,10 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
 
         let stateStruct: DeclSyntax = """
         @ComposableArchitecture.ObservableState
-        struct State: Swift.Equatable {
-            public var routes: TCAFlow.RouteStack<\(raw: screenTypeName).State>
+        \(raw: accessModifier)struct State: Swift.Equatable {
+            \(raw: accessModifier)var routes: TCAFlow.RouteStack<\(raw: screenTypeName).State>
 
-            public init() {
+            \(raw: accessModifier)init() {
                 self.routes = TCAFlow.RouteStack([
                     TCAFlow.Route.root(\(raw: screenTypeName).State.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()), embedInNavigationView: \(raw: embedInNavigationView))
                 ])
@@ -227,7 +229,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
             // 기존 Action enum이 없는 경우, 새로 생성
             let actionEnum: DeclSyntax = """
             @CasePaths.CasePathable
-            enum Action {
+            \(raw: accessModifier)enum Action {
                 case route(TCAFlow.FlowAction<\(raw: screenTypeName)>)
             }
             """
@@ -281,6 +283,27 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
             baseName = coordinatorName
         }
         return "\(baseName)Screen"
+    }
+
+    private static func accessModifier(for declaration: some DeclGroupSyntax) -> String {
+        let modifiers: DeclModifierListSyntax
+
+        if let structDecl = declaration.as(StructDeclSyntax.self) {
+            modifiers = structDecl.modifiers
+        } else if let extensionDecl = declaration.as(ExtensionDeclSyntax.self) {
+            modifiers = extensionDecl.modifiers
+        } else {
+            return ""
+        }
+
+        for modifier in modifiers {
+            let name = modifier.name.text
+            if name == "public" || name == "open" || name == "package" {
+                return "\(name) "
+            }
+        }
+
+        return ""
     }
 
     /// Extension으로 Screen을 정의할 수 있는 기본 구조 생성
