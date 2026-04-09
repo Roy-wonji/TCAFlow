@@ -354,7 +354,7 @@ struct NestedCoordinator {
     var routes: [Route<NestedScreen.State>]
 
     init() {
-      self.routes = [.root(.step1(.init()), embedInNavigationView: true)]
+      self.routes = [.root(.step1(.init()), embedInNavigationView: false)]
     }
   }
 
@@ -423,7 +423,7 @@ struct NestedCoordinatorView: View {
           NestedStep2View(store: store)
       }
     }
-    .navigationTitle("Nested Coordinator")
+    .navigationTitle("Nested")
   }
 }
 
@@ -472,18 +472,6 @@ struct NestedStep1View: View {
     }
     .padding()
     .navigationTitle("Nested Step 1")
-    .toolbar {
-      ToolbarItem(placement: .navigationBarLeading) {
-        Button {
-          store.send(.backToMain)
-        } label: {
-          HStack(spacing: 4) {
-            Image(systemName: "chevron.left")
-            Text("Back")
-          }
-        }
-      }
-    }
   }
 }
 
