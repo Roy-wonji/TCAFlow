@@ -413,6 +413,7 @@ extension NestedCoordinator.NestedScreen.State: Equatable {}
 
 struct NestedCoordinatorView: View {
   @Bindable var store: StoreOf<NestedCoordinator>
+  @GestureState private var dragOffset: CGFloat = 0
 
   var body: some View {
     TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
@@ -423,6 +424,21 @@ struct NestedCoordinatorView: View {
           NestedStep2View(store: store)
       }
     }
+    .offset(x: dragOffset)
+    .simultaneousGesture(
+      DragGesture(minimumDistance: 20, coordinateSpace: .global)
+        .updating($dragOffset) { value, state, _ in
+          // 왼쪽 edge에서 시작 + 오른쪽으로 드래그
+          if value.startLocation.x < 30 && value.translation.width > 0 {
+            state = value.translation.width
+          }
+        }
+        .onEnded { value in
+          if value.startLocation.x < 30 && value.translation.width > 100 {
+            store.send(.backToMain)
+          }
+        }
+    )
   }
 }
 
@@ -471,6 +487,18 @@ struct NestedStep1View: View {
     }
     .padding()
     .navigationTitle("Nested Step 1")
+    .toolbar {
+      ToolbarItem(placement: .navigationBarLeading) {
+        Button {
+          store.send(.backToMain)
+        } label: {
+          HStack(spacing: 4) {
+            Image(systemName: "chevron.left")
+            Text("Back")
+          }
+        }
+      }
+    }
   }
 }
 
