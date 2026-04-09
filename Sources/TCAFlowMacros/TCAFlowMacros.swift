@@ -14,6 +14,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
 
         let embedInNavigationView = try Self.embedInNavigationView(from: node)
         let accessModifier = Self.accessModifier(for: declaration)
+        let isAttachedToExtension = declaration.as(ExtensionDeclSyntax.self) != nil
 
         // struct 또는 extension 지원
         let coordinatorName: String
@@ -138,7 +139,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
             .joined(separator: "\n      ")
 
         let appScreenEnum: DeclSyntax = """
-        \(raw: accessModifier)enum \(raw: screenTypeName): Swift.Sendable, ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer {
+        \(raw: accessModifier)enum \(raw: screenTypeName): ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer {
             \(raw: appScreenCases)
 
             @CasePaths.CasePathable
@@ -181,6 +182,10 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
         """
         members.append(appScreenEnum)
 
+        if isAttachedToExtension {
+            return members
+        }
+
         let stateStruct: DeclSyntax = """
         @ComposableArchitecture.ObservableState
         \(raw: accessModifier)struct State: Swift.Equatable {
@@ -195,7 +200,9 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
         """
         members.append(stateStruct)
 
-        // 기존 Action enum이 있으면 route case만 추가, 없으면 새로 생성
+        // struct에 직접 매크로를 붙인 경우에만 coordinator Action을 생성한다.
+        // extension에 매크로를 붙이는 패턴에서는 coordinator가 직접 State/Action/body를 정의할 수 있어야 하므로
+        // *Screen만 생성하고 여기서는 멈춘다.
         if existingActionEnum != nil {
             // 기존 Action enum이 있는 경우, route case만 추가하는 extension 생성
             let routeCaseExtension: DeclSyntax = """
@@ -317,7 +324,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
 
         // 1. 빈 Screen enum 정의 (extension에서 case 추가 가능)
         let emptyScreenEnum: DeclSyntax = """
-        enum \(raw: screenTypeName): Swift.Sendable, Swift.Equatable {
+        enum \(raw: screenTypeName): Swift.Equatable {
             // Screen cases should be defined in extension
             // Example:
             // extension \(raw: coordinatorName) {
@@ -494,7 +501,7 @@ public struct FlowScreenMacro: MemberMacro {
 
         // 빈 Screen enum 정의만 생성 (실제 case는 extension으로 정의)
         let screenEnumStub: DeclSyntax = """
-        enum \(raw: screenTypeName): Swift.Sendable {
+        enum \(raw: screenTypeName) {
             // Screen cases are defined in extensions
         }
         """
