@@ -24,7 +24,7 @@ let project = Project(
                 "UILaunchScreen": [:]
             ]),
             sources: [
-                "TCAFlowExamples/**"
+                "TCAFlowExamples/TCAFlowExamplesApp.swift"
             ],
             resources: [],
             dependencies: [
@@ -33,7 +33,9 @@ let project = Project(
                 .package(product: "IdentifiedCollections")
             ],
             settings: .settings(base: [
-                "ENABLE_DEBUG_DYLIB": "NO"
+                "ENABLE_DEBUG_DYLIB": "NO",
+                "SWIFT_STRICT_CONCURRENCY": "targeted",
+                "SWIFT_VERSION": "5"
             ])
         )
     ]

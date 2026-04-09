@@ -17,6 +17,7 @@
 		22E28B35175B12482ED03147 /* SwiftOperators.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7B4A8061539F30662A684E8 /* SwiftOperators.framework */; };
 		28E6DA6CF80F6F7789E05534 /* ComposableArchitecture.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1266B50609DB8D855AB5DCEB /* ComposableArchitecture.framework */; };
 		46129584148E086C92415B2A /* SwiftSyntax600.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD9AED6F7ED69584EDC936DC /* SwiftSyntax600.framework */; };
+		48DF7AFCAF496FF8CC0AD926 /* ForEachRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665F1DD53EE29019E29D9083 /* ForEachRoute.swift */; };
 		4A8336F726C890A908FECEF6 /* SwiftUINavigation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E728AD7D6FB0D03817EB643 /* SwiftUINavigation.framework */; };
 		4AA6BD949B97860013FAF3E2 /* TCAFlowMacros.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB636DB63858B9D77ACA228 /* TCAFlowMacros.swift */; };
 		4B56E7CAE06AC4E402EB2DE6 /* SwiftSyntaxMacroExpansion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DD2773A2F24565250742B0B /* SwiftSyntaxMacroExpansion.framework */; };
@@ -34,6 +35,7 @@
 		80C9061A13AFE824C7D9E9B7 /* CustomDump.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 35048C44548313FC9281B832 /* CustomDump.framework */; };
 		811BE23A1A550E2CF73C3C21 /* SwiftParser.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B3970DD36FBB3CF886224CA /* SwiftParser.framework */; };
 		81527036ADC6118900660394 /* ConcurrencyExtras.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98CF7AA35C81D903B57A5302 /* ConcurrencyExtras.framework */; };
+		9B4EA4A9D61ED0D159E97E01 /* ReducerMacro.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11AD3DAABF1F22D8742C66CF /* ReducerMacro.swift */; };
 		A0510A075921DA0513DB1447 /* TCARouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7CFA7773BD3C6C27A715F9 /* TCARouter.swift */; };
 		A22E7C77ED913C2C8D917178 /* TCAFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA4B8D1A5EEA09C7006E8D0D /* TCAFlow.swift */; };
 		A7EE492164BE1070777533A6 /* SwiftSyntaxBuilder.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69BB28CCAA4CEFBC1DF54B49 /* SwiftSyntaxBuilder.framework */; };
@@ -91,6 +93,7 @@
 		0551AE02A747051F8A465D8C /* TCAFlowMacros-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TCAFlowMacros-Info.plist"; sourceTree = "<group>"; };
 		0DD2773A2F24565250742B0B /* SwiftSyntaxMacroExpansion.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntaxMacroExpansion.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E6F945C6E0D2D305ACC5F82 /* SwiftSyntax509.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntax509.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		11AD3DAABF1F22D8742C66CF /* ReducerMacro.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReducerMacro.swift; sourceTree = "<group>"; };
 		1266B50609DB8D855AB5DCEB /* ComposableArchitecture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ComposableArchitecture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		127C9EAE3E6CF6DFE08395C4 /* IssueReporting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = IssueReporting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		145454A126E49E414AC5E6EA /* TCAFlow.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = TCAFlow.docc; sourceTree = "<group>"; };
@@ -103,6 +106,7 @@
 		583C2AB9E5AA6303EADB1647 /* SwiftBasicFormat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftBasicFormat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C930C643B21A3D048F5E357 /* IssueReportingPackageSupport.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = IssueReportingPackageSupport.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D710B64887F94D7C538ABF8 /* TCAFlow-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TCAFlow-Info.plist"; sourceTree = "<group>"; };
+		665F1DD53EE29019E29D9083 /* ForEachRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForEachRoute.swift; sourceTree = "<group>"; };
 		69BB28CCAA4CEFBC1DF54B49 /* SwiftSyntaxBuilder.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSyntaxBuilder.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B3970DD36FBB3CF886224CA /* SwiftParser.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftParser.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D7CFA7773BD3C6C27A715F9 /* TCARouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCARouter.swift; sourceTree = "<group>"; };
@@ -205,6 +209,7 @@
 		39F3B9280247E930C9C6FD6B /* TCAFlowMacros */ = {
 			isa = PBXGroup;
 			children = (
+				11AD3DAABF1F22D8742C66CF /* ReducerMacro.swift */,
 				8AB636DB63858B9D77ACA228 /* TCAFlowMacros.swift */,
 			);
 			path = TCAFlowMacros;
@@ -287,6 +292,7 @@
 		B595CA7E485DF77D05BFDE19 /* TCAFlow */ = {
 			isa = PBXGroup;
 			children = (
+				665F1DD53EE29019E29D9083 /* ForEachRoute.swift */,
 				145454A126E49E414AC5E6EA /* TCAFlow.docc */,
 				BA4B8D1A5EEA09C7006E8D0D /* TCAFlow.swift */,
 				2BB6A384C766217AA12FC843 /* TCAFlowMacros.swift */,
@@ -420,6 +426,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				48DF7AFCAF496FF8CC0AD926 /* ForEachRoute.swift in Sources */,
 				14E5F56DA023D25DB0670B90 /* TCAFlow.docc in Sources */,
 				A22E7C77ED913C2C8D917178 /* TCAFlow.swift in Sources */,
 				E72B8453EF547D05ED876529 /* TCAFlowMacros.swift in Sources */,
@@ -431,6 +438,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B4EA4A9D61ED0D159E97E01 /* ReducerMacro.swift in Sources */,
 				4AA6BD949B97860013FAF3E2 /* TCAFlowMacros.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

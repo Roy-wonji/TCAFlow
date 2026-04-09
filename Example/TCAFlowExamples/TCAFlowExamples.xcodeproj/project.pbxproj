@@ -3,23 +3,14 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2729C3D64FF7C4D6C3328307 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 821C9CE8DA44A1D6D4B35403 /* AppCoordinator.swift */; };
 		6CA3EC6960EF91290482F9E6 /* IdentifiedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 94700432F45F37D7063F3D84 /* IdentifiedCollections */; };
-		7AC8E02AC3D85D0E9460983E /* CounterFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBC02124FD0B77D08374FAC0 /* CounterFeature.swift */; };
-		9AA04132098FE97D07113059 /* ProfileDetailFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B9F1B1B571450E180C33AD3 /* ProfileDetailFeature.swift */; };
-		A77A22686899D233352A9925 /* SummaryFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601C3735EEF5ACE7354ABAE8 /* SummaryFeature.swift */; };
 		AD9FC335D450BE217153DE9F /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 2026D34F63103DE1286FB58D /* ComposableArchitecture */; };
-		AE289A947568DDB0B61B6BF7 /* SingleViewFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C94E04FD9F17FC1E8AA5243 /* SingleViewFeature.swift */; };
-		B01D943BADB2F948227611C4 /* HomeFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E0F512BAFF59741B76BEDF /* HomeFeature.swift */; };
-		C602AD9BC5163075CBF35304 /* ProfileCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6DBDB152F5DD180BDB4DB70 /* ProfileCoordinator.swift */; };
 		D2599A3887566186328DD06A /* TCAFlow in Frameworks */ = {isa = PBXBuildFile; productRef = C69E762E360A2F4CF6D0D114 /* TCAFlow */; };
-		D36DC9562C225387B059EE17 /* ProfileHomeFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D05002125DE170534EAECD8 /* ProfileHomeFeature.swift */; };
 		F2E1B5B534766F304A5D480E /* TCAFlowExamplesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */; };
-		F8FBFF4CF0A8FB00C2ED1762 /* SettingsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662136E6874876C73ADFA7A6 /* SettingsFeature.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -36,19 +27,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		1B9F1B1B571450E180C33AD3 /* ProfileDetailFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailFeature.swift; sourceTree = "<group>"; };
-		1D05002125DE170534EAECD8 /* ProfileHomeFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHomeFeature.swift; sourceTree = "<group>"; };
 		257EDB19611523568C091C51 /* TCAFlow */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TCAFlow; path = ../..; sourceTree = "<group>"; };
-		59E0F512BAFF59741B76BEDF /* HomeFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFeature.swift; sourceTree = "<group>"; };
-		601C3735EEF5ACE7354ABAE8 /* SummaryFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryFeature.swift; sourceTree = "<group>"; };
-		662136E6874876C73ADFA7A6 /* SettingsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeature.swift; sourceTree = "<group>"; };
-		7C94E04FD9F17FC1E8AA5243 /* SingleViewFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleViewFeature.swift; sourceTree = "<group>"; };
-		821C9CE8DA44A1D6D4B35403 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCAFlowExamplesApp.swift; sourceTree = "<group>"; };
 		9F97BEA477CA1EBEABA7F79E /* TCAFlowExamples-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TCAFlowExamples-Info.plist"; sourceTree = "<group>"; };
 		C73A07C36A59F1F207F9D7D6 /* TCAFlowExamples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TCAFlowExamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F6DBDB152F5DD180BDB4DB70 /* ProfileCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCoordinator.swift; sourceTree = "<group>"; };
-		FBC02124FD0B77D08374FAC0 /* CounterFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterFeature.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,15 +75,6 @@
 		7499A1323F5EAA09F8CB6657 /* TCAFlowExamples */ = {
 			isa = PBXGroup;
 			children = (
-				821C9CE8DA44A1D6D4B35403 /* AppCoordinator.swift */,
-				FBC02124FD0B77D08374FAC0 /* CounterFeature.swift */,
-				59E0F512BAFF59741B76BEDF /* HomeFeature.swift */,
-				F6DBDB152F5DD180BDB4DB70 /* ProfileCoordinator.swift */,
-				1B9F1B1B571450E180C33AD3 /* ProfileDetailFeature.swift */,
-				1D05002125DE170534EAECD8 /* ProfileHomeFeature.swift */,
-				662136E6874876C73ADFA7A6 /* SettingsFeature.swift */,
-				7C94E04FD9F17FC1E8AA5243 /* SingleViewFeature.swift */,
-				601C3735EEF5ACE7354ABAE8 /* SummaryFeature.swift */,
 				9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */,
 			);
 			path = TCAFlowExamples;
@@ -165,8 +138,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				TargetAttributes = {
-				};
+				LastUpgradeCheck = 2630;
 			};
 			buildConfigurationList = 5FAD5EAF0C743D71FD6BCA41 /* Build configuration list for PBXProject "TCAFlowExamples" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -180,7 +152,7 @@
 			packageReferences = (
 				B757D2E5FC0AF2AA141EAB71 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 				8678CA4F5BCFAEF44BFBA0D8 /* XCRemoteSwiftPackageReference "swift-identified-collections" */,
-				248D8263672DDF9B00F9EDB5 /* XCLocalSwiftPackageReference "/Users/suhwonji/Desktop/SideProject/TCAFlow" */,
+				C9687812C6D989FB8C38A2E1 /* XCLocalSwiftPackageReference "../.." */,
 			);
 			productRefGroup = 5D5672BF4F6629D568164D45 /* Products */;
 			projectDirPath = "";
@@ -206,15 +178,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2729C3D64FF7C4D6C3328307 /* AppCoordinator.swift in Sources */,
-				7AC8E02AC3D85D0E9460983E /* CounterFeature.swift in Sources */,
-				B01D943BADB2F948227611C4 /* HomeFeature.swift in Sources */,
-				C602AD9BC5163075CBF35304 /* ProfileCoordinator.swift in Sources */,
-				9AA04132098FE97D07113059 /* ProfileDetailFeature.swift in Sources */,
-				D36DC9562C225387B059EE17 /* ProfileHomeFeature.swift in Sources */,
-				F8FBFF4CF0A8FB00C2ED1762 /* SettingsFeature.swift in Sources */,
-				AE289A947568DDB0B61B6BF7 /* SingleViewFeature.swift in Sources */,
-				A77A22686899D233352A9925 /* SummaryFeature.swift in Sources */,
 				F2E1B5B534766F304A5D480E /* TCAFlowExamplesApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -243,8 +206,9 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 5.0;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -288,6 +252,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -298,6 +263,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -322,13 +288,11 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-					"$(inherited)",
-					DEBUG,
-				);
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -372,6 +336,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -389,6 +354,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Debug;
 		};
@@ -416,9 +382,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		248D8263672DDF9B00F9EDB5 /* XCLocalSwiftPackageReference "/Users/suhwonji/Desktop/SideProject/TCAFlow" */ = {
+		C9687812C6D989FB8C38A2E1 /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = /Users/suhwonji/Desktop/SideProject/TCAFlow;
+			relativePath = ../..;
 		};
 /* End XCLocalSwiftPackageReference section */
 
