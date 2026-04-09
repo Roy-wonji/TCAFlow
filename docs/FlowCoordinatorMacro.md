@@ -25,7 +25,7 @@ struct AppCoordinator: Sendable {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .route(.element(.element(_, .home(.detailButtonTapped)))):
+      case .route(.routeAction(_, .home(.detailButtonTapped)))):
         state.routes.push(.detail(DetailFeature.State()))
         return .none
 
@@ -178,7 +178,7 @@ child가 독립적인 `NavigationStack`을 가져야 하면 `navigation: true`�
 화면 action은 `.route(.element(.element(id, screenAction)))` 형태로 들어옵니다.
 
 ```swift
-case .route(.element(.element(let id, let screenAction))):
+case .route(.routeAction(let id, let screenAction)):
   switch screenAction {
   case .counter(.summaryButtonTapped):
     if let route = state.routes.routes[id: id],

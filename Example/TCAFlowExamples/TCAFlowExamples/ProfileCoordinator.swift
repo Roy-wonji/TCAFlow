@@ -21,7 +21,7 @@ struct ProfileCoordinator: Sendable {
             _ = state.routes.pop()
           }
 
-        case .element(.element(_, let screenAction)):
+        case .routeAction(_, let screenAction):
           switch screenAction {
           case .profileHome(.detailButtonTapped):
             state.routes.push(.profileDetail(ProfileDetailFeature.State()))

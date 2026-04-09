@@ -25,7 +25,7 @@ struct AppCoordinator: Sendable {
             _ = state.routes.pop()
           }
 
-        case .element(.element(let id, let screenAction)):
+        case .routeAction(let id, let screenAction):
         switch screenAction {
         case .home(.pushOneViewButtonTapped):
             state.routes.push(.single(.init()))
@@ -138,7 +138,7 @@ private extension AppCoordinator {
           _ = state.routes.pop()
         }
 
-      case .element(.element(_, let screenAction)):
+      case .routeAction(_, let screenAction):
         switch screenAction {
         case .profileHome(.detailButtonTapped):
           state.routes.push(.profileDetail(.init()))

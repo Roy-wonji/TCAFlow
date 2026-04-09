@@ -39,11 +39,11 @@ struct AppCoordinator: Sendable {
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .route(.element(.element(_, .home(.detailButtonTapped)))):
+      case .route(.routeAction(_, .home(.detailButtonTapped)))):
         state.routes.push(.detail(DetailFeature.State()))
         return .none
 
-      case .route(.element(.element(_, .detail(.closeButtonTapped)))):
+      case .route(.routeAction(_, .detail(.closeButtonTapped)))):
         _ = state.routes.pop()
         return .none
 

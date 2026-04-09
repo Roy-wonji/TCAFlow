@@ -97,12 +97,115 @@ extension RouteStack {
 
 @CasePathable
 public enum FlowAction<Action> {
-    case element(IdentifiedAction<UUID, Action>)
+    case routeAction(id: UUID, action: Action)
     case pathChanged([UUID])
 
+    // MARK: - 하위 호환성을 위한 computed property
+
+    /// 하위 호환성을 위한 기존 element property
     public var element: (id: UUID, action: Action)? {
-        guard case let .element(.element(id, action)) = self else { return nil }
+        guard case let .routeAction(id, action) = self else { return nil }
         return (id, action)
+    }
+
+    // MARK: - 개선된 패턴 매칭을 위한 편의 메서드
+
+    /// 특정 스크린 액션과 매칭하는지 확인
+    public func isScreenAction<T>(_ action: T) -> Bool where T: Equatable {
+        guard case let .routeAction(_, screenAction) = self,
+              let typedAction = screenAction as? T else { return false }
+        return typedAction == action
+    }
+
+    /// 스크린 액션 타입과 매칭하는지 확인
+    public func isScreenActionType<T>(_: T.Type) -> Bool {
+        guard case let .routeAction(_, screenAction) = self else { return false }
+        return screenAction is T
+    }
+
+    /// 특정 ID의 스크린 액션과 매칭
+    public func matchesRoute(id targetID: UUID, action targetAction: Action) -> Bool where Action: Equatable {
+        guard case let .routeAction(id, action) = self else { return false }
+        return id == targetID && action == targetAction
+    }
+
+    /// 스크린 액션만 추출 (ID 무시)
+    public var screenAction: Action? {
+        guard case let .routeAction(_, action) = self else { return nil }
+        return action
+    }
+
+    /// 스크린 ID만 추출
+    public var routeID: UUID? {
+        guard case let .routeAction(id, _) = self else { return nil }
+        return id
+    }
+}
+
+// MARK: - 패턴 매칭을 위한 편의 확장
+
+extension FlowAction {
+    /// if case 문을 간단하게 만들어주는 정적 메서드들
+
+    /// 특정 액션 타입으로 케스팅이 가능한지 확인
+    public static func ~=<T>(pattern: T, value: FlowAction) -> Bool where T: Equatable {
+        return value.isScreenAction(pattern)
+    }
+}
+
+// MARK: - 매크로에서 생성된 Action과의 편의 매칭
+
+extension FlowAction {
+    /// 매크로에서 생성된 스크린 액션과 매칭하기 위한 헬퍼 (CasePaths 지원)
+    public func matches<ScreenAction, Value>(_ casePath: AnyCasePath<ScreenAction, Value>) -> Value? {
+        guard let screenAction = self.screenAction as? ScreenAction else { return nil }
+        return casePath.extract(from: screenAction)
+    }
+
+    /// 특정 케이스인지 확인
+    public func isCase<ScreenAction, Value>(_ casePath: AnyCasePath<ScreenAction, Value>) -> Bool {
+        return matches(casePath) != nil
+    }
+}
+
+// MARK: - 간편한 패턴 매칭을 위한 케이스 분해 메서드
+
+extension FlowAction {
+    /// 화면 액션과 ID를 분해하여 클로저에 전달 - 깔끔한 API
+    @discardableResult
+    public func ifRouteAction<T>(
+        _ handler: (UUID, Action) -> T
+    ) -> T? {
+        guard case let .routeAction(id, action) = self else { return nil }
+        return handler(id, action)
+    }
+
+    /// 특정 화면의 액션인 경우에만 클로저 실행
+    @discardableResult
+    public func ifScreenAction<T, ScreenAction>(
+        as screenActionType: ScreenAction.Type,
+        _ handler: (UUID, ScreenAction) -> T
+    ) -> T? {
+        guard case let .routeAction(id, action) = self,
+              let screenAction = action as? ScreenAction else { return nil }
+        return handler(id, screenAction)
+    }
+
+    /// ID는 무시하고 화면 액션만 처리
+    @discardableResult
+    public func ifScreenAction<T>(
+        _ handler: (Action) -> T
+    ) -> T? {
+        guard let action = screenAction else { return nil }
+        return handler(action)
+    }
+
+    // MARK: - 하위 호환성을 위한 별칭 메서드
+    @discardableResult
+    public func ifElement<T>(
+        _ handler: (UUID, Action) -> T
+    ) -> T? {
+        return ifRouteAction(handler)
     }
 }
 

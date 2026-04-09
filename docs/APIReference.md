@@ -76,7 +76,7 @@ public enum FlowAction<Action> {
 화면 action은 보통 coordinator reducer에서 이렇게 처리합니다.
 
 ```swift
-case .route(.element(.element(let id, let screenAction))):
+case .route(.routeAction(let id, let screenAction)):
   switch screenAction {
   case .home(.detailButtonTapped):
     state.routes.push(.detail(DetailFeature.State()))

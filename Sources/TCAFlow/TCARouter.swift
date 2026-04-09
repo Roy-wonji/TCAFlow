@@ -76,13 +76,16 @@ public struct TCARouter<ScreenState: Equatable, ScreenAction, ScreenView: View>:
 
   @ViewBuilder
   private func makeScreen(routeID: UUID) -> some View {
-    if let store = self.store.scope(
-      state: \.routes[id: routeID]?.state,
-      action: \.element[id: routeID]
-    ) {
-      self.screenView(store)
-    } else {
-      EmptyView()
+    WithPerceptionTracking {
+      if let route = self.store.state.routes[id: routeID] {
+        let childStore = self.store.scope(
+          state: { _ in route.state },
+          action: { FlowAction.routeAction(id: routeID, action: $0) }
+        )
+        self.screenView(childStore)
+      } else {
+        EmptyView()
+      }
     }
   }
 }

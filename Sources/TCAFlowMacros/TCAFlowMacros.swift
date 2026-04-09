@@ -301,7 +301,7 @@ public struct ViewTransitionsMacro: MemberMacro {
 public struct ForEachRouteMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,
-        providingPeersOf declaration: some DeclSyntax,
+        providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         return []
