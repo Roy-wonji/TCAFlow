@@ -117,7 +117,7 @@ struct DemoCoordinatorView: View {
   @Bindable var store: StoreOf<DemoCoordinator>
 
   var body: some View {
-    TCARouter(store.scope(state: \.routes, action: \.router)) { screen in
+    TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
       switch screen.case {
         case .home(let store):
           HomeView(store: store)
@@ -415,7 +415,7 @@ struct NestedCoordinatorView: View {
   @Bindable var store: StoreOf<NestedCoordinator>
 
   var body: some View {
-    TCARouter(store.scope(state: \.routes, action: \.router)) { screen in
+    TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
       switch screen.case {
         case .step1(let store):
           NestedStep1View(store: store)

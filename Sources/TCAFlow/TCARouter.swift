@@ -52,10 +52,10 @@ extension EnvironmentValues {
     }
 }
 
-// MARK: - TCARouter
+// MARK: - TCAFlowRouter
 
 @MainActor
-public struct TCARouter<Screen, ScreenAction, ScreenContent: View>: View {
+public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     @Perception.Bindable private var store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
     private let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
 
@@ -114,7 +114,7 @@ public struct TCARouter<Screen, ScreenAction, ScreenContent: View>: View {
 }
 
 // MARK: - _StackReplacement
-/// When a nested TCARouter with embedInNavigationView:true is inside a parent NavigationStack,
+/// When a nested TCAFlowRouter with embedInNavigationView:true is inside a parent NavigationStack,
 /// it presents itself as a fullScreenCover (with no animation) → looks like a stack replacement.
 /// This avoids the SwiftUI limitation of NavigationStack-in-NavigationStack causing immediate pop.
 
@@ -341,4 +341,4 @@ private struct _Presented<Screen, ScreenAction, ScreenContent: View>: View {
 
 // MARK: - Backward Compat
 
-public typealias TCAFlowRouter = TCARouter
+public typealias TCARouter = TCAFlowRouter
