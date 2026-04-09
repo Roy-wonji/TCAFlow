@@ -2,19 +2,35 @@ import ComposableArchitecture
 import SwiftUI
 import Perception
 
-/// A SwiftUI view that renders a navigation flow based on an array of routes.
-/// Usage: TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in ... }
+// MARK: - CaseStore
+
+/// A wrapper that provides TCACoordinators-style case access to screen stores
+public struct CaseStore<Screen> {
+    public let screen: Screen
+
+    init(screen: Screen) {
+        self.screen = screen
+    }
+
+    /// Provides .case access for switch statements
+    public var `case`: Screen {
+        return screen
+    }
+}
+
+/// TCACoordinators-style router view
+/// Usage: TCARouter(store.scope(state: \.routes, action: \.router)) { screen in ... }
 @MainActor
-public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
+public struct TCARouter<Screen, ScreenAction, ScreenContent: View>: View {
     private let store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
-    private let screenView: (Screen) -> ScreenContent
+    private let screenView: (CaseStore<Screen>) -> ScreenContent
 
     public init(
         _ store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
-        @ViewBuilder screenView: @escaping (Screen) -> ScreenContent
+        @ViewBuilder content: @escaping (CaseStore<Screen>) -> ScreenContent
     ) {
         self.store = store
-        self.screenView = screenView
+        self.screenView = content
     }
 
     public var body: some View {
@@ -24,15 +40,15 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
             if let rootRoute = routes.first {
                 if rootRoute.embedInNavigationView {
                     NavigationStack {
-                        screenView(rootRoute.screen)
+                        screenView(CaseStore(screen: rootRoute.screen))
                             .navigationDestination(for: Int.self) { index in
                                 if index > 0 && index < routes.count {
-                                    screenView(routes[index].screen)
+                                    screenView(CaseStore(screen: routes[index].screen))
                                 }
                             }
                     }
                 } else {
-                    screenView(rootRoute.screen)
+                    screenView(CaseStore(screen: rootRoute.screen))
                 }
             } else {
                 Text("No Routes")
@@ -41,6 +57,11 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
         }
     }
 }
+
+// MARK: - Type Alias
+
+/// Alias for TCARouter to maintain compatibility with TCAFlowRouter name
+public typealias TCAFlowRouter<Screen, ScreenAction, ScreenContent: View> = TCARouter<Screen, ScreenAction, ScreenContent>
 
 // MARK: - Route Helpers
 

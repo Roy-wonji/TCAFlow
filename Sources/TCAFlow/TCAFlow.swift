@@ -1,6 +1,9 @@
 import ComposableArchitecture
 import Foundation
 import SwiftUI
+#if canImport(os)
+import os
+#endif
 
 /// A route represents a navigation destination and how it should be presented.
 /// Identical to TCACoordinators Route API
@@ -233,6 +236,16 @@ extension Array {
         }
         self[self.count - 1] = .push(screen)
     }
+
+    /// Replaces the entire navigation stack with new routes
+    public mutating func replaceStack<Screen>(with newRoutes: [Route<Screen>]) where Element == Route<Screen> {
+        self = newRoutes
+    }
+
+    /// Replaces the entire navigation stack with a single root screen
+    public mutating func replaceStack<Screen>(withRoot screen: Screen, embedInNavigationView: Bool = true) where Element == Route<Screen> {
+        self = [.root(screen, embedInNavigationView: embedInNavigationView)]
+    }
 }
 
 // MARK: - routeWithDelaysIfUnsupported helper
@@ -276,6 +289,19 @@ public typealias IdentifiedRouterAction<Screen: Identifiable, ScreenAction> = Ro
 /// Convenience type alias for identified router actions with reducer.
 public typealias IdentifiedRouterActionOf<R: Reducer> = RouterAction<R.State.ID, R.State, R.Action> where R.State: Identifiable
 
+// MARK: - Nested Coordinator Support
+
+/// Helper methods for working with nested coordinators
+/// This will be expanded when the @Reducer macro is implemented
+extension Array where Element == Route<Any> {
+    /// Push a screen onto a nested coordinator if the current route contains one
+    public mutating func pushToNestedCoordinator<Screen>(_ screen: Screen) {
+        // This will be implemented properly with macro support
+        // For now, this is a placeholder for nested coordinator functionality
+        runtimeWarn("pushToNestedCoordinator not yet fully implemented - requires @Reducer macro support")
+    }
+}
+
 // MARK: - Debugging Utilities
 
 #if DEBUG
@@ -290,7 +316,6 @@ public func runtimeWarn(
     let category = category ?? "TCAFlow"
 
     #if canImport(os)
-    import os
     os_log(
         .fault,
         dso: #dsohandle,

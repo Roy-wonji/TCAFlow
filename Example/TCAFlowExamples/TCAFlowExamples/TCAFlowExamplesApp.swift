@@ -1,14 +1,14 @@
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct TCAFlowExamplesApp: App {
     var body: some Scene {
         WindowGroup {
-            AppCoordinatorView(
-                store: .init(
-                    initialState: AppCoordinator.State(),
-                    reducer: { AppCoordinator() }
-                )
+            AuthCoordinatorView(
+                store: Store(initialState: AuthCoordinator.State()) {
+                    AuthCoordinator()
+                }
             )
         }
     }
