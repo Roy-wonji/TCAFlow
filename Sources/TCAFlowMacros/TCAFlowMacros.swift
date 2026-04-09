@@ -544,14 +544,14 @@ public struct FlowScreenCaseMacro: ExtensionMacro {
 @main
 struct TCAFlowPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        FlowCoordinatorMacro.self,
-        NestedCoordinatorExtensionMacro.self,
-        RouteStackExtensionsMacro.self,
-        ViewTransitionsMacro.self,
-        ForEachRouteMacro.self,
-        FlowScreenMacro.self,
-        FlowScreenCaseMacro.self,
-        ReducerMacro.self,
-        ScreenReducerMacro.self,
+        // FlowCoordinatorMacro.self,
+        // NestedCoordinatorExtensionMacro.self,
+        // RouteStackExtensionsMacro.self,
+        // ViewTransitionsMacro.self,
+        // ForEachRouteMacro.self,
+        // FlowScreenMacro.self,
+        // FlowScreenCaseMacro.self,
+        // ReducerMacro.self,
+        // ScreenReducerMacro.self,
     ]
 }

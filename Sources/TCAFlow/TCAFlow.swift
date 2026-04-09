@@ -164,35 +164,39 @@ extension Array {
 
     /// Pops the topmost route from the navigation stack.
     @discardableResult
-    public mutating func pop() -> Element? where Element: RouteProtocol {
+    public mutating func pop() -> Element? {
         return self.popLast()
     }
 
     /// Goes back by one step (same as pop)
     @discardableResult
-    public mutating func goBack() -> Element? where Element: RouteProtocol {
+    public mutating func goBack() -> Element? {
         return self.pop()
     }
 
     /// Pops back to the root route.
-    public mutating func popToRoot() where Element: RouteProtocol {
+    public mutating func popToRoot() {
         if let root = self.first {
             self = [root]
         }
     }
 
     /// Goes back to root (same as popToRoot)
-    public mutating func goBackToRoot() where Element: RouteProtocol {
+    public mutating func goBackToRoot() {
         popToRoot()
     }
 
     /// Dismisses the topmost presented route (sheet or cover).
     @discardableResult
-    public mutating func dismiss() -> Element? where Element: RouteProtocol {
-        guard let last = self.last, last.isPresented else {
-            return nil
+    public mutating func dismiss() -> Element? {
+        guard !self.isEmpty else { return nil }
+        let last = self.last!
+
+        // Check if it's a Route type and if it's presented
+        if let route = last as? Route<Any>, route.isPresented {
+            return self.removeLast()
         }
-        return self.removeLast()
+        return nil
     }
 
     /// Goes back to a specific screen case using AnyCasePath
@@ -231,19 +235,6 @@ extension Array {
     }
 }
 
-// MARK: - RouteProtocol
-
-/// Protocol that all route types must conform to.
-public protocol RouteProtocol {
-    associatedtype Screen
-
-    var screen: Screen { get set }
-    var embedInNavigationView: Bool { get }
-    var isPresented: Bool { get }
-}
-
-extension Route: RouteProtocol {}
-
 // MARK: - routeWithDelaysIfUnsupported helper
 
 /// TCACoordinators-style helper for handling route updates with delays
@@ -263,12 +254,27 @@ public func routeWithDelaysIfUnsupported<Action, Screen, ScreenAction>(
 
 // MARK: - Helper Functions
 
+/// Helper function to match screen cases
 private func matchesScreenCase<Screen>(_ screen1: Screen, target screen2: Screen) -> Bool {
     // This is a simplified implementation
     // In a real scenario, you'd want to compare enum cases properly
     return String(describing: screen1).split(separator: "(").first ==
            String(describing: screen2).split(separator: "(").first
 }
+
+// MARK: - Type Aliases
+
+/// Convenience type alias for indexed router actions.
+public typealias IndexedRouterAction<Screen, ScreenAction> = RouterAction<Int, Screen, ScreenAction>
+
+/// Convenience type alias for indexed router actions with reducer.
+public typealias IndexedRouterActionOf<R: Reducer> = RouterAction<Int, R.State, R.Action>
+
+/// Convenience type alias for identified router actions.
+public typealias IdentifiedRouterAction<Screen: Identifiable, ScreenAction> = RouterAction<Screen.ID, Screen, ScreenAction>
+
+/// Convenience type alias for identified router actions with reducer.
+public typealias IdentifiedRouterActionOf<R: Reducer> = RouterAction<R.State.ID, R.State, R.Action> where R.State: Identifiable
 
 // MARK: - Debugging Utilities
 

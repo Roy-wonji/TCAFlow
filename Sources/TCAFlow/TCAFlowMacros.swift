@@ -1,5 +1,6 @@
 import Foundation
 
+/*
 /// Generates TCAFlow coordinator boilerplate from a nested `Screen` enum.
 ///
 /// Use this macro when you want to write only the route cases and keep the generated
@@ -39,7 +40,9 @@ public macro RouteStackExtensions() = #externalMacro(module: "TCAFlowMacros", ty
 /// View transition extension 메서드들을 자동 생성하는 매크로
 @attached(member, names: arbitrary)
 public macro ViewTransitions() = #externalMacro(module: "TCAFlowMacros", type: "ViewTransitionsMacro")
+*/
 
+/*
 /// Reducer macro similar to TCACoordinators but without hashable requirement
 /// Generates State/Action enums and body implementation for screen enums
 @attached(member, names: named(State), named(Action), named(body))
@@ -50,3 +53,4 @@ public macro Reducer() = #externalMacro(module: "TCAFlowMacros", type: "ReducerM
 @attached(member, names: named(State), named(Action), named(body))
 @attached(extension, conformances: Reducer, CaseReducer)
 public macro ScreenReducer() = #externalMacro(module: "TCAFlowMacros", type: "ScreenReducerMacro")
+*/

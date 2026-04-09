@@ -3,15 +3,15 @@ import SwiftUI
 import Perception
 
 /// A SwiftUI view that renders a navigation flow based on an array of routes.
-/// Usage: TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screens in ... }
+/// Usage: TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in ... }
 @MainActor
-public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
-    private let store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>
-    private let screenView: (Screen.CaseScope) -> ScreenContent
+public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
+    private let store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
+    private let screenView: (Screen) -> ScreenContent
 
     public init(
-        _ store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>,
-        @ViewBuilder screenView: @escaping (Screen.CaseScope) -> ScreenContent
+        _ store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
+        @ViewBuilder screenView: @escaping (Screen) -> ScreenContent
     ) {
         self.store = store
         self.screenView = screenView
@@ -19,80 +19,25 @@ public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
 
     public var body: some View {
         WithPerceptionTracking {
-            let routes = store.state
+            let routes = store.withState { $0 }
 
             if let rootRoute = routes.first {
                 if rootRoute.embedInNavigationView {
                     NavigationStack {
-                        makeScreen(for: rootRoute, at: 0)
+                        screenView(rootRoute.screen)
                             .navigationDestination(for: Int.self) { index in
                                 if index > 0 && index < routes.count {
-                                    makeScreen(for: routes[index], at: index)
+                                    screenView(routes[index].screen)
                                 }
                             }
                     }
-                    .overlay {
-                        presentedScreens(routes: routes)
-                    }
                 } else {
-                    makeScreen(for: rootRoute, at: 0)
-                        .overlay {
-                            presentedScreens(routes: routes)
-                        }
+                    screenView(rootRoute.screen)
                 }
             } else {
                 Text("No Routes")
                     .foregroundStyle(.secondary)
             }
-        }
-    }
-
-    @ViewBuilder
-    private func makeScreen(for route: Route<Screen.State>, at index: Int) -> some View {
-        let caseScope = Screen.scope(
-            store.scope(
-                state: { _ in route.screen },
-                action: { RouterAction.routeAction(index, $0) }
-            )
-        )
-        screenView(caseScope)
-    }
-
-    @ViewBuilder
-    private func presentedScreens(routes: [Route<Screen.State>]) -> some View {
-        ForEach(routes.indices, id: \.self) { index in
-            let route = routes[index]
-            if route.isPresented {
-                Color.clear
-                    .sheet(isPresented: .constant(route.isSheet)) {
-                        presentedContent(for: route, at: index)
-                    }
-                    #if !os(macOS)
-                    .fullScreenCover(isPresented: .constant(route.isCover)) {
-                        presentedContent(for: route, at: index)
-                    }
-                    #endif
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func presentedContent(for route: Route<Screen.State>, at index: Int) -> some View {
-        let content = makeScreen(for: route, at: index)
-
-        if route.embedInNavigationView {
-            NavigationStack {
-                content
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Done") {
-                                store.send(.updateRoutes(Array(store.state.dropLast())))
-                            }
-                        }
-                    }
-            }
-        } else {
-            content
         }
     }
 }
@@ -112,17 +57,3 @@ extension Route {
         return false
     }
 }
-
-// MARK: - Type Aliases
-
-/// Convenience type alias for indexed router actions.
-public typealias IndexedRouterAction<Screen, ScreenAction> = RouterAction<Int, Screen, ScreenAction>
-
-/// Convenience type alias for indexed router actions with reducer.
-public typealias IndexedRouterActionOf<R: Reducer> = RouterAction<Int, R.State, R.Action>
-
-/// Convenience type alias for identified router actions.
-public typealias IdentifiedRouterAction<Screen: Identifiable, ScreenAction> = RouterAction<Screen.ID, Screen, ScreenAction>
-
-/// Convenience type alias for identified router actions with reducer.
-public typealias IdentifiedRouterActionOf<R: Reducer> = RouterAction<R.State.ID, R.State, R.Action> where R.State: Identifiable
