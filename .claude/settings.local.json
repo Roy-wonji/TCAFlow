@@ -21,7 +21,8 @@
       "Bash(git rm:*)",
       "Bash(curl -s https://raw.githubusercontent.com/pointfreeco/swift-composable-architecture/main/Sources/ComposableArchitecture/Exports.swift)",
       "Bash(mkdir:*)",
-      "Bash(find docs:*)"
+      "Bash(find docs:*)",
+      "Bash(grep -E \"\\\\.swift$\")"
     ]
   }
 }

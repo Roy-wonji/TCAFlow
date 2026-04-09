@@ -313,10 +313,10 @@ extension Reducer {
     ///       return .none  // pathChanged는 자동 처리됨
     ///     }
     ///   }
-    ///   .handleRoutePath(\.routes, action: \.route)
+    ///   .forEachRoute(\.routes, action: \.route)
     /// }
     /// ```
-    public func handleRoutePath<RouteState: Equatable, RouteAction>(
+    public func forEachRoute<RouteState: Equatable, RouteAction>(
         _ routeStackKeyPath: WritableKeyPath<State, RouteStack<RouteState>>,
         action routeActionKeyPath: AnyCasePath<Action, FlowAction<RouteAction>>
     ) -> some ReducerOf<Self> {

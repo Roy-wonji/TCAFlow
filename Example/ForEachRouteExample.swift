@@ -53,7 +53,7 @@ struct SimpleCoordinator: Reducer {
             }
         }
         // 🎯 pathChanged 자동 처리!
-        .handleRoutePath(\.routes, action: \.route)
+        .forEachRoute(\.routes, action: \.route)
     }
 
     // 각 스크린 액션을 깔끔하게 처리
@@ -202,7 +202,7 @@ struct MinimalCoordinator: Reducer {
                 }
             }
         }
-        .handleRoutePath(\.routes, action: \.route)
+        .forEachRoute(\.routes, action: \.route)
         // 🎯 각 Feature의 리듀서는 TCA의 기본 forEach 패턴 사용
         .forEach(\.routes.routes, action: \.route.routeAction) {
             EmptyReducer<Screen, ScreenAction>()
@@ -332,7 +332,7 @@ var body: some ReducerOf<Self> {
             return handleScreenAction(screenAction, id: id, state: &state)
         }
     }
-    .handleRoutePath(\.routes, action: \.route) // 🎯 pathChanged 자동 처리
+    .forEachRoute(\.routes, action: \.route) // 🎯 pathChanged 자동 처리
 }
 
 // 🚀 더 간단한 방식 (네비게이션만 처리)
@@ -355,6 +355,6 @@ var body: some ReducerOf<Self> {
             }
         }
     }
-    .handleRoutePath(\.routes, action: \.route)
+    .forEachRoute(\.routes, action: \.route)
 }
 */

@@ -237,7 +237,7 @@ state.routes.goBackTo(.home(HomeFeature.State()))
 
 매크로를 사용할 수 없는 환경에서도 TCAFlow의 라우팅 기능을 깔끔하게 사용할 수 있도록 유틸리티를 제공합니다.
 
-### handleRoutePath
+### forEachRoute
 
 `pathChanged` 액션을 자동으로 처리하는 확장입니다.
 
@@ -256,7 +256,7 @@ struct AppCoordinator: Reducer {
         return handleScreenAction(screenAction, id: id, state: &state)
       }
     }
-    .handleRoutePath(\.routes, action: \.route) // 🎯 pathChanged 자동 처리!
+    .forEachRoute(\.routes, action: \.route) // 🎯 pathChanged 자동 처리!
   }
 }
 ```
@@ -287,7 +287,7 @@ if let path = routeAction.pathChangeRoute {
 | 항목 | `@FlowCoordinator` 매크로 | 수동 구현 + 유틸리티 |
 | --- | --- | --- |
 | 보일러플레이트 | Screen enum만 정의 | State, Action, Screen 모두 정의 |
-| pathChanged 처리 | 수동 작성 필요 | `.handleRoutePath()`로 자동 |
+| pathChanged 처리 | 수동 작성 필요 | `.forEachRoute()`로 자동 |
 | 커스터마이징 | 제한적 | 완전한 제어 |
 | 학습 곡선 | 낮음 | 중간 |
 | 사용 권장 | ✅ 대부분의 경우 | 특수한 요구사항이 있는 경우 |

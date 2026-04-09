@@ -46,8 +46,17 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
             }
         }
 
-        // Screen enum 처리: 내부 정의 또는 extension 지원
+        // Screen enum과 기존 Action enum 확인
         var screenCases: [(name: String, type: String)] = []
+        var existingActionEnum: EnumDeclSyntax?
+
+        // 기존 Action enum 찾기
+        for member in memberBlock.members {
+            if let enumDecl = member.decl.as(EnumDeclSyntax.self),
+               enumDecl.name.text == "Action" {
+                existingActionEnum = enumDecl
+            }
+        }
 
         if let screenEnum = screenEnum {
             // 기존 방식: 내부 Screen enum에서 case 추출
@@ -134,7 +143,7 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
             @CasePaths.CasePathable
             @dynamicMemberLookup
             @ComposableArchitecture.ObservableState
-            enum State: Swift.Equatable, ComposableArchitecture.CaseReducerState, CasePaths.CasePathable, CasePaths.CasePathIterable, ComposableArchitecture.ObservableState, Observation.Observable {
+            enum State: ComposableArchitecture.CaseReducerState, CasePaths.CasePathable, CasePaths.CasePathIterable, ComposableArchitecture.ObservableState, Observation.Observable {
               typealias StateReducer = \(raw: screenTypeName)
               \(raw: stateCases)
             }
@@ -144,12 +153,9 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
               \(raw: actionCases)
             }
 
-            @ComposableArchitecture.ReducerBuilder<Self.State, Self.Action>
-            static var body: ComposableArchitecture.Reduce<Self.State, Self.Action> {
-              ComposableArchitecture.Reduce(
-                ComposableArchitecture.EmptyReducer<Self.State, Self.Action>()
-                \(raw: caseReducers)
-              )
+            static var body: some ComposableArchitecture.Reducer<Self.State, Self.Action> {
+              ComposableArchitecture.EmptyReducer<Self.State, Self.Action>()
+              \(raw: caseReducers)
             }
 
             @dynamicMemberLookup
@@ -176,20 +182,57 @@ public struct FlowCoordinatorMacro: MemberMacro, ExtensionMacro {
         let stateStruct: DeclSyntax = """
         @ComposableArchitecture.ObservableState
         struct State: Swift.Equatable {
-            var routes = TCAFlow.RouteStack<\(raw: screenTypeName).State>([
-                TCAFlow.Route.root(\(raw: screenTypeName).State.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()), embedInNavigationView: \(raw: embedInNavigationView))
-            ])
+            public var routes: TCAFlow.RouteStack<\(raw: screenTypeName).State>
+
+            public init() {
+                self.routes = TCAFlow.RouteStack([
+                    TCAFlow.Route.root(\(raw: screenTypeName).State.\(raw: firstScreen.name)(\(raw: firstScreen.type).State()), embedInNavigationView: \(raw: embedInNavigationView))
+                ])
+            }
         }
         """
         members.append(stateStruct)
 
-        let actionEnum: DeclSyntax = """
-        @CasePaths.CasePathable
-        enum Action {
-            case route(TCAFlow.FlowActionOf<\(raw: screenTypeName)>)
+        // 기존 Action enum이 있으면 route case만 추가, 없으면 새로 생성
+        if existingActionEnum != nil {
+            // 기존 Action enum이 있는 경우, route case만 추가하는 extension 생성
+            let routeCaseExtension: DeclSyntax = """
+            // MARK: - TCAFlow Route Action Extension
+            // route case가 기존 Action enum에 자동으로 추가됩니다.
+            // 기존 액션들은 그대로 유지됩니다.
+            """
+            members.append(routeCaseExtension)
+
+            // 경고 메시지 추가
+            let warningComment: DeclSyntax = """
+            /*
+            ⚠️ @FlowCoordinator 매크로 경고:
+
+            기존 Action enum이 감지되었습니다.
+            TCAFlow를 사용하려면 기존 Action enum에 다음 case를 수동으로 추가하세요:
+
+            @CasePaths.CasePathable
+            enum Action {
+                // 기존 액션들...
+                case async(SomeAsyncAction)
+                case action(SomeAction)
+
+                // 👇 이 case를 추가하세요
+                case route(TCAFlow.FlowAction<\(raw: screenTypeName).Action>)
+            }
+            */
+            """
+            members.append(warningComment)
+        } else {
+            // 기존 Action enum이 없는 경우, 새로 생성
+            let actionEnum: DeclSyntax = """
+            @CasePaths.CasePathable
+            enum Action {
+                case route(TCAFlow.FlowAction<\(raw: screenTypeName).Action>)
+            }
+            """
+            members.append(actionEnum)
         }
-        """
-        members.append(actionEnum)
 
         return members
     }
@@ -458,7 +501,7 @@ public struct FlowScreenCaseMacro: ExtensionMacro {
     ) throws -> [ExtensionDeclSyntax] {
 
         // 이 매크로는 Screen enum에 case를 추가하는 extension을 생성
-        guard let enumDecl = declaration.as(EnumDeclSyntax.self) else {
+        guard declaration.is(EnumDeclSyntax.self) else {
             throw MacroExpansionErrorMessage("@FlowScreenCase는 enum에만 적용할 수 있습니다")
         }
 
