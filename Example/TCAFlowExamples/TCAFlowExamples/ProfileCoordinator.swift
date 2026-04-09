@@ -18,7 +18,7 @@ struct ProfileCoordinator: Sendable {
         case .pathChanged(let path):
           let routeIDs = [state.routes.routes.first?.id].compactMap { $0 } + path
           while let last = state.routes.routes.last, !routeIDs.contains(last.id) {
-            _ = state.routes.pop()
+            state.routes.pop()
           }
 
         case .routeAction(_, let screenAction):
@@ -27,7 +27,7 @@ struct ProfileCoordinator: Sendable {
             state.routes.push(.profileDetail(ProfileDetailFeature.State()))
 
           case .profileDetail(.closeButtonTapped):
-            _ = state.routes.pop()
+            state.routes.pop()
           }
         }
 

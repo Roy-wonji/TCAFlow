@@ -50,7 +50,7 @@ var routes: RouteStack<AppScreen.State> = [
 
 ```swift
 state.routes.push(.detail(DetailFeature.State()))
-_ = state.routes.pop()
+state.routes.pop()
 state.routes.popToRoot()
 state.routes.replace(with: .settings(SettingsFeature.State()))
 state.routes.goTo(.settings(SettingsFeature.State()))
@@ -82,7 +82,7 @@ case .route(.routeAction(let id, let screenAction)):
     state.routes.push(.detail(DetailFeature.State()))
 
   case .detail(.closeButtonTapped):
-    _ = state.routes.pop()
+    state.routes.pop()
   }
   return .none
 ```
@@ -93,7 +93,7 @@ case .route(.routeAction(let id, let screenAction)):
 case .route(.pathChanged(let path)):
   let routeIDs = [state.routes.routes.first?.id].compactMap { $0 } + path
   while let last = state.routes.routes.last, !routeIDs.contains(last.id) {
-    _ = state.routes.pop()
+    state.routes.pop()
   }
   return .none
 ```

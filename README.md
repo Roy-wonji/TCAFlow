@@ -137,7 +137,7 @@ struct AppCoordinator: Sendable {
         return .none
 
       case .route(.routeAction(_, .detail(.closeButtonTapped)))):
-        _ = state.routes.pop()
+        state.routes.pop()
         return .none
 
       case .route:
@@ -218,7 +218,7 @@ var routes: RouteStack<AppScreen.State> = [
 ```swift
 state.routes.push(.profile(.init()))
 state.routes.push(.detail(DetailFeature.State()))
-_ = state.routes.pop()
+state.routes.pop()
 state.routes.popToRoot()
 state.routes.replace(with: .settings(SettingsFeature.State()))
 state.routes.goTo(.settings(SettingsFeature.State()))

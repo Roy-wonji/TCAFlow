@@ -87,7 +87,7 @@ struct AppCoordinator: Sendable {
         return .none
 
       case .route(.routeAction(_, .detail(.closeButtonTapped)))):
-        _ = state.routes.pop()
+        state.routes.pop()
         return .none
 
       case .route:

@@ -22,7 +22,7 @@ struct AppCoordinator: Sendable {
         case .pathChanged(let path):
           let routeIDs = [state.routes.routes.first?.id].compactMap { $0 } + path
           while let last = state.routes.routes.last, !routeIDs.contains(last.id) {
-            _ = state.routes.pop()
+            state.routes.pop()
           }
 
         case .routeAction(let id, let screenAction):
@@ -66,16 +66,16 @@ struct AppCoordinator: Sendable {
             state.routes.goTo(.settings(.init()))
 
         case .summary(.backButtonTapped):
-          _ = state.routes.pop()
+          state.routes.pop()
 
         case .summary(.restartButtonTapped):
           state.routes.popToRoot()
 
         case .settings(.backButtonTapped):
-          _ = state.routes.pop()
+          state.routes.pop()
 
         case .single(.closeButtonTapped):
-          _ = state.routes.pop()
+          state.routes.pop()
 
         case .counter(.incrementButtonTapped):
           if case .counter(var childState) = state.routes.routes[id: id]?.state {
@@ -135,7 +135,7 @@ private extension AppCoordinator {
       case .pathChanged(let path):
         let routeIDs = [state.routes.routes.first?.id].compactMap { $0 } + path
         while let last = state.routes.routes.last, !routeIDs.contains(last.id) {
-          _ = state.routes.pop()
+          state.routes.pop()
         }
 
       case .routeAction(_, let screenAction):
@@ -144,7 +144,7 @@ private extension AppCoordinator {
           state.routes.push(.profileDetail(.init()))
 
         case .profileDetail(.closeButtonTapped):
-          _ = state.routes.pop()
+          state.routes.pop()
         }
       }
     }
