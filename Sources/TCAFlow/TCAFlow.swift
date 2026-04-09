@@ -294,3 +294,71 @@ private extension Equatable {
             == String(describing: other).split(separator: "(").first
     }
 }
+
+// MARK: - RouteStack Utilities
+
+extension Reducer {
+    /// RouteStack의 pathChanged 액션을 자동으로 처리하는 유틸리티입니다.
+    /// 매크로 없이 라우트 경로 변경을 깔끔하게 처리할 수 있습니다.
+    ///
+    /// 사용법:
+    /// ```swift
+    /// var body: some ReducerOf<Self> {
+    ///   Reduce { state, action in
+    ///     switch action {
+    ///     case .route(.routeAction(let id, let screenAction)):
+    ///       // 각 스크린 액션 처리
+    ///       return handleScreenAction(screenAction, id: id, state: &state)
+    ///     case .route:
+    ///       return .none  // pathChanged는 자동 처리됨
+    ///     }
+    ///   }
+    ///   .handleRoutePath(\.routes, action: \.route)
+    /// }
+    /// ```
+    public func handleRoutePath<RouteState: Equatable, RouteAction>(
+        _ routeStackKeyPath: WritableKeyPath<State, RouteStack<RouteState>>,
+        action routeActionKeyPath: AnyCasePath<Action, FlowAction<RouteAction>>
+    ) -> some ReducerOf<Self> {
+        CombineReducers {
+            self
+
+            Reduce<State, Action> { state, action in
+                guard let flowAction = routeActionKeyPath.extract(from: action),
+                      case let .pathChanged(path) = flowAction else {
+                    return .none
+                }
+
+                // 경로 변경 자동 처리
+                let routeIDs = [state[keyPath: routeStackKeyPath].routes.first?.id].compactMap { $0 } + path
+                while let last = state[keyPath: routeStackKeyPath].routes.last,
+                      !routeIDs.contains(last.id) {
+                    state[keyPath: routeStackKeyPath].pop()
+                }
+                return .none
+            }
+        }
+    }
+}
+
+// MARK: - RouteStack Action Helpers
+
+extension FlowAction {
+    /// RouteAction에서 ID와 액션을 추출하는 헬퍼
+    public var routeInfo: (id: UUID, action: Action)? {
+        guard case let .routeAction(id, action) = self else { return nil }
+        return (id: id, action: action)
+    }
+
+    /// PathChanged인지 확인하는 헬퍼
+    public var isPathChanged: Bool {
+        if case .pathChanged = self { return true }
+        return false
+    }
+
+    /// PathChanged의 경로를 추출하는 헬퍼
+    public var pathChangeRoute: [UUID]? {
+        guard case let .pathChanged(path) = self else { return nil }
+        return path
+    }
+}
