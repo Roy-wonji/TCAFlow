@@ -2,7 +2,7 @@
 
 TCAFlow는 TCA(The Composable Architecture)용 coordinator-style navigation helper입니다.
 
-TCACoordinators처럼 route stack을 reducer state에서 관리하지만, 화면 state에 `Hashable`을 강제하지 않고 `Equatable`만 요구합니다. 현재 API는 TCA 1.25+의 `@Reducer`, `@ObservableState`, key-path store scoping에 맞춰져 있습니다.
+TCACoordinators와 완전히 동일한 API를 제공하지만 NavigationStack 기반으로 구현되었고, 화면 state에 `Hashable`을 강제하지 않습니다. TCACoordinators의 모든 기능을 지원하면서도 더 유연한 타입 제약을 가집니다.
 
 ## Features
 
@@ -111,63 +111,74 @@ struct HomeView: View {
 }
 ```
 
-coordinator는 `@FlowCoordinator`와 nested `Screen` enum으로 작성합니다.
+coordinator는 `@Reducer` 매크로로 Screen enum을 정의합니다.
 
 ```swift
 import ComposableArchitecture
 import SwiftUI
 import TCAFlow
 
-@FlowCoordinator(navigation: true)
 @Reducer
-struct AppCoordinator: Sendable {
-  enum Screen {
-    case home(HomeFeature)
-    case profile(ProfileCoordinator)
-    case detail(DetailFeature)
+enum Screen {
+  case home(HomeFeature)
+  case detail(DetailFeature)
+  case profile(ProfileCoordinator)
+}
+
+struct AppCoordinator: Reducer {
+  @ObservableState
+  struct State: Equatable {
+    var routes: [Route<Screen.State>] = [.push(.home(HomeFeature.State()))]
+  }
+
+  @CasePathable
+  enum Action {
+    case router(IndexedRouterAction<Screen.State, Screen.Action>)
   }
 
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .route(.routeAction(_, .home(.profileButtonTapped)))):
-        state.routes.push(.profile(.init()))
-        return .none
-
-      case .route(.routeAction(_, .home(.detailButtonTapped)))):
+      case let .router(.routeAction(_, .home(.detailButtonTapped))):
         state.routes.push(.detail(DetailFeature.State()))
         return .none
 
-      case .route(.routeAction(_, .detail(.closeButtonTapped)))):
+      case let .router(.routeAction(_, .detail(.closeButtonTapped))):
         state.routes.pop()
         return .none
 
-      case .route:
+      case .router:
         return .none
       }
     }
+    .forEachRoute(\.routes, action: \.router)
   }
 }
 ```
 
-SwiftUI에서는 coordinator store를 `RouteStack`으로 scope해서 `TCARouter`에 넘깁니다.
+SwiftUI에서는 TCACoordinators와 완전히 동일한 방식으로 사용합니다.
 
 ```swift
 struct AppCoordinatorView: View {
-  @SwiftUI.Bindable var store: StoreOf<AppCoordinator>
+  @Bindable private var store: StoreOf<AppCoordinator>
+
+  init(store: StoreOf<AppCoordinator>) {
+    self.store = store
+  }
 
   var body: some View {
-    TCARouter(
-      self.store.scope(state: \.routes, action: \.route)
-    ) { screen in
-      switch screen.case {
-      case .home(let store):
-        HomeView(store: store)
+    TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screens in
+      switch screens.case {
+      case .home(let homeStore):
+        HomeView(store: homeStore)
           .navigationTitle("Home")
 
-      case .detail(let store):
-        DetailView(store: store)
+      case .detail(let detailStore):
+        DetailView(store: detailStore)
           .navigationTitle("Detail")
+
+      case .profile(let profileStore):
+        ProfileCoordinatorView(store: profileStore)
       }
     }
   }
@@ -182,10 +193,9 @@ struct ExampleApp: App {
   var body: some Scene {
     WindowGroup {
       AppCoordinatorView(
-        store: Store(
-          initialState: AppCoordinator.State(),
-          reducer: { AppCoordinator() }
-        )
+        store: Store(initialState: AppCoordinator.State()) {
+          AppCoordinator()
+        }
       )
     }
   }
@@ -194,37 +204,27 @@ struct ExampleApp: App {
 
 ## Navigation API
 
-`navigation`은 기본값이 `true`입니다. root를 `NavigationStack` 없이 렌더링하려면 `false`를 넘깁니다.
+Route는 3가지 방식으로 화면을 표시할 수 있습니다.
 
 ```swift
-@FlowCoordinator(navigation: false)
-@Reducer
-struct AppCoordinator: Sendable {
-  enum Screen {
-    case home(HomeFeature)
-    case detail(DetailFeature)
-  }
-}
-```
-
-직접 `State`를 작성하는 경우에는 `Route.root`에서도 같은 옵션을 줄 수 있습니다.
-
-```swift
-var routes: RouteStack<AppScreen.State> = [
-  .root(.home(HomeFeature.State()), embedInNavigationView: false)
-]
-```
-
-`@FlowCoordinator`가 생성한 `State`에는 `routes`가 들어 있습니다.
-
-```swift
-state.routes.push(.profile(.init()))
+// Push navigation (NavigationStack)
 state.routes.push(.detail(DetailFeature.State()))
+
+// Sheet presentation
+state.routes.presentSheet(.settings(SettingsFeature.State()), withNavigation: true)
+
+// Full screen cover
+state.routes.presentCover(.onboarding(OnboardingFeature.State()), withNavigation: false)
+```
+
+기본 네비게이션 메서드들:
+
+```swift
+state.routes.push(.profile(ProfileFeature.State()))
 state.routes.pop()
 state.routes.popToRoot()
-state.routes.replace(with: .settings(SettingsFeature.State()))
-state.routes.goTo(.settings(SettingsFeature.State()))
-state.routes.goBackTo(.home(HomeFeature.State()))
+state.routes.dismiss() // 최상위 모달 닫기
+state.routes.goBackTo(SomeFeature.self) // 특정 타입으로 이동
 ```
 
 `embedInNavigationView`가 `true`면 `TCARouter`가 root를 `NavigationStack` 안에 렌더링합니다. `false`면 네비게이션 컨테이너 없이 현재 route view만 렌더링합니다.
@@ -233,125 +233,134 @@ state.routes.goBackTo(.home(HomeFeature.State()))
 
 `goBackTo`는 target screen과 같은 enum case가 나올 때까지 pop합니다.
 
-## RouteStack 유틸리티 (매크로 없이 사용)
+## @Reducer 매크로
 
-매크로를 사용할 수 없는 환경에서도 TCAFlow의 라우팅 기능을 깔끔하게 사용할 수 있도록 유틸리티를 제공합니다.
+TCACoordinators와 동일하게 `@Reducer` 매크로를 사용해서 Screen enum을 정의합니다.
+
+```swift
+@Reducer
+enum Screen {
+  case home(HomeFeature)
+  case detail(DetailFeature)
+  case settings(SettingsFeature)
+}
+```
+
+매크로가 자동으로 다음을 생성합니다:
+
+- `Screen.State` enum
+- `Screen.Action` enum  
+- `Screen.body` reducer implementation
+- `Screen.scope(_:)` method for CaseScope
 
 ### forEachRoute
 
-`pathChanged` 액션을 자동으로 처리하는 확장입니다.
+RouterAction을 자동으로 처리하는 확장입니다.
 
 ```swift
 struct AppCoordinator: Reducer {
-  // State, Screen, Action 정의...
+  // State, Action 정의...
 
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .route(let routeAction):
-        // routeAction만 처리, pathChanged는 자동 처리됨
-        guard let (id, screenAction) = routeAction.routeInfo else {
-          return .none
-        }
-        return handleScreenAction(screenAction, id: id, state: &state)
+      case let .router(.routeAction(_, screenAction)):
+        // 각 스크린 액션 처리
+        return handleScreenAction(screenAction, state: &state)
+      case .router(.updateRoutes):
+        return .none // 자동 처리됨
       }
     }
-    .forEachRoute(\.routes, action: \.route) // 🎯 pathChanged 자동 처리!
+    .forEachRoute(\.routes, action: \.router) // 🎯 RouterAction 자동 처리!
   }
 }
 ```
 
-### FlowAction 헬퍼
+### TCACoordinators와의 차이점
 
-라우트 액션을 더 쉽게 처리할 수 있는 헬퍼 프로퍼티들을 제공합니다.
-
-```swift
-// RouteAction 정보 추출
-if let (id, screenAction) = routeAction.routeInfo {
-  return handleScreenAction(screenAction, id: id, state: &state)
-}
-
-// PathChanged 확인
-if routeAction.isPathChanged {
-  return .none // 자동 처리됨
-}
-
-// PathChanged 경로 추출
-if let path = routeAction.pathChangeRoute {
-  // 커스텀 경로 처리 로직
-}
-```
-
-### 매크로 vs 수동 구현 비교
-
-| 항목 | `@FlowCoordinator` 매크로 | 수동 구현 + 유틸리티 |
+| 항목 | TCACoordinators | TCAFlow |
 | --- | --- | --- |
-| 보일러플레이트 | Screen enum만 정의 | State, Action, Screen 모두 정의 |
-| pathChanged 처리 | 수동 작성 필요 | `.forEachRoute()`로 자동 |
-| 커스터마이징 | 제한적 | 완전한 제어 |
-| 학습 곡선 | 낮음 | 중간 |
-| 사용 권장 | ✅ 대부분의 경우 | 특수한 요구사항이 있는 경우 |
+| Screen State 제약 | Hashable 강제 | Equatable만 요구 |
+| Route 방식 | push only | push/sheet/cover 지원 |
+| Navigation 구현 | FlowStacks 기반 | NavigationStack 직접 사용 |
+| API 호환성 | TCACoordinators API | 100% 호환 |
 
-## FlowCoordinator Macro
+## Screen Reducer Macro
 
-`@FlowCoordinator`는 아래 멤버를 생성합니다.
+`@Reducer` 매크로는 Screen enum에 다음을 생성합니다:
 
-- `<CoordinatorName>Screen`
-- `<CoordinatorName>Screen.State`
-- `<CoordinatorName>Screen.Action`
-- `<CoordinatorName>Screen.CaseScope`
-- `State`
-- `Action`
-
-작성자는 `Screen` enum과 coordinator reducer logic만 작성하면 됩니다.
+- `State` enum (각 케이스의 State 포함)
+- `Action` enum (각 케이스의 Action 포함)  
+- `body` reducer implementation
+- `scope(_:)` method for pattern matching
 
 ```swift
-@FlowCoordinator(navigation: true)
 @Reducer
-struct AppCoordinator: Sendable {
-  enum Screen {
-    case home(HomeFeature)
-    case single(SingleViewFeature)
-    case counter(CounterFeature)
-    case summary(SummaryFeature)
-    case settings(SettingsFeature)
-  }
+enum AppScreen {
+  case home(HomeFeature)
+  case detail(DetailFeature)
+  case settings(SettingsFeature)
 }
+
+// 생성된 코드 예시:
+// enum State: CaseReducerState {
+//   case home(HomeFeature.State)
+//   case detail(DetailFeature.State)
+//   case settings(SettingsFeature.State)
+// }
+//
+// enum Action {
+//   case home(HomeFeature.Action)
+//   case detail(DetailFeature.Action)
+//   case settings(SettingsFeature.Action)
+// }
 ```
 
-`AppCoordinator`면 `AppScreen`, `HomeCoordinator`면 `HomeScreen`이 생성됩니다.
-
-첫 번째 `Screen` case가 root route가 됩니다.
+TCACoordinators와 동일한 방식으로 사용할 수 있습니다.
 
 ## Nested Coordinator
 
 다른 coordinator를 screen case로 넣을 수 있습니다.
 
 ```swift
-@FlowCoordinator(navigation: true)
 @Reducer
-struct HomeCoordinator: Sendable {
-  enum Screen {
-    case home(HomeFeature)
-    case profile(ProfileCoordinator)
+enum HomeScreen {
+  case home(HomeFeature)
+  case profile(ProfileCoordinator)
+}
+
+struct HomeCoordinator: Reducer {
+  @ObservableState
+  struct State: Equatable {
+    var routes: [Route<HomeScreen.State>] = [.push(.home(HomeFeature.State()))]
+  }
+  
+  @CasePathable
+  enum Action {
+    case router(IndexedRouterAction<HomeScreen.State, HomeScreen.Action>)
+  }
+  
+  var body: some ReducerOf<Self> {
+    // reducer implementation...
   }
 }
 ```
 
-child coordinator가 parent `NavigationStack` 흐름에 이어서 push/pop 되어야 하면 child는 `navigation: false`가 맞습니다.
+child coordinator는 자체 Router를 가집니다:
 
 ```swift
-@FlowCoordinator(navigation: false)
-@Reducer
-struct ProfileCoordinator: Sendable {
-  enum Screen {
-    case profileHome(ProfileHomeFeature)
-    case profileDetail(ProfileDetailFeature)
-  }
+@Reducer  
+enum ProfileScreen {
+  case profileHome(ProfileHomeFeature)
+  case profileDetail(ProfileDetailFeature)
+}
+
+struct ProfileCoordinator: Reducer {
+  // ProfileCoordinator implementation...
 }
 ```
 
-child가 자기 own `NavigationStack`을 가져야 하면 `navigation: true`도 그대로 동작합니다. example 앱에 이 케이스가 포함되어 있습니다.
+중첩된 coordinator들도 TCACoordinators와 완전히 동일한 방식으로 동작합니다.
 
 ## Example App
 

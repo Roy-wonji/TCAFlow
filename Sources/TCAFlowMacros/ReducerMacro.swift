@@ -54,6 +54,17 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
             }
             """
             members.append(stateEnum)
+        } else {
+            // No associated types, create empty state conforming to CaseReducerState
+            let emptyStateEnum: DeclSyntax = """
+            @CasePathable
+            @dynamicMemberLookup
+            @ComposableArchitecture.ObservableState
+            \(raw: accessModifier)enum State: ComposableArchitecture.CaseReducerState {
+              \(raw: accessModifier)typealias StateReducer = \(raw: enumName)
+            }
+            """
+            members.append(emptyStateEnum)
         }
 
         // Generate Action enum
@@ -90,6 +101,18 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
             }
             """
             members.append(bodyComputed)
+
+            // Generate scope method for TCACoordinators compatibility
+            let scopeMethod: DeclSyntax = """
+            @preconcurrency
+            @MainActor
+            \(raw: accessModifier)static func scope(_ store: ComposableArchitecture.Store<Self.State, Self.Action>) -> Self {
+              switch store.state {
+              \(raw: generateScopeCases(cases: cases))
+              }
+            }
+            """
+            members.append(scopeMethod)
         }
 
         return members
@@ -109,9 +132,10 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
 
         let enumName = enumDecl.name.text
 
-        // Generate CaseReducer and Reducer conformance
-        let reducerConformanceExtension = try ExtensionDeclSyntax("extension \(raw: enumName): ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer") {
-            // Empty extension body - conformance is handled by the generated members
+        // Generate CaseReducer, Reducer, and CaseReducerState conformance
+        let reducerConformanceExtension = try ExtensionDeclSyntax("extension \(raw: enumName): ComposableArchitecture.CaseReducer, ComposableArchitecture.Reducer, ComposableArchitecture.CaseReducerState") {
+            // Add StateReducer typealias for CaseReducerState conformance
+            "public typealias StateReducer = \(raw: enumName)"
         }
 
         return [reducerConformanceExtension]
@@ -134,6 +158,18 @@ public struct ReducerMacro: MemberMacro, ExtensionMacro {
         }
 
         return ""
+    }
+
+    private static func generateScopeCases(cases: [(name: String, associatedType: String?)]) -> String {
+        let scopeCases = cases.compactMap { caseInfo in
+            guard let associatedType = caseInfo.associatedType else { return nil }
+            return """
+            case .\(caseInfo.name):
+              return .\(caseInfo.name)(store.scope(state: \\.\(caseInfo.name), action: \\.\(caseInfo.name))!)
+            """
+        }.joined(separator: "\n        ")
+
+        return scopeCases
     }
 }
 

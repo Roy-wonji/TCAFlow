@@ -3,15 +3,15 @@ import SwiftUI
 import Perception
 
 /// A SwiftUI view that renders a navigation flow based on an array of routes.
-/// Based on TCACoordinators TCARouter but using NavigationStack directly.
+/// Usage: TCAFlowRouter(store) { screens in switch screens.case { ... } }
 @MainActor
-public struct TCARouter<Screen, ScreenAction, ID: Hashable, ScreenContent: View>: View {
-    private let store: Store<[Route<Screen>], RouterAction<ID, Screen, ScreenAction>>
-    private let screenView: (Store<Screen, ScreenAction>) -> ScreenContent
+public struct TCAFlowRouter<Screen: CaseReducer, ScreenContent: View>: View {
+    private let store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>
+    private let screenView: (CaseScope<Screen>) -> ScreenContent
 
     public init(
-        _ store: Store<[Route<Screen>], RouterAction<ID, Screen, ScreenAction>>,
-        @ViewBuilder screenView: @escaping (Store<Screen, ScreenAction>) -> ScreenContent
+        _ store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>,
+        @ViewBuilder screenView: @escaping (CaseScope<Screen>) -> ScreenContent
     ) {
         self.store = store
         self.screenView = screenView
@@ -19,13 +19,15 @@ public struct TCARouter<Screen, ScreenAction, ID: Hashable, ScreenContent: View>
 
     public var body: some View {
         WithPerceptionTracking {
-            let routes = store.withState { $0 }
+            let routes = store.state
 
             if let rootRoute = routes.first {
                 NavigationStack {
                     makeScreen(for: rootRoute, at: 0)
-                        .navigationDestination(for: RouteDestination<Screen>.self) { destination in
-                            makeScreen(for: destination.route, at: destination.index)
+                        .navigationDestination(for: Int.self) { index in
+                            if index > 0 && index < routes.count {
+                                makeScreen(for: routes[index], at: index)
+                            }
                         }
                 }
                 .overlay {
@@ -39,31 +41,35 @@ public struct TCARouter<Screen, ScreenAction, ID: Hashable, ScreenContent: View>
     }
 
     @ViewBuilder
-    private func makeScreen(for route: Route<Screen>, at index: Int) -> some View {
-        let childStore = store.scope(
-            state: { _ in route.screen },
-            action: { RouterAction.routeAction(self.routeID(for: index), $0) }
+    private func makeScreen(for route: Route<Screen.State>, at index: Int) -> some View {
+        let caseScope = CaseScope<Screen>(
+            route: route,
+            index: index,
+            store: store
         )
-        screenView(childStore)
+        screenView(caseScope)
     }
 
     @ViewBuilder
-    private func presentedScreens(routes: [Route<Screen>]) -> some View {
-        ForEach(Array(routes.enumerated()), id: \.offset) { index, route in
+    private func presentedScreens(routes: [Route<Screen.State>]) -> some View {
+        ForEach(routes.indices, id: \.self) { index in
+            let route = routes[index]
             if route.isPresented {
                 Color.clear
                     .sheet(isPresented: .constant(route.isSheet)) {
                         presentedContent(for: route, at: index)
                     }
+                    #if !os(macOS)
                     .fullScreenCover(isPresented: .constant(route.isCover)) {
                         presentedContent(for: route, at: index)
                     }
+                    #endif
             }
         }
     }
 
     @ViewBuilder
-    private func presentedContent(for route: Route<Screen>, at index: Int) -> some View {
+    private func presentedContent(for route: Route<Screen.State>, at index: Int) -> some View {
         let content = makeScreen(for: route, at: index)
 
         if route.withNavigation {
@@ -81,37 +87,36 @@ public struct TCARouter<Screen, ScreenAction, ID: Hashable, ScreenContent: View>
             content
         }
     }
-
-    // Helper to determine route ID based on index
-    private func routeID(for index: Int) -> ID {
-        if ID.self == Int.self {
-            return index as! ID
-        } else {
-            // For non-Int IDs, we need additional logic
-            // This is a simplified implementation
-            fatalError("Non-Int ID types not yet supported in this implementation")
-        }
-    }
 }
 
-// MARK: - RouteDestination
+// MARK: - CaseScope (TCACoordinators style)
 
-/// A wrapper type for NavigationStack destinations
-public struct RouteDestination<Screen>: Hashable where Screen: Hashable {
-    public let route: Route<Screen>
-    public let index: Int
+/// Provides TCACoordinators-style case access pattern
+/// Usage: switch screens.case { case .login(let store): ... }
+public struct CaseScope<Screen: CaseReducer> {
+    private let route: Route<Screen.State>
+    private let index: Int
+    private let store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>
 
-    public init(route: Route<Screen>, index: Int) {
+    internal init(
+        route: Route<Screen.State>,
+        index: Int,
+        store: Store<[Route<Screen.State>], IndexedRouterAction<Screen.State, Screen.Action>>
+    ) {
         self.route = route
         self.index = index
+        self.store = store
     }
 
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(index)
-    }
-
-    public static func == (lhs: RouteDestination<Screen>, rhs: RouteDestination<Screen>) -> Bool {
-        return lhs.index == rhs.index
+    /// The screen case for pattern matching
+    /// Usage: switch screens.case { case .login(let store): ... }
+    public var `case`: Screen {
+        return Screen.scope(
+            store.scope(
+                state: { _ in self.route.screen },
+                action: { RouterAction.routeAction(self.index, $0) }
+            )
+        )
     }
 }
 
@@ -131,24 +136,6 @@ extension Route {
     }
 }
 
-// MARK: - Indexed TCARouter
-
-/// Convenience initializer for indexed routing (using Int as ID)
-public struct IndexedTCARouter<Screen, ScreenAction, ScreenContent: View>: View {
-    private let tcaRouter: TCARouter<Screen, ScreenAction, Int, ScreenContent>
-
-    public init(
-        _ store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
-        @ViewBuilder screenView: @escaping (Store<Screen, ScreenAction>) -> ScreenContent
-    ) {
-        self.tcaRouter = TCARouter(store, screenView: screenView)
-    }
-
-    public var body: some View {
-        tcaRouter
-    }
-}
-
 // MARK: - Type Aliases
 
 /// Convenience type alias for indexed router actions.
@@ -162,79 +149,3 @@ public typealias IdentifiedRouterAction<Screen: Identifiable, ScreenAction> = Ro
 
 /// Convenience type alias for identified router actions with reducer.
 public typealias IdentifiedRouterActionOf<R: Reducer> = RouterAction<R.State.ID, R.State, R.Action> where R.State: Identifiable
-
-// MARK: - Observation Support
-
-extension TCARouter {
-    /// Alternative implementation for when Screen is not ObservableState
-    public init<LocalState, LocalAction>(
-        _ store: Store<[Route<Screen>], RouterAction<ID, Screen, ScreenAction>>,
-        @ViewBuilder screenView: @escaping (Store<Screen, ScreenAction>) -> ScreenContent
-    ) where Screen == LocalState, ScreenAction == LocalAction {
-        self.store = store
-        self.screenView = screenView
-    }
-}
-
-// MARK: - Router Action Extensions
-
-extension RouterAction.AllCasePaths {
-    /// Subscript for accessing route actions by ID
-    public subscript<ID: Hashable, Screen, ScreenAction>(
-        id: ID
-    ) -> AnyCasePath<RouterAction<ID, Screen, ScreenAction>, ScreenAction> {
-        AnyCasePath(
-            embed: { RouterAction.routeAction(id, $0) },
-            extract: {
-                guard case let .routeAction(routeId, action) = $0, routeId == id else { return nil }
-                return action
-            }
-        )
-    }
-}
-
-// MARK: - Convenience Functions
-
-extension Store where State == [Route<some Any>] {
-    /// Pushes a new screen onto the navigation stack
-    public func push<Screen>(_ screen: Screen) where State == [Route<Screen>] {
-        var routes = self.state
-        routes.push(screen)
-        self.send(.updateRoutes(routes) as! Action)
-    }
-
-    /// Presents a screen as a sheet
-    public func presentSheet<Screen>(_ screen: Screen, withNavigation: Bool = false) where State == [Route<Screen>] {
-        var routes = self.state
-        routes.presentSheet(screen, withNavigation: withNavigation)
-        self.send(.updateRoutes(routes) as! Action)
-    }
-
-    /// Presents a screen as a full screen cover
-    public func presentCover<Screen>(_ screen: Screen, withNavigation: Bool = false) where State == [Route<Screen>] {
-        var routes = self.state
-        routes.presentCover(screen, withNavigation: withNavigation)
-        self.send(.updateRoutes(routes) as! Action)
-    }
-
-    /// Pops the topmost route
-    public func pop() {
-        var routes = self.state
-        routes.pop()
-        self.send(.updateRoutes(routes) as! Action)
-    }
-
-    /// Pops to root
-    public func popToRoot() {
-        var routes = self.state
-        routes.popToRoot()
-        self.send(.updateRoutes(routes) as! Action)
-    }
-
-    /// Dismisses the topmost presented route
-    public func dismiss() {
-        var routes = self.state
-        routes.dismiss()
-        self.send(.updateRoutes(routes) as! Action)
-    }
-}
