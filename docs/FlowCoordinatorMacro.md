@@ -211,3 +211,53 @@ case .settings(.binding(let bindingAction)):
     state.routes.routes[id: id]?.state = .settings(childState)
   }
 ```
+
+## Extension 매크로
+
+TCAFlow는 extension에서 사용할 수 있는 매크로들도 제공합니다.
+
+### @NestedCoordinatorExtension
+
+nested coordinator를 처리하는 extension에 사용합니다. boilerplate reducer 함수를 자동 생성합니다.
+
+```swift
+@NestedCoordinatorExtension
+private extension AppCoordinator {
+  static func reduceProfileCoordinator(
+    state: inout ProfileCoordinator.State,
+    action: ProfileCoordinator.Action
+  ) {
+    // coordinator logic
+  }
+}
+```
+
+### @RouteStackExtensions
+
+RouteStack 관련 extension 메서드들을 자동 생성합니다.
+
+```swift
+@RouteStackExtensions
+extension RouteStack {
+  // 추가 메서드들이 자동 생성됩니다
+}
+```
+
+### @ViewTransitions
+
+SwiftUI View transition extension 메서드들을 자동 생성합니다.
+
+```swift
+@ViewTransitions
+extension View {
+  // transition 관련 메서드들이 자동 생성됩니다
+}
+```
+
+## Extension 사용 패턴
+
+extension 매크로를 사용하면 다음과 같은 이점이 있습니다:
+
+1. **boilerplate 코드 감소**: 반복적인 extension 코드를 자동 생성
+2. **일관성 유지**: 매크로로 생성된 코드는 항상 일관된 패턴을 따름
+3. **유지보수성**: 매크로 로직 변경으로 모든 extension을 일괄 업데이트 가능
