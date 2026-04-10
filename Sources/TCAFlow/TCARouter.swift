@@ -149,7 +149,7 @@ private struct _StackReplacementRegistrar<Screen, ScreenAction, ScreenContent: V
     let holder: _StackReplacerHolder?
 
     var body: some View {
-        Color(UIColor.systemBackground)
+        Color.white
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
             .navigationBarHidden(true)
@@ -373,7 +373,3 @@ private struct _Presented<Screen, ScreenAction, ScreenContent: View>: View {
         }
     }
 }
-
-// MARK: - Backward Compat
-
-public typealias TCARouter = TCAFlowRouter
