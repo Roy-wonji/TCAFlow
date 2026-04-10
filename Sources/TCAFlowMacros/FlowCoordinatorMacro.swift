@@ -15,40 +15,23 @@ extension FlowCoordinatorMacro: MemberMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // 1. extension인지 확인
-        guard let extensionDecl = declaration.as(ExtensionDeclSyntax.self) else {
-            context.addDiagnostics(
-                from: FlowCoordinatorError.notAnExtension,
-                node: node
-            )
-            return []
-        }
-
-        // 2. @Reducer enum 찾기
-        guard let screenEnum = findReducerEnum(in: extensionDecl) else {
-            context.addDiagnostics(
-                from: FlowCoordinatorError.noReducerEnum,
-                node: node
-            )
+        // struct 또는 extension 모두 지원
+        guard let screenEnum = findReducerEnum(in: declaration) else {
+            context.addDiagnostics(from: FlowCoordinatorError.noReducerEnum, node: node)
             return []
         }
 
         let screenName = screenEnum.name.trimmedDescription
 
-        // 3. 첫번째 case 추출
         guard let firstCase = findFirstCase(in: screenEnum) else {
-            context.addDiagnostics(
-                from: FlowCoordinatorError.noEnumCases,
-                node: node
-            )
+            context.addDiagnostics(from: FlowCoordinatorError.noEnumCases, node: node)
             return []
         }
 
-        // 4. navigation 파라미터 읽기
         let navigation = extractNavigationParam(from: node)
 
-        // 5. 이미 존재하는 멤버 확인
-        let existingMembers = extensionDecl.memberBlock.members.map {
+        // 이미 존재하는 멤버 확인
+        let existingMembers = declaration.memberBlock.members.map {
             $0.decl.trimmedDescription
         }.joined()
 
@@ -58,9 +41,8 @@ extension FlowCoordinatorMacro: MemberMacro {
 
         var results: [DeclSyntax] = []
 
-        // 6. State 생성
         if !hasState {
-            let stateDecl: DeclSyntax = """
+            results.append("""
                 @ObservableState
                 struct State: Equatable {
                     var routes: [Route<\(raw: screenName).State>]
@@ -68,90 +50,107 @@ extension FlowCoordinatorMacro: MemberMacro {
                         self.routes = [.root(.\(raw: firstCase)(.init()), embedInNavigationView: \(raw: navigation))]
                     }
                 }
-                """
-            results.append(stateDecl)
+                """)
         }
 
-        // 7. Action 생성
         if !hasAction {
-            let actionDecl: DeclSyntax = """
+            results.append("""
                 @CasePathable
                 enum Action {
                     case router(IndexedRouterActionOf<\(raw: screenName)>)
                 }
-                """
-            results.append(actionDecl)
+                """)
         }
 
-        // 8. body 생성 (항상 생성 - forEachRoute 자동 적용)
         if !hasBody {
-            let bodyDecl: DeclSyntax = """
+            results.append("""
                 var body: some Reducer<State, Action> {
                     Reduce { state, action in
                         return self.handleRoute(state: &state, action: action)
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }
-                """
-            results.append(bodyDecl)
+                """)
         }
 
         return results
     }
 }
 
+// MARK: - ExtensionMacro (struct에 붙었을 때 Reducer conformance + Equatable 추가)
+
+extension FlowCoordinatorMacro: ExtensionMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingExtensionsOf type: some TypeSyntaxProtocol,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [ExtensionDeclSyntax] {
+        // struct에 붙었을 때만 Reducer conformance + Equatable 생성
+        guard declaration.is(StructDeclSyntax.self) else { return [] }
+
+        let typeName = type.trimmedDescription
+
+        guard let screenEnum = findReducerEnum(in: declaration) else { return [] }
+        let screenName = screenEnum.name.trimmedDescription
+
+        var extensions: [ExtensionDeclSyntax] = []
+
+        // Reducer conformance
+        let reducerExt: DeclSyntax = "extension \(raw: typeName): Reducer {}"
+        if let ext = reducerExt.as(ExtensionDeclSyntax.self) {
+            extensions.append(ext)
+        }
+
+        return extensions
+    }
+}
 
 // MARK: - Helpers
 
-private func findReducerEnum(in extensionDecl: ExtensionDeclSyntax) -> EnumDeclSyntax? {
-    for member in extensionDecl.memberBlock.members {
+private func findReducerEnum(in declaration: some DeclGroupSyntax) -> EnumDeclSyntax? {
+    for member in declaration.memberBlock.members {
         guard let enumDecl = member.decl.as(EnumDeclSyntax.self) else { continue }
         let hasReducerAttr = enumDecl.attributes.contains { attr in
             guard let attribute = attr.as(AttributeSyntax.self) else { return false }
             return attribute.attributeName.trimmedDescription == "Reducer"
         }
-        if hasReducerAttr {
-            return enumDecl
-        }
+        if hasReducerAttr { return enumDecl }
     }
     return nil
 }
 
 private func findFirstCase(in enumDecl: EnumDeclSyntax) -> String? {
     for member in enumDecl.memberBlock.members {
-        guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
-        guard let firstElement = caseDecl.elements.first else { continue }
+        guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self),
+              let firstElement = caseDecl.elements.first else { continue }
         return firstElement.name.trimmedDescription
     }
     return nil
 }
 
 private func extractNavigationParam(from node: AttributeSyntax) -> Bool {
-    guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else {
-        return true // default
-    }
+    guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else { return true }
     for arg in arguments {
         if arg.label?.trimmedDescription == "navigation",
            let boolLiteral = arg.expression.as(BooleanLiteralExprSyntax.self) {
             return boolLiteral.literal.text == "true"
         }
     }
-    return true // default
+    return true
 }
 
 // MARK: - Errors
 
 enum FlowCoordinatorError: String, Error, DiagnosticMessage {
-    case notAnExtension
     case noReducerEnum
     case noEnumCases
 
     var message: String {
         switch self {
-        case .notAnExtension:
-            return "@FlowCoordinator can only be applied to an extension"
         case .noReducerEnum:
-            return "@FlowCoordinator requires a @Reducer enum inside the extension"
+            return "@FlowCoordinator requires a @Reducer enum inside"
         case .noEnumCases:
             return "Screen enum must have at least one case"
         }
