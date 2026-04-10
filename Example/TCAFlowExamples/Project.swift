@@ -24,7 +24,7 @@ let project = Project(
                 "UILaunchScreen": [:]
             ]),
             sources: [
-                "TCAFlowExamples/TCAFlowExamplesApp.swift"
+                "TCAFlowExamples/**"
             ],
             resources: [],
             dependencies: [
