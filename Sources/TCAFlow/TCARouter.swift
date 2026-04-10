@@ -155,7 +155,6 @@ private struct _StackReplacementRegistrar<Screen, ScreenAction, ScreenContent: V
             .navigationBarHidden(true)
             #endif
             .onAppear {
-                // overlay 콘텐츠를 먼저 준비
                 holder?.content = AnyView(
                     _NavStackHost(
                         store: store,
@@ -163,7 +162,6 @@ private struct _StackReplacementRegistrar<Screen, ScreenAction, ScreenContent: V
                         screenContent: screenContent
                     )
                 )
-                // push 애니메이션과 동기화하기 위해 animated 활성화
                 withAnimation(.easeInOut(duration: 0.35)) {
                     holder?.isActive = true
                 }
@@ -176,6 +174,37 @@ private struct _StackReplacementRegistrar<Screen, ScreenAction, ScreenContent: V
             }
     }
 }
+
+// MARK: - _EdgeSwipeBackModifier
+/// 중첩 코디네이터 overlay 루트에서 에지 스와이프백을 감지하여 부모로 돌아가는 제스처
+
+#if os(iOS)
+@MainActor
+private struct _EdgeSwipeBackModifier: ViewModifier {
+    let onSwipeBack: () -> Void
+    @GestureState private var dragOffset: CGFloat = 0
+    @State private var isDragging = false
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: dragOffset)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 15, coordinateSpace: .global)
+                    .updating($dragOffset) { value, state, _ in
+                        // 왼쪽 가장자리 30pt 이내에서 시작한 오른쪽 드래그만 처리
+                        if value.startLocation.x < 30 && value.translation.width > 0 {
+                            state = value.translation.width
+                        }
+                    }
+                    .onEnded { value in
+                        if value.startLocation.x < 30 && value.translation.width > 80 {
+                            onSwipeBack()
+                        }
+                    }
+            )
+    }
+}
+#endif
 
 // MARK: - _NavStackHost
 
@@ -246,7 +275,19 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
             }
             .environment(\._isInsideNavStack, true)
             .environment(\._stackReplacerHolder, stackReplacer)
-            .onAppear { syncFromStore() }
+            .onAppear {
+                syncFromStore()
+                // 중첩 코디네이터에서 스와이프백 시 부모 routes pop
+                stackReplacer.onDismiss = { [weak store] in
+                    guard let store = store else { return }
+                    let routes = store.currentState
+                    if routes.count > 1 {
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            store.send(.updateRoutes(Array(routes.dropLast())))
+                        }
+                    }
+                }
+            }
             .onChange(of: path) { _ in syncToStore() }
             .background(
                 // routeCount 관찰은 WithPerceptionTracking 안에서,
@@ -263,8 +304,17 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
 
             // Layer 2: Stack replacement content (nested coordinator's NavigationStack)
             if stackReplacer.isActive, let content = stackReplacer.content {
+                #if os(iOS)
                 content
                     .transition(.move(edge: .trailing))
+                    .modifier(_EdgeSwipeBackModifier {
+                        // 중첩 코디네이터의 루트에서 스와이프백 → 부모로 pop
+                        stackReplacer.onDismiss?()
+                    })
+                #else
+                content
+                    .transition(.move(edge: .trailing))
+                #endif
             }
         }
         .modifier(_SheetMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
