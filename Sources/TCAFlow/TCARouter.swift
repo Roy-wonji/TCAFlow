@@ -196,9 +196,7 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     private func syncFromStore() {
         let expected = computePath()
         if path != expected {
-            withAnimation {
-                path = expected
-            }
+            path = expected
         }
     }
 
@@ -238,7 +236,9 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
                 .environment(\._stackReplacerHolder, stackReplacer)
                 .onAppear { syncFromStore() }
                 .onChange(of: routeCount) { _ in
-                    DispatchQueue.main.async { syncFromStore() }
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        syncFromStore()
+                    }
                 }
                 .onChange(of: path) { _ in syncToStore() }
             }
