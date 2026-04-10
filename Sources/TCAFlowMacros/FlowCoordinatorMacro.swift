@@ -106,11 +106,23 @@ extension FlowCoordinatorMacro: ExtensionMacro {
         guard declaration.is(StructDeclSyntax.self) else { return [] }
         let typeName = type.trimmedDescription
 
+        let params = extractParams(from: node)
+        let screenName = params.screen ?? ""
+
         var extensions: [ExtensionDeclSyntax] = []
 
+        // Reducer conformance
         let reducerExt: DeclSyntax = "extension \(raw: typeName): Reducer {}"
         if let ext = reducerExt.as(ExtensionDeclSyntax.self) {
             extensions.append(ext)
+        }
+
+        // Screen.State: Equatable (screen 파라미터가 있을 때)
+        if !screenName.isEmpty {
+            let equatableExt: DeclSyntax = "extension \(raw: typeName).\(raw: screenName).State: Equatable {}"
+            if let ext = equatableExt.as(ExtensionDeclSyntax.self) {
+                extensions.append(ext)
+            }
         }
 
         return extensions
