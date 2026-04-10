@@ -12,6 +12,7 @@ TCAFlow는 [TCACoordinators](https://github.com/johnpatrickmorgan/TCACoordinator
 - 🏗️ **Nested Coordinator** - 복잡한 플로우 완벽 지원
 - 🔄 **Migration 친화적** - TCACoordinators에서 쉬운 전환
 - ⚡ **Swift 6 호환** - 최신 Swift 기능 활용
+- 🎨 **@FlowCoordinator 매크로** - 보일러플레이트 코드 자동 생성
 
 ## 🆚 TCACoordinators와 비교
 
@@ -28,6 +29,7 @@ TCAFlow는 [TCACoordinators](https://github.com/johnpatrickmorgan/TCACoordinator
 - **Swift**: 6.0+
 - **TCA**: 1.25.5+
 - **플랫폼**: iOS 16.0+ / macOS 13.0+ / watchOS 9.0+ / tvOS 16.0+
+- **Xcode**: 16.0+ (매크로 지원)
 
 ## 📦 설치
 
@@ -42,8 +44,176 @@ dependencies: [
 ```swift
 .target(
     name: "App",
-    dependencies: ["TCAFlow"]
+    dependencies: ["TCAFlow"]  // 매크로 자동 포함 ✅
 )
+```
+
+**참고**: TCAFlow 패키지에는 `@FlowCoordinator` 매크로가 자동으로 포함됩니다.
+
+## 🎨 @FlowCoordinator 매크로
+
+TCAFlow는 **`@FlowCoordinator` 매크로**를 제공하여 Coordinator의 보일러플레이트 코드를 자동으로 생성합니다.
+
+### ✨ 매크로를 사용하면 이렇게 간단해집니다!
+
+#### **기존 방식 (수동 작성)**
+```swift
+@Reducer
+struct AppCoordinator {
+    @ObservableState
+    struct State: Equatable {
+        var routes: [Route<Screen.State>]
+        init() {
+            routes = [.root(.home(.init()), embedInNavigationView: true)]
+        }
+    }
+    
+    @CasePathable
+    enum Action {
+        case router(IndexedRouterActionOf<Screen>)
+    }
+    
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            return handleRoute(state: &state, action: action)
+        }
+        .forEachRoute(\.routes, action: \.router)
+    }
+    
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        // 라우팅 로직...
+    }
+}
+```
+
+#### **💫 매크로 사용 (자동 생성)**
+```swift
+@FlowCoordinator(screen: "Screen", navigation: true)
+struct AppCoordinator {
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        // 라우팅 로직만 작성!
+        switch action {
+        case .router(.routeAction(_, .home(.detailTapped))):
+            state.routes.push(.detail(.init()))
+            return .none
+        default:
+            return .none
+        }
+    }
+}
+
+extension AppCoordinator {
+    @Reducer
+    enum Screen {
+        case home(HomeFeature)
+        case detail(DetailFeature)
+    }
+}
+
+extension AppCoordinator.Screen.State: Equatable {}
+```
+
+### 🔧 매크로 사용법
+
+#### **방식 1: struct에 직접 적용 (권장)**
+```swift
+@FlowCoordinator(screen: "Screen", navigation: true)
+struct AppCoordinator {
+    // ✅ 자동 생성: State, Action, body
+    
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        // 라우팅 로직만 작성
+    }
+}
+
+extension AppCoordinator {
+    @Reducer
+    enum Screen {
+        case home(HomeFeature)
+        case detail(DetailFeature)
+    }
+}
+
+// ✅ 자동 생성: Screen.State: Equatable
+```
+
+#### **방식 2: extension에 적용**
+```swift
+struct AppCoordinator {}
+
+@FlowCoordinator(navigation: true)
+extension AppCoordinator {
+    @Reducer
+    enum Screen {
+        case home(HomeFeature)
+        case detail(DetailFeature)
+    }
+    
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        // 라우팅 로직
+    }
+}
+```
+
+### 📋 매크로 파라미터
+
+```swift
+@FlowCoordinator(
+    screen: "Screen",    // Screen enum 이름 (optional)
+    navigation: true     // root route에 embedInNavigationView 적용 (기본값: true)
+)
+```
+
+- **`screen`**: Screen enum의 이름을 명시적으로 지정
+- **`navigation`**: `true`이면 root route가 NavigationView를 embed
+
+### 🎛️ 커스터마이징
+
+#### **Action에 추가 케이스가 필요한 경우**
+```swift
+@FlowCoordinator(screen: "Screen")
+struct NestedCoordinator {
+    @CasePathable
+    enum Action {
+        case router(IndexedRouterActionOf<Screen>)
+        case backToMain  // ✅ 추가 액션
+        case deepLink(URL)
+    }
+    
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .backToMain:
+            // 커스텀 로직
+            return .none
+        case .router(let routerAction):
+            // 라우팅 로직
+            return .none
+        default:
+            return .none
+        }
+    }
+}
+```
+
+#### **State 초기화를 커스터마이징하는 경우**
+```swift
+@FlowCoordinator(screen: "Screen")
+struct AppCoordinator {
+    @ObservableState
+    struct State: Equatable {
+        var routes: [Route<Screen.State>]
+        var isLoggedIn: Bool  // ✅ 추가 프로퍼티
+        
+        init(isLoggedIn: Bool = false) {
+            self.isLoggedIn = isLoggedIn
+            self.routes = isLoggedIn
+                ? [.root(.home(.init()), embedInNavigationView: true)]
+                : [.root(.login(.init()), embedInNavigationView: true)]
+        }
+    }
+    
+    // ✅ Action, body는 자동 생성
+}
 ```
 
 ## 🚀 빠른 시작
@@ -78,44 +248,31 @@ struct HomeFeature {
 }
 ```
 
-### 2️⃣ Coordinator 구현
+### 2️⃣ Coordinator 구현 (매크로 사용)
 
 ```swift
-@Reducer
+@FlowCoordinator(screen: "Screen", navigation: true)
 struct AppCoordinator {
-    @ObservableState
-    struct State: Equatable {
-        var routes: [Route<Screen.State>] = [
-            .root(.home(.init()), embedInNavigationView: true)
-        ]
-    }
+    // ✨ State, Action, body는 매크로가 자동 생성!
     
-    @CasePathable 
-    enum Action {
-        case router(IndexedRouterActionOf<Screen>)
-    }
-    
-    var body: some Reducer<State, Action> {
-        Reduce { state, action in
-            switch action {
-            // 📱 Navigation 로직
-            case .router(.routeAction(_, .home(.detailButtonTapped))):
-                state.routes.push(.detail(.init(title: "상세 화면")))
-                return .none
-                
-            case .router(.routeAction(_, .home(.settingsButtonTapped))):
-                state.routes.presentSheet(.settings(.init()))
-                return .none
-                
-            case .router(.routeAction(_, .detail(.backTapped))):
-                state.routes.goBack()
-                return .none
-                
-            default:
-                return .none
-            }
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        // 📱 Navigation 로직만 집중!
+        case .router(.routeAction(_, .home(.detailButtonTapped))):
+            state.routes.push(.detail(.init(title: "상세 화면")))
+            return .none
+            
+        case .router(.routeAction(_, .home(.settingsButtonTapped))):
+            state.routes.presentSheet(.settings(.init()))
+            return .none
+            
+        case .router(.routeAction(_, .detail(.backTapped))):
+            state.routes.goBack()
+            return .none
+            
+        default:
+            return .none
         }
-        .forEachRoute(\.routes, action: \.router)  // 🔗 라우터 연결
     }
 }
 
@@ -129,7 +286,7 @@ extension AppCoordinator {
     }
 }
 
-extension AppCoordinator.Screen.State: Equatable {}
+// ✨ Screen.State: Equatable도 매크로가 자동 생성!
 ```
 
 ### 3️⃣ View 연결
@@ -300,9 +457,63 @@ extension AppCoordinator {
 }
 ```
 
+## 🎨 @FlowCoordinator vs 수동 작성
+
+| 특징 | 수동 작성 | @FlowCoordinator 매크로 |
+|------|----------|----------------------|
+| **코드 길이** | ~30줄 | ~10줄 ✅ |
+| **보일러플레이트** | 많음 | 자동 생성 ✅ |
+| **실수 가능성** | 높음 | 낮음 ✅ |
+| **커스터마이징** | 완전 자유 | 일부 제약 |
+| **학습 곡선** | 높음 | 낮음 ✅ |
+
+### 🤔 언제 무엇을 사용할까?
+
+#### **✅ @FlowCoordinator 매크로 사용 권장**
+- 새 프로젝트 시작
+- 간단한 Coordinator
+- 빠른 프로토타이핑
+- 보일러플레이트 줄이고 싶을 때
+
+#### **✅ 수동 작성 권장**  
+- 기존 코드가 많을 때
+- 매우 복잡한 State 초기화
+- Action에 많은 커스텀 케이스 필요
+- 매크로를 학습할 시간이 없을 때
+
 ## 💡 실전 팁
 
-### 🔧 라우터 액션 헬퍼
+### 🔧 매크로 사용 시 팁
+
+```swift
+@FlowCoordinator(screen: "Screen", navigation: true)
+struct AppCoordinator {
+    // ✅ handleRoute 메서드는 필수!
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .router(let routerAction):
+            return handleRouterAction(state: &state, action: routerAction)
+        default:
+            return .none
+        }
+    }
+    
+    // 🎯 라우터 액션을 별도 메서드로 분리하면 깔끔
+    private func handleRouterAction(
+        state: inout State,
+        action: IndexedRouterActionOf<Screen>
+    ) -> Effect<Action> {
+        switch action {
+        case .routeAction(_, .home(.detailTapped)):
+            state.routes.push(.detail(.init()))
+            return .none
+        // ...
+        }
+    }
+}
+```
+
+### 🔧 라우터 액션 헬퍼 (수동 작성 시)
 
 ```swift
 extension AppCoordinator {
@@ -350,8 +561,7 @@ extension Array where Element == Route<AppCoordinator.Screen.State> {
 
 ## 🔄 Migration from TCACoordinators
 
-TCACoordinators에서 마이그레이션은 간단합니다:
-
+### 1️⃣ 기본 마이그레이션
 ```swift
 // Before (TCACoordinators)
 import TCACoordinators
@@ -366,6 +576,55 @@ struct MyState: Hashable, Equatable { ... }  // ❌
 struct MyState: Equatable { ... }            // ✅
 ```
 
+### 2️⃣ 매크로로 더 간단하게!
+
+#### **Before (TCACoordinators - 수동 작성)**
+```swift
+@Reducer
+struct AppCoordinator {
+    @ObservableState
+    struct State: Hashable, Equatable {  // Hashable 필요
+        var routes: [Route<Screen.State>] = [...]
+    }
+    
+    @CasePathable
+    enum Action {
+        case router(IndexedRouterActionOf<Screen>)
+    }
+    
+    var body: some Reducer<State, Action> {
+        Reduce { state, action in
+            // 라우팅 로직...
+        }
+        .forEachRoute(\.routes, action: \.router)
+    }
+}
+```
+
+#### **After (TCAFlow - 매크로 사용)**
+```swift
+@FlowCoordinator(screen: "Screen", navigation: true)  // 🎨 매크로로 한 줄!
+struct AppCoordinator {
+    func handleRoute(state: inout State, action: Action) -> Effect<Action> {
+        // 라우팅 로직만 작성하면 끝!
+        switch action {
+        case .router(.routeAction(_, .home(.detailTapped))):
+            state.routes.push(.detail(.init()))
+            return .none
+        default:
+            return .none
+        }
+    }
+}
+```
+
+### 🚀 Migration Steps
+
+1. **Import 변경**: `TCACoordinators` → `TCAFlow`
+2. **Router 변경**: `TCARouter` → `TCAFlowRouter`
+3. **Hashable 제거**: Screen State에서 `Hashable` 삭제
+4. **매크로 적용**: `@FlowCoordinator` 매크로로 보일러플레이트 제거 (선택사항)
+
 ## 📚 예제 프로젝트
 
 완전한 예제는 `Example/` 폴더에서 확인하세요:
@@ -374,15 +633,17 @@ struct MyState: Equatable { ... }            // ✅
 Example/TCAFlowExamples/
 ├── TCAFlowExamplesApp.swift
 ├── Coordinators/
-│   ├── DemoCoordinator.swift          # 메인 코디네이터
+│   ├── DemoCoordinator.swift          # @FlowCoordinator 매크로 사용 예제 🎨
 │   └── DemoCoordinatorView.swift      # 라우터 뷰
 └── Features/
-    ├── Home/                          # 홈 화면
-    ├── Flow/                          # 플로우 예제
-    ├── Detail/                        # 상세 화면
-    ├── Settings/                      # 설정 화면
+    ├── Home/                          # 홈 화면 + goTo 예제
+    ├── Flow/                          # 플로우 예제 + goTo 예제  
+    ├── Detail/                        # 상세 화면 + goTo 예제
+    ├── Settings/                      # 설정 화면 + goTo 예제
     └── Nested/                        # 중첩 코디네이터 예제
 ```
+
+**🎨 매크로 사용 예제**: `DemoCoordinator.swift`에서 `@FlowCoordinator` 매크로가 어떻게 보일러플레이트를 줄이는지 확인할 수 있습니다!
 
 ### 🔨 예제 빌드
 
