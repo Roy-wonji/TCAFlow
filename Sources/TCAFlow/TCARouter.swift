@@ -52,27 +52,6 @@ extension EnvironmentValues {
     }
 }
 
-// MARK: - _StackReplacerHolder
-
-/// Observable object that allows a nested TCAFlowRouter to register its content
-/// for stack replacement rendering in the parent _NavStackHost.
-@MainActor
-final class _StackReplacerHolder: ObservableObject {
-    @Published var content: AnyView?
-    @Published var isActive = false
-    var onDismiss: (() -> Void)?
-}
-
-private struct _StackReplacerHolderKey: @preconcurrency EnvironmentKey {
-    @MainActor static let defaultValue: _StackReplacerHolder? = nil
-}
-
-extension EnvironmentValues {
-    var _stackReplacerHolder: _StackReplacerHolder? {
-        get { self[_StackReplacerHolderKey.self] }
-        set { self[_StackReplacerHolderKey.self] = newValue }
-    }
-}
 
 // MARK: - TCAFlowRouter
 
@@ -82,7 +61,7 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     private let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
 
     @Environment(\._isInsideNavStack) private var isInsideNavStack
-    @Environment(\._stackReplacerHolder) private var stackReplacerHolder
+
 
     public init(
         _ store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
@@ -104,12 +83,13 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
             if !routes.isEmpty {
                 let firstRoute = routes[0]
                 if firstRoute.embedInNavigationView && isInsideNavStack {
-                    // Register for stack replacement in parent
-                    _StackReplacementRegistrar(
+                    // 부모 NavigationStack 안에서는 별도 NavStack 없이
+                    // navigationDestination 체이닝으로 push 처리
+                    _InlineRouteChain(
                         store: store,
                         scopedScreenStore: scopedScreenStore,
                         screenContent: screenContent,
-                        holder: stackReplacerHolder
+                        index: 0
                     )
                 } else if firstRoute.embedInNavigationView {
                     _NavStackHost(
@@ -136,75 +116,61 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     }
 }
 
-// MARK: - _StackReplacementRegistrar
-/// Invisible view placed inside parent's navigationDestination.
-/// On appear: tells parent to show the nested NavigationStack as overlay.
-/// On disappear (swipe back): tells parent to hide it.
+// MARK: - _InlineRouteChain
+/// 부모 NavigationStack 안에서 중첩 코디네이터의 push를
+/// navigationDestination(isPresented:) 체이닝으로 처리하는 재귀 뷰.
+/// overlay 없이 부모 NavigationStack이 모든 전환 애니메이션과 스와이프백을 처리한다.
 
 @MainActor
-private struct _StackReplacementRegistrar<Screen, ScreenAction, ScreenContent: View>: View {
+private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: View {
     let store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
     let scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
     let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
-    let holder: _StackReplacerHolder?
+    let index: Int
+
+    private var routes: [Route<Screen>] { store.currentState }
+
+    private var hasNext: Bool {
+        routes.count > index + 1 && routes[index + 1].isPush
+    }
+
+    private var isPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { hasNext },
+            set: { presented in
+                if !presented {
+                    // 스와이프백 또는 pop: 현재 인덱스 이후 routes 제거
+                    let trimmed = Array(routes.prefix(index + 1))
+                    if routes.count != trimmed.count {
+                        store.send(.updateRoutes(trimmed))
+                    }
+                }
+            }
+        )
+    }
 
     var body: some View {
-        Color.clear
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
-            .navigationBarHidden(true)
-            #endif
-            .onAppear {
-                holder?.content = AnyView(
-                    _NavStackHost(
+        WithPerceptionTracking {
+            Group {
+                if Screen.self is ObservableState.Type {
+                    WithPerceptionTracking { screenContent(scopedScreenStore(index)) }
+                } else {
+                    screenContent(scopedScreenStore(index))
+                }
+            }
+            .navigationDestination(isPresented: isPresentedBinding) {
+                if routes.count > index + 1 {
+                    _InlineRouteChain(
                         store: store,
                         scopedScreenStore: scopedScreenStore,
-                        screenContent: screenContent
+                        screenContent: screenContent,
+                        index: index + 1
                     )
-                )
-                withAnimation(.easeInOut(duration: 0.35)) {
-                    holder?.isActive = true
                 }
             }
-            .onDisappear {
-                withAnimation(.easeInOut(duration: 0.35)) {
-                    holder?.isActive = false
-                }
-                holder?.content = nil
-            }
+        }
     }
 }
-
-// MARK: - _EdgeSwipeBackModifier
-/// 중첩 코디네이터 overlay 루트에서 에지 스와이프백을 감지하여 부모로 돌아가는 제스처
-
-#if os(iOS)
-@MainActor
-private struct _EdgeSwipeBackModifier: ViewModifier {
-    let onSwipeBack: () -> Void
-    @GestureState private var dragOffset: CGFloat = 0
-    @State private var isDragging = false
-
-    func body(content: Content) -> some View {
-        content
-            .offset(x: dragOffset)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 15, coordinateSpace: .global)
-                    .updating($dragOffset) { value, state, _ in
-                        // 왼쪽 가장자리 30pt 이내에서 시작한 오른쪽 드래그만 처리
-                        if value.startLocation.x < 30 && value.translation.width > 0 {
-                            state = value.translation.width
-                        }
-                    }
-                    .onEnded { value in
-                        if value.startLocation.x < 30 && value.translation.width > 80 {
-                            onSwipeBack()
-                        }
-                    }
-            )
-    }
-}
-#endif
 
 // MARK: - _NavStackHost
 
@@ -216,7 +182,6 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
 
     @State private var coordinatorID = UUID()
     @State private var path: [_RouteIndex] = []
-    @StateObject private var stackReplacer = _StackReplacerHolder()
 
     private func computePath() -> [_RouteIndex] {
         let routes = store.currentState
@@ -253,70 +218,35 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     private var routeCount: Int { store.currentState.count }
 
     var body: some View {
-        ZStack {
-            // Layer 1: This coordinator's NavigationStack
-            NavigationStack(path: $path) {
-                Group {
+        NavigationStack(path: $path) {
+            Group {
+                if Screen.self is ObservableState.Type {
+                    WithPerceptionTracking { screenContent(scopedScreenStore(0)) }
+                } else {
+                    screenContent(scopedScreenStore(0))
+                }
+            }
+            .navigationDestination(for: _RouteIndex.self) { routeIndex in
+                if routeIndex.coordinatorID == coordinatorID {
                     if Screen.self is ObservableState.Type {
-                        WithPerceptionTracking { screenContent(scopedScreenStore(0)) }
+                        WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
                     } else {
-                        screenContent(scopedScreenStore(0))
+                        screenContent(scopedScreenStore(routeIndex.index))
                     }
                 }
-                .navigationDestination(for: _RouteIndex.self) { routeIndex in
-                    if routeIndex.coordinatorID == coordinatorID {
-                        if Screen.self is ObservableState.Type {
-                            WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
-                        } else {
-                            screenContent(scopedScreenStore(routeIndex.index))
-                        }
-                    }
-                }
-            }
-            .environment(\._isInsideNavStack, true)
-            .environment(\._stackReplacerHolder, stackReplacer)
-            .onAppear {
-                syncFromStore()
-                // 중첩 코디네이터에서 스와이프백 시 부모 routes pop
-                stackReplacer.onDismiss = { [weak store] in
-                    guard let store = store else { return }
-                    let routes = store.currentState
-                    if routes.count > 1 {
-                        withAnimation(.easeInOut(duration: 0.35)) {
-                            store.send(.updateRoutes(Array(routes.dropLast())))
-                        }
-                    }
-                }
-            }
-            .onChange(of: path) { _ in syncToStore() }
-            .background(
-                // routeCount 관찰은 WithPerceptionTracking 안에서,
-                // NavigationStack은 바깥에 두어 애니메이션 컨텍스트 보존
-                WithPerceptionTracking {
-                    Color.clear
-                        .onChange(of: routeCount) { _ in
-                            syncFromStore(animated: true)
-                        }
-                }
-            )
-            .opacity(stackReplacer.isActive ? 0 : 1)
-            .animation(.easeInOut(duration: 0.35), value: stackReplacer.isActive)
-
-            // Layer 2: Stack replacement content (nested coordinator's NavigationStack)
-            if stackReplacer.isActive, let content = stackReplacer.content {
-                #if os(iOS)
-                content
-                    .transition(.move(edge: .trailing))
-                    .modifier(_EdgeSwipeBackModifier {
-                        // 중첩 코디네이터의 루트에서 스와이프백 → 부모로 pop
-                        stackReplacer.onDismiss?()
-                    })
-                #else
-                content
-                    .transition(.move(edge: .trailing))
-                #endif
             }
         }
+        .environment(\._isInsideNavStack, true)
+        .onAppear { syncFromStore() }
+        .onChange(of: path) { _ in syncToStore() }
+        .background(
+            WithPerceptionTracking {
+                Color.clear
+                    .onChange(of: routeCount) { _ in
+                        syncFromStore(animated: true)
+                    }
+            }
+        )
         .modifier(_SheetMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
         .modifier(_CoverMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
     }
