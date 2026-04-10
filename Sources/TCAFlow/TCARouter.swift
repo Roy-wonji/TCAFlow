@@ -196,7 +196,9 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     private func syncFromStore() {
         let expected = computePath()
         if path != expected {
-            path = expected
+            withAnimation {
+                path = expected
+            }
         }
     }
 
