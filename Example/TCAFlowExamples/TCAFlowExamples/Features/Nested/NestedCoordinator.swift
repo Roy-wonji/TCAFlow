@@ -19,30 +19,17 @@ extension NestedCoordinator {
     case router(IndexedRouterActionOf<NestedScreen>)
     case backToMain
   }
-
-  // body 직접 작성 → 매크로가 body 생성 건너뜀 (backToMain 처리 필요)
-  var body: some Reducer<State, Action> {
-    Reduce { state, action in
-      switch action {
-      case .router(let routeAction):
-        return self.handleRoute(state: &state, action: routeAction)
-      case .backToMain:
-        return .none
-      }
-    }
-    .forEachRoute(\.routes, action: \.router)
-  }
 }
 
 extension NestedCoordinator.NestedScreen.State: Equatable {}
 
 // MARK: - Route Handling
-// body는 매크로가 생성 → .forEachRoute 자동 적용
-// handleRoute에서 모든 Action을 처리 (추가 action 포함)
+// routeReducer를 작성하면 매크로가 body에서 .forEachRoute 자동 적용
 
 extension NestedCoordinator {
-  func handleRoute(state: inout State, action: Action) -> Effect<Action> {
-    switch action {
+  var routeReducer: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
       case .router(.routeAction(_, .step1(.nextStep))):
         state.routes.push(.step2(.init()))
         return .none
@@ -58,10 +45,11 @@ extension NestedCoordinator {
         return .send(.backToMain)
 
       case .backToMain:
-        return .none  // 상위 coordinator에서 처리
+        return .none
 
       default:
         return .none
+      }
     }
   }
 }
