@@ -149,12 +149,13 @@ private struct _StackReplacementRegistrar<Screen, ScreenAction, ScreenContent: V
     let holder: _StackReplacerHolder?
 
     var body: some View {
-        Color.white
+        Color.clear
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
             .navigationBarHidden(true)
             #endif
             .onAppear {
+                // overlay 콘텐츠를 먼저 준비
                 holder?.content = AnyView(
                     _NavStackHost(
                         store: store,
@@ -162,10 +163,15 @@ private struct _StackReplacementRegistrar<Screen, ScreenAction, ScreenContent: V
                         screenContent: screenContent
                     )
                 )
-                holder?.isActive = true
+                // push 애니메이션과 동기화하기 위해 animated 활성화
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    holder?.isActive = true
+                }
             }
             .onDisappear {
-                holder?.isActive = false
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    holder?.isActive = false
+                }
                 holder?.content = nil
             }
     }
@@ -253,11 +259,12 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
                 }
             )
             .opacity(stackReplacer.isActive ? 0 : 1)
+            .animation(.easeInOut(duration: 0.35), value: stackReplacer.isActive)
 
             // Layer 2: Stack replacement content (nested coordinator's NavigationStack)
             if stackReplacer.isActive, let content = stackReplacer.content {
                 content
-                    .transition(.identity)
+                    .transition(.move(edge: .trailing))
             }
         }
         .modifier(_SheetMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
