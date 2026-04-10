@@ -83,13 +83,12 @@ extension FlowCoordinatorMacro: MemberMacro {
             results.append(actionDecl)
         }
 
-        // 8. body 생성
+        // 8. body 생성 (항상 생성 - forEachRoute 자동 적용)
         if !hasBody {
             let bodyDecl: DeclSyntax = """
                 var body: some Reducer<State, Action> {
                     Reduce { state, action in
-                        guard case .router(let routeAction) = action else { return .none }
-                        return self.handleRoute(state: &state, action: routeAction)
+                        return self.handleRoute(state: &state, action: action)
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }

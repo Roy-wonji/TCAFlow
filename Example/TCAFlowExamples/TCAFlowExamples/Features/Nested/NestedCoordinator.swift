@@ -37,26 +37,28 @@ extension NestedCoordinator {
 extension NestedCoordinator.NestedScreen.State: Equatable {}
 
 // MARK: - Route Handling
+// body는 매크로가 생성 → .forEachRoute 자동 적용
+// handleRoute에서 모든 Action을 처리 (추가 action 포함)
 
 extension NestedCoordinator {
-  func handleRoute(
-    state: inout State,
-    action: IndexedRouterActionOf<NestedScreen>
-  ) -> Effect<Action> {
+  func handleRoute(state: inout State, action: Action) -> Effect<Action> {
     switch action {
-      case .routeAction(_, .step1(.nextStep)):
+      case .router(.routeAction(_, .step1(.nextStep))):
         state.routes.push(.step2(.init()))
         return .none
 
-      case .routeAction(_, .step1(.backToMain)):
+      case .router(.routeAction(_, .step1(.backToMain))):
         return .send(.backToMain)
 
-      case .routeAction(_, .step2(.goBack)):
+      case .router(.routeAction(_, .step2(.goBack))):
         state.routes.goBack()
         return .none
 
-      case .routeAction(_, .step2(.finish)):
+      case .router(.routeAction(_, .step2(.finish))):
         return .send(.backToMain)
+
+      case .backToMain:
+        return .none  // 상위 coordinator에서 처리
 
       default:
         return .none

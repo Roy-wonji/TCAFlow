@@ -23,76 +23,73 @@ extension DemoCoordinator.DemoScreen.State: Equatable {}
 // MARK: - Route Handling
 
 extension DemoCoordinator {
-  func handleRoute(
-    state: inout State,
-    action: IndexedRouterActionOf<DemoScreen>
-  ) -> Effect<Action> {
+  func handleRoute(state: inout State, action: Action) -> Effect<Action> {
     switch action {
-      case .routeAction(_, .home(.startFlow)):
+      case .router(.routeAction(_, .home(.startFlow))):
         state.routes.push(.flow(.init()))
         return .none
 
-      case .routeAction(_, .home(.pushOneView)):
+      case .router(.routeAction(_, .home(.pushOneView))):
         state.routes.push(.detail(.init(title: "Push된 화면", message: "간단한 Push 테스트입니다")))
         return .none
 
-      case .routeAction(_, .home(.openNestedCoordinator)):
+      case .router(.routeAction(_, .home(.openNestedCoordinator))):
         state.routes.push(.nested(.init()))
         return .none
 
-      case .routeAction(_, .home(.jumpToSettings)):
+      case .router(.routeAction(_, .home(.jumpToSettings))):
         state.routes.push(.settings(.init()))
         return .none
 
-      case .routeAction(_, .flow(.nextStep)):
+      case .router(.routeAction(_, .flow(.nextStep))):
         state.routes.push(.detail(.init(title: "Flow Step 2", message: "다음 단계로 이동했습니다")))
         return .none
 
-      case .routeAction(_, .flow(.goToDetailSmartly)):
+      case .router(.routeAction(_, .flow(.goToDetailSmartly))):
         state.routes.goTo(.detail(.init(title: "From Flow", message: "Flow에서 goTo로 이동했습니다")))
         return .none
 
-      case .routeAction(_, .flow(.goToHomeDirectly)):
+      case .router(.routeAction(_, .flow(.goToHomeDirectly))):
         state.routes.goTo(\.home)
         return .none
 
-      case .routeAction(_, .detail(.goBack)):
+      case .router(.routeAction(_, .detail(.goBack))):
         state.routes.goBack()
         return .none
 
-      case .routeAction(_, .detail(.goToRoot)):
+      case .router(.routeAction(_, .detail(.goToRoot))):
         state.routes.goBackToRoot()
         return .none
 
-      case .routeAction(_, .detail(.goToHomeDirectly)):
+      case .router(.routeAction(_, .detail(.goToHomeDirectly))):
         state.routes.goTo(\.home)
         return .none
 
-      case .routeAction(_, .detail(.goToSettingsSmartly)):
+      case .router(.routeAction(_, .detail(.goToSettingsSmartly))):
         state.routes.goTo(.settings(.init()))
         return .none
 
-      case .routeAction(_, .settings(.goBack)):
+      case .router(.routeAction(_, .settings(.goBack))):
         state.routes.goBack()
         return .none
 
-      case .routeAction(_, .settings(.goToHomeDirectly)):
+      case .router(.routeAction(_, .settings(.goToHomeDirectly))):
         state.routes.goTo(\.home)
         return .none
 
-      case .routeAction(_, .settings(.goToFlowSmartly)):
+      case .router(.routeAction(_, .settings(.goToFlowSmartly))):
         state.routes.goTo(.flow(.init()))
         return .none
 
-      case .routeAction(_, .nested(.backToMain)):
+      case .router(.routeAction(_, .nested(.backToMain))):
         state.routes.goBackToRoot()
         return .none
 
-      case .routeAction(_, .home(.goToSettingsSmartly)):
+      case .router(.routeAction(_, .home(.goToSettingsSmartly))):
         state.routes.goTo(.settings(.init()))
         return .none
 
-      case .routeAction(_, .home(.goToFlowOrCreate)):
+      case .router(.routeAction(_, .home(.goToFlowOrCreate))):
         state.routes.goTo(.flow(.init()))
         return .none
 

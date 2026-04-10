@@ -48,10 +48,7 @@ final class FlowCoordinatorMacroTests: XCTestCase {
 
                 var body: some Reducer<State, Action> {
                     Reduce { state, action in
-                        guard case .router(let routeAction) = action else {
-                            return .none
-                        }
-                        return self.handleRoute(state: &state, action: routeAction)
+                        return self.handleRoute(state: &state, action: action)
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }
@@ -98,10 +95,7 @@ final class FlowCoordinatorMacroTests: XCTestCase {
 
                 var body: some Reducer<State, Action> {
                     Reduce { state, action in
-                        guard case .router(let routeAction) = action else {
-                            return .none
-                        }
-                        return self.handleRoute(state: &state, action: routeAction)
+                        return self.handleRoute(state: &state, action: action)
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }
@@ -114,7 +108,7 @@ final class FlowCoordinatorMacroTests: XCTestCase {
         #endif
     }
 
-    func testCustomActionSkipsGeneration() throws {
+    func testCustomActionSkipsActionGeneration() throws {
         #if canImport(TCAFlowMacros)
         assertMacroExpansion(
             """
@@ -157,10 +151,7 @@ final class FlowCoordinatorMacroTests: XCTestCase {
 
                 var body: some Reducer<State, Action> {
                     Reduce { state, action in
-                        guard case .router(let routeAction) = action else {
-                            return .none
-                        }
-                        return self.handleRoute(state: &state, action: routeAction)
+                        return self.handleRoute(state: &state, action: action)
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }
@@ -207,10 +198,7 @@ final class FlowCoordinatorMacroTests: XCTestCase {
 
                 var body: some Reducer<State, Action> {
                     Reduce { state, action in
-                        guard case .router(let routeAction) = action else {
-                            return .none
-                        }
-                        return self.handleRoute(state: &state, action: routeAction)
+                        return self.handleRoute(state: &state, action: action)
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }
