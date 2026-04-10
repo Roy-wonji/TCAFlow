@@ -7,16 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		04240871BE071927E734D48D /* DemoCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07495DE1ACBFE5F775AB6108 /* DemoCoordinatorView.swift */; };
+		1865B17B5E5AD75CF3DDE3EB /* NestedStep1Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = D436BC0164A4847075EC2F59 /* NestedStep1Feature.swift */; };
+		2437B8EE8061CDFD7DAF4B7C /* NestedStep1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7548D234BD903D2D6E95E82 /* NestedStep1View.swift */; };
+		2B5624E26E228A27D4F6A640 /* DetailFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFDA1708033A441F752B6A5 /* DetailFeature.swift */; };
+		44EB0F99AB170F39283D2377 /* NestedStep2Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 459AF78025148AAC030E0315 /* NestedStep2Feature.swift */; };
 		6CA3EC6960EF91290482F9E6 /* IdentifiedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 94700432F45F37D7063F3D84 /* IdentifiedCollections */; };
+		6D2A7194CE197B431C201AD1 /* HomeFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00E0658D9B2F16CB5A37AA /* HomeFeature.swift */; };
+		6E74B884993AC8DA4B7C4655 /* NestedStep2View.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD386B0B2EC7A3F76AFE06F8 /* NestedStep2View.swift */; };
+		7096D0F2753C56D0D4380F7E /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F6CAB3EF86F3A5E8516C3CE /* DetailView.swift */; };
+		8597461937673F3BE2EE05FD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40EB5EA56D1B76D0F774CD5E /* HomeView.swift */; };
+		8810C180688CF0E1282127DC /* FlowFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07CB16F779BC5A0D23917C91 /* FlowFeature.swift */; };
+		9C0F36E62B7E1764F8E74FC6 /* NestedCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAE95D67722035F758A3F0C /* NestedCoordinator.swift */; };
+		9C1102A96252D6879F43FBCE /* FlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC207A46EAEDBC5586369B1B /* FlowView.swift */; };
 		AD9FC335D450BE217153DE9F /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 2026D34F63103DE1286FB58D /* ComposableArchitecture */; };
 		D2599A3887566186328DD06A /* TCAFlow in Frameworks */ = {isa = PBXBuildFile; productRef = C69E762E360A2F4CF6D0D114 /* TCAFlow */; };
+		D4D6825743DC72AE812114D7 /* SettingsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06CECFFB5670EAF7775A23F0 /* SettingsFeature.swift */; };
+		D8300744A888472D2E2E4018 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6596D7BE51A5045895B236B3 /* SettingsView.swift */; };
+		E42D6291561F7313800A9BF9 /* DemoCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8039CBC4BAC6D1396EE42E6 /* DemoCoordinator.swift */; };
+		F22820E6C19267D8FEECAA36 /* NestedCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9DAF78543370BAD464C8807 /* NestedCoordinatorView.swift */; };
 		F2E1B5B534766F304A5D480E /* TCAFlowExamplesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */; };
-		AA000001AA000001AA000001 /* DemoCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001BB000001BB000001 /* DemoCoordinator.swift */; };
-		AA000002AA000002AA000002 /* HomeFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002BB000002BB000002 /* HomeFeature.swift */; };
-		AA000003AA000003AA000003 /* FlowFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000003BB000003BB000003 /* FlowFeature.swift */; };
-		AA000004AA000004AA000004 /* DetailFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000004BB000004BB000004 /* DetailFeature.swift */; };
-		AA000005AA000005AA000005 /* SettingsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000005BB000005BB000005 /* SettingsFeature.swift */; };
-		AA000006AA000006AA000006 /* NestedCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000006BB000006BB000006 /* NestedCoordinator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,16 +43,26 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		06CECFFB5670EAF7775A23F0 /* SettingsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeature.swift; sourceTree = "<group>"; };
+		07495DE1ACBFE5F775AB6108 /* DemoCoordinatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCoordinatorView.swift; sourceTree = "<group>"; };
+		07CB16F779BC5A0D23917C91 /* FlowFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowFeature.swift; sourceTree = "<group>"; };
 		257EDB19611523568C091C51 /* TCAFlow */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TCAFlow; path = ../..; sourceTree = "<group>"; };
+		3CAE95D67722035F758A3F0C /* NestedCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestedCoordinator.swift; sourceTree = "<group>"; };
+		3CFDA1708033A441F752B6A5 /* DetailFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailFeature.swift; sourceTree = "<group>"; };
+		40EB5EA56D1B76D0F774CD5E /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		459AF78025148AAC030E0315 /* NestedStep2Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestedStep2Feature.swift; sourceTree = "<group>"; };
+		6596D7BE51A5045895B236B3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		6F6CAB3EF86F3A5E8516C3CE /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
 		9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCAFlowExamplesApp.swift; sourceTree = "<group>"; };
-		BB000001BB000001BB000001 /* DemoCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCoordinator.swift; sourceTree = "<group>"; };
-		BB000002BB000002BB000002 /* HomeFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFeature.swift; sourceTree = "<group>"; };
-		BB000003BB000003BB000003 /* FlowFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowFeature.swift; sourceTree = "<group>"; };
-		BB000004BB000004BB000004 /* DetailFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailFeature.swift; sourceTree = "<group>"; };
-		BB000005BB000005BB000005 /* SettingsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeature.swift; sourceTree = "<group>"; };
-		BB000006BB000006BB000006 /* NestedCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestedCoordinator.swift; sourceTree = "<group>"; };
 		9F97BEA477CA1EBEABA7F79E /* TCAFlowExamples-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TCAFlowExamples-Info.plist"; sourceTree = "<group>"; };
+		AD386B0B2EC7A3F76AFE06F8 /* NestedStep2View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestedStep2View.swift; sourceTree = "<group>"; };
+		B9DAF78543370BAD464C8807 /* NestedCoordinatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestedCoordinatorView.swift; sourceTree = "<group>"; };
 		C73A07C36A59F1F207F9D7D6 /* TCAFlowExamples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TCAFlowExamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C8039CBC4BAC6D1396EE42E6 /* DemoCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCoordinator.swift; sourceTree = "<group>"; };
+		CA00E0658D9B2F16CB5A37AA /* HomeFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFeature.swift; sourceTree = "<group>"; };
+		D436BC0164A4847075EC2F59 /* NestedStep1Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestedStep1Feature.swift; sourceTree = "<group>"; };
+		DC207A46EAEDBC5586369B1B /* FlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowView.swift; sourceTree = "<group>"; };
+		F7548D234BD903D2D6E95E82 /* NestedStep1View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestedStep1View.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +79,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1F2CBFCFD77E60D1877A4092 /* Detail */ = {
+			isa = PBXGroup;
+			children = (
+				3CFDA1708033A441F752B6A5 /* DetailFeature.swift */,
+				6F6CAB3EF86F3A5E8516C3CE /* DetailView.swift */,
+			);
+			path = Detail;
+			sourceTree = "<group>";
+		};
+		4A5A1636930611443355AB8A /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				CA00E0658D9B2F16CB5A37AA /* HomeFeature.swift */,
+				40EB5EA56D1B76D0F774CD5E /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
 		5D5672BF4F6629D568164D45 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -87,13 +125,9 @@
 		7499A1323F5EAA09F8CB6657 /* TCAFlowExamples */ = {
 			isa = PBXGroup;
 			children = (
+				A424920C7F4C0023CC0A2FB0 /* Coordinators */,
+				B6A8ED2EB71D414DA7087C6C /* Features */,
 				9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */,
-				BB000001BB000001BB000001 /* DemoCoordinator.swift */,
-				BB000002BB000002BB000002 /* HomeFeature.swift */,
-				BB000003BB000003BB000003 /* FlowFeature.swift */,
-				BB000004BB000004BB000004 /* DetailFeature.swift */,
-				BB000005BB000005BB000005 /* SettingsFeature.swift */,
-				BB000006BB000006BB000006 /* NestedCoordinator.swift */,
 			);
 			path = TCAFlowExamples;
 			sourceTree = "<group>";
@@ -105,6 +139,58 @@
 				7499A1323F5EAA09F8CB6657 /* TCAFlowExamples */,
 			);
 			name = Project;
+			sourceTree = "<group>";
+		};
+		7D50A2C62288144D27EC74A9 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				06CECFFB5670EAF7775A23F0 /* SettingsFeature.swift */,
+				6596D7BE51A5045895B236B3 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A424920C7F4C0023CC0A2FB0 /* Coordinators */ = {
+			isa = PBXGroup;
+			children = (
+				C8039CBC4BAC6D1396EE42E6 /* DemoCoordinator.swift */,
+				07495DE1ACBFE5F775AB6108 /* DemoCoordinatorView.swift */,
+			);
+			path = Coordinators;
+			sourceTree = "<group>";
+		};
+		B6A8ED2EB71D414DA7087C6C /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				1F2CBFCFD77E60D1877A4092 /* Detail */,
+				BFDD46DEA354BE9CAFD468C1 /* Flow */,
+				4A5A1636930611443355AB8A /* Home */,
+				BAA81955431F35712A2367B4 /* Nested */,
+				7D50A2C62288144D27EC74A9 /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		BAA81955431F35712A2367B4 /* Nested */ = {
+			isa = PBXGroup;
+			children = (
+				3CAE95D67722035F758A3F0C /* NestedCoordinator.swift */,
+				B9DAF78543370BAD464C8807 /* NestedCoordinatorView.swift */,
+				D436BC0164A4847075EC2F59 /* NestedStep1Feature.swift */,
+				F7548D234BD903D2D6E95E82 /* NestedStep1View.swift */,
+				459AF78025148AAC030E0315 /* NestedStep2Feature.swift */,
+				AD386B0B2EC7A3F76AFE06F8 /* NestedStep2View.swift */,
+			);
+			path = Nested;
+			sourceTree = "<group>";
+		};
+		BFDD46DEA354BE9CAFD468C1 /* Flow */ = {
+			isa = PBXGroup;
+			children = (
+				07CB16F779BC5A0D23917C91 /* FlowFeature.swift */,
+				DC207A46EAEDBC5586369B1B /* FlowView.swift */,
+			);
+			path = Flow;
 			sourceTree = "<group>";
 		};
 		C213593284BFA266BD5F79F1 /* Derived */ = {
@@ -197,13 +283,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E42D6291561F7313800A9BF9 /* DemoCoordinator.swift in Sources */,
+				04240871BE071927E734D48D /* DemoCoordinatorView.swift in Sources */,
+				2B5624E26E228A27D4F6A640 /* DetailFeature.swift in Sources */,
+				7096D0F2753C56D0D4380F7E /* DetailView.swift in Sources */,
+				8810C180688CF0E1282127DC /* FlowFeature.swift in Sources */,
+				9C1102A96252D6879F43FBCE /* FlowView.swift in Sources */,
+				6D2A7194CE197B431C201AD1 /* HomeFeature.swift in Sources */,
+				8597461937673F3BE2EE05FD /* HomeView.swift in Sources */,
+				9C0F36E62B7E1764F8E74FC6 /* NestedCoordinator.swift in Sources */,
+				F22820E6C19267D8FEECAA36 /* NestedCoordinatorView.swift in Sources */,
+				1865B17B5E5AD75CF3DDE3EB /* NestedStep1Feature.swift in Sources */,
+				2437B8EE8061CDFD7DAF4B7C /* NestedStep1View.swift in Sources */,
+				44EB0F99AB170F39283D2377 /* NestedStep2Feature.swift in Sources */,
+				6E74B884993AC8DA4B7C4655 /* NestedStep2View.swift in Sources */,
+				D4D6825743DC72AE812114D7 /* SettingsFeature.swift in Sources */,
+				D8300744A888472D2E2E4018 /* SettingsView.swift in Sources */,
 				F2E1B5B534766F304A5D480E /* TCAFlowExamplesApp.swift in Sources */,
-				AA000001AA000001AA000001 /* DemoCoordinator.swift in Sources */,
-				AA000002AA000002AA000002 /* HomeFeature.swift in Sources */,
-				AA000003AA000003AA000003 /* FlowFeature.swift in Sources */,
-				AA000004AA000004AA000004 /* DetailFeature.swift in Sources */,
-				AA000005AA000005AA000005 /* SettingsFeature.swift in Sources */,
-				AA000006AA000006AA000006 /* NestedCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

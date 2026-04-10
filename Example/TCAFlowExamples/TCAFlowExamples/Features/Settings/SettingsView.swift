@@ -1,23 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
 
-@Reducer
-struct SettingsFeature {
-  @ObservableState
-  struct State: Equatable {
-    init() {}
-  }
-
-  @CasePathable
-  enum Action {
-    case goBack
-  }
-
-  var body: some ReducerOf<Self> {
-    Reduce { _, _ in .none }
-  }
-}
-
 struct SettingsView: View {
   @Bindable var store: StoreOf<SettingsFeature>
 
