@@ -37,14 +37,14 @@ let package = Package(
             ],
             path: "Sources/TCAFlow",
             swiftSettings: [
-                .swiftLanguageMode(.v5),
+                .swiftLanguageMode(.v6),
                 .unsafeFlags(["-suppress-warnings"])
             ]
         ),
         .testTarget(
             name: "TCAFlowTests",
             dependencies: ["TCAFlow"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
             name: "TCAFlowMacrosTests",
@@ -52,7 +52,7 @@ let package = Package(
                 "TCAFlowMacros",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
 )

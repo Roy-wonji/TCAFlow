@@ -63,7 +63,7 @@ final class _StackReplacerHolder: ObservableObject {
     var onDismiss: (() -> Void)?
 }
 
-private struct _StackReplacerHolderKey: EnvironmentKey {
+private struct _StackReplacerHolderKey: @preconcurrency EnvironmentKey {
     @MainActor static let defaultValue: _StackReplacerHolder? = nil
 }
 
