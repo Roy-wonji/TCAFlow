@@ -195,16 +195,15 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
 
     private func syncFromStore(animated: Bool = false) {
         let expected = computePath()
-        if path != expected {
-            if animated {
-                Task { @MainActor in
-                    withAnimation(.easeInOut(duration: 0.35)) {
-                        path = expected
-                    }
-                }
-            } else {
+        guard path != expected else { return }
+        if animated {
+            var transaction = Transaction(animation: .easeInOut(duration: 0.35))
+            transaction.disablesAnimations = false
+            withTransaction(transaction) {
                 path = expected
             }
+        } else {
+            path = expected
         }
     }
 
