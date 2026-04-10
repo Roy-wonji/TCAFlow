@@ -77,36 +77,6 @@ extension FlowCoordinatorMacro: MemberMacro {
     }
 }
 
-// MARK: - ExtensionMacro (struct에 붙었을 때 Reducer conformance + Equatable 추가)
-
-extension FlowCoordinatorMacro: ExtensionMacro {
-    public static func expansion(
-        of node: AttributeSyntax,
-        attachedTo declaration: some DeclGroupSyntax,
-        providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo protocols: [TypeSyntax],
-        in context: some MacroExpansionContext
-    ) throws -> [ExtensionDeclSyntax] {
-        // struct에 붙었을 때만 Reducer conformance + Equatable 생성
-        guard declaration.is(StructDeclSyntax.self) else { return [] }
-
-        let typeName = type.trimmedDescription
-
-        guard let screenEnum = findReducerEnum(in: declaration) else { return [] }
-        let screenName = screenEnum.name.trimmedDescription
-
-        var extensions: [ExtensionDeclSyntax] = []
-
-        // Reducer conformance
-        let reducerExt: DeclSyntax = "extension \(raw: typeName): Reducer {}"
-        if let ext = reducerExt.as(ExtensionDeclSyntax.self) {
-            extensions.append(ext)
-        }
-
-        return extensions
-    }
-}
-
 // MARK: - Helpers
 
 private func findReducerEnum(in declaration: some DeclGroupSyntax) -> EnumDeclSyntax? {

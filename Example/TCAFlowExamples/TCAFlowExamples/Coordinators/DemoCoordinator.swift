@@ -2,10 +2,10 @@ import ComposableArchitecture
 import SwiftUI
 import TCAFlow
 
-// MARK: - DemoCoordinator
+struct DemoCoordinator: Reducer {}
 
 @FlowCoordinator(navigation: true)
-struct DemoCoordinator {
+extension DemoCoordinator {
   @Reducer(state: .equatable)
   enum DemoScreen {
     case home(HomeFeature)
@@ -15,8 +15,6 @@ struct DemoCoordinator {
     case nested(NestedCoordinator)
   }
 }
-
-// MARK: - Route Handling
 
 extension DemoCoordinator {
   func handleRoute(state: inout State, action: Action) -> Effect<Action> {
