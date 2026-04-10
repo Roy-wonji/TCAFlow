@@ -203,6 +203,45 @@ extension Array {
         guard let idx = firstIndex(where: { $0.isPresented }) else { return }
         self = Array(prefix(idx))
     }
+
+    public mutating func goTo<Screen, Value>(
+        _ casePath: CaseKeyPath<Screen, Value>
+    ) where Element == Route<Screen> {
+        goTo(AnyCasePath(casePath))
+    }
+
+    public mutating func goTo<Screen, Value>(
+        _ casePath: AnyCasePath<Screen, Value>
+    ) where Element == Route<Screen> {
+        // 스택에 해당 화면이 있으면 그 화면까지 뒤로 이동
+        if let index = lastIndex(where: { casePath.extract(from: $0.screen) != nil }) {
+            self = Array(prefix(through: index))
+        }
+        // 스택에 없으면 아무것도 안 함 (화면 인스턴스가 없어서 새로 생성 불가)
+        // 새로 생성하려면 goTo(screen) 또는 push(screen)을 사용
+    }
+
+    public mutating func goTo<Screen>(
+        _ screen: Screen
+    ) where Element == Route<Screen> {
+        // 동일한 화면이 있으면 그 화면까지 뒤로 이동
+        if let index = lastIndex(where: {
+            String(describing: $0.screen) == String(describing: screen)
+        }) {
+            self = Array(prefix(through: index))
+        } else {
+            // 없으면 push
+            push(screen)
+        }
+    }
+
+    public mutating func goTo<Screen>(
+        where predicate: (Route<Screen>) -> Bool
+    ) where Element == Route<Screen> {
+        if let index = lastIndex(where: predicate) {
+            self = Array(prefix(through: index))
+        }
+    }
 }
 
 // MARK: - routeWithDelaysIfUnsupported

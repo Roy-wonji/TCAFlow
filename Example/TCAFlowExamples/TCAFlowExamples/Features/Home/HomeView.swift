@@ -43,6 +43,40 @@ struct HomeView: View {
       }
       .padding(.horizontal, 20)
 
+      // goTo 예제 섹션
+      VStack(spacing: 12) {
+        Text("🎯 goTo 스마트 이동")
+          .font(.headline)
+          .fontWeight(.semibold)
+          .foregroundColor(.primary)
+
+        VStack(spacing: 8) {
+          Button("Go to Settings") {
+            store.send(.goToSettingsSmartly)
+          }
+          .buttonStyle(.bordered)
+          .controlSize(.regular)
+
+          Button("Go to Flow") {
+            store.send(.goToFlowOrCreate)
+          }
+          .buttonStyle(.bordered)
+          .controlSize(.regular)
+        }
+
+        Text("스마트 이동: 있으면 이동, 없으면 새로 생성")
+          .font(.caption)
+          .foregroundColor(.blue)
+          .multilineTextAlignment(.center)
+      }
+      .padding(.horizontal, 20)
+      .padding(.vertical, 16)
+      .background(
+        RoundedRectangle(cornerRadius: 12)
+          .fill(Color(UIColor.systemGray6))
+      )
+      .padding(.horizontal, 20)
+
       Spacer()
     }
     .padding()

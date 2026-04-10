@@ -17,6 +17,8 @@ struct DetailFeature {
   enum Action {
     case goBack
     case goToRoot
+    case goToHomeDirectly            // "이전 홈으로 돌아가기" - 실용적!
+    case goToSettingsSmartly         // 무조건 Settings로 이동
   }
 
   var body: some ReducerOf<Self> {

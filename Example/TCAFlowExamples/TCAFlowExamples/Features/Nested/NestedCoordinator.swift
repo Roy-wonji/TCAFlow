@@ -1,36 +1,45 @@
 import ComposableArchitecture
 import TCAFlow
 
-@Reducer
-struct NestedCoordinator {
-  @ObservableState
-  struct State: Equatable {
-    var routes: [Route<NestedScreen.State>]
+// MARK: - NestedCoordinator (@FlowCoordinator + 추가 Action)
 
-    init() {
-      self.routes = [.root(.step1(.init()), embedInNavigationView: true)]
-    }
+struct NestedCoordinator: Reducer {}
+
+@FlowCoordinator(navigation: true)
+extension NestedCoordinator {
+  @Reducer
+  enum NestedScreen {
+    case step1(NestedStep1Feature)
+    case step2(NestedStep2Feature)
   }
 
+  // Action 직접 작성 → 매크로가 Action 생성 건너뜀
   @CasePathable
   enum Action {
     case router(IndexedRouterActionOf<NestedScreen>)
     case backToMain
   }
 
+  // body 직접 작성 → 매크로가 body 생성 건너뜀 (backToMain 처리 필요)
   var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
-        case .router(let routeAction):
-          return handleRouterAction(state: &state, action: routeAction)
-        case .backToMain:
-          return .none
+      case .router(let routeAction):
+        return self.handleRoute(state: &state, action: routeAction)
+      case .backToMain:
+        return .none
       }
     }
     .forEachRoute(\.routes, action: \.router)
   }
+}
 
-  private func handleRouterAction(
+extension NestedCoordinator.NestedScreen.State: Equatable {}
+
+// MARK: - Route Handling
+
+extension NestedCoordinator {
+  func handleRoute(
     state: inout State,
     action: IndexedRouterActionOf<NestedScreen>
   ) -> Effect<Action> {
@@ -54,15 +63,3 @@ struct NestedCoordinator {
     }
   }
 }
-
-// MARK: - NestedScreen
-
-extension NestedCoordinator {
-  @Reducer
-  enum NestedScreen {
-    case step1(NestedStep1Feature)
-    case step2(NestedStep2Feature)
-  }
-}
-
-extension NestedCoordinator.NestedScreen.State: Equatable {}

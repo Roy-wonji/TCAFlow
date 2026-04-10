@@ -56,12 +56,6 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                     .forEachRoute(\\.routes, action: \\.router)
                 }
             }
-
-            extension AppCoordinator: Reducer {
-            }
-
-            extension AppCoordinator.Screen.State: Equatable {
-            }
             """,
             macros: testMacros
         )
@@ -111,12 +105,6 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }
-            }
-
-            extension AppCoordinator: Reducer {
-            }
-
-            extension AppCoordinator.Screen.State: Equatable {
             }
             """,
             macros: testMacros
@@ -177,12 +165,6 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                     .forEachRoute(\\.routes, action: \\.router)
                 }
             }
-
-            extension NestedCoordinator: Reducer {
-            }
-
-            extension NestedCoordinator.NestedScreen.State: Equatable {
-            }
             """,
             macros: testMacros
         )
@@ -232,12 +214,6 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                     }
                     .forEachRoute(\\.routes, action: \\.router)
                 }
-            }
-
-            extension AppCoordinator: Reducer {
-            }
-
-            extension AppCoordinator.Screen.State: Equatable {
             }
             """,
             macros: testMacros

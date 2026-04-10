@@ -211,14 +211,44 @@ state.routes.dismissAll()       // 모든 presented 화면 닫기
 ### 🎯 특정 화면으로 이동
 
 ```swift
-// CaseKeyPath로 특정 화면까지 이동
-state.routes.goBackTo(\.home)
-state.routes.goBackTo(\.profile)
+// 🔙 뒤로 이동 (goBackTo)
+state.routes.goBackTo(\.home)         // 홈 화면까지 pop
+state.routes.goBackTo(\.profile)      // 프로필 화면까지 pop
 
-// 조건부 이동
+// 🎯 스마트 이동 (goTo) - 가장 일반적인 방식
+state.routes.goTo(.settings(.init()))  // 설정으로 이동 (없으면 새로 생성)
+state.routes.goTo(.profile(.init()))   // 프로필로 이동 (없으면 새로 생성)
+state.routes.goTo(.detail(.init()))    // 상세로 이동 (없으면 새로 생성)
+
+// 🏠 이전 화면으로 돌아가기 (특수 용도)
+state.routes.goTo(\.home)             // 이전 홈으로 바로 돌아가기
+
+// 🔍 조건부 이동
 state.routes.goBackTo { route in
     route.screen.id == "specific-id"
 }
+
+state.routes.goTo { route in
+    route.screen.isTargetScreen
+}
+```
+
+**💡 언제 어떤 방식을 사용할까?**
+
+```swift
+// ✅ 일반적인 경우: 무조건 해당 화면으로 이동
+case .settingsButtonTapped:
+    state.routes.goTo(.settings(.init()))  // 없으면 새로 생성
+    return .none
+
+case .profileButtonTapped:
+    state.routes.goTo(.profile(.init(userId: user.id)))
+    return .none
+
+// ✅ 특수한 경우: "이전 홈으로 돌아가기" 같은 경우
+case .backToHomeButtonTapped:
+    state.routes.goTo(\.home)  // 스택의 홈으로 바로 이동
+    return .none
 ```
 
 ## 🏗️ Nested Coordinator

@@ -2,33 +2,28 @@ import ComposableArchitecture
 import SwiftUI
 import TCAFlow
 
-@Reducer
-struct DemoCoordinator {
-  @ObservableState
-  struct State: Equatable {
-    var routes: [Route<DemoScreen.State>]
+// MARK: - DemoCoordinator (@FlowCoordinator 매크로 사용)
 
-    init() {
-      self.routes = [.root(.home(.init()), embedInNavigationView: true)]
-    }
+struct DemoCoordinator: Reducer {}
+
+@FlowCoordinator(navigation: true)
+extension DemoCoordinator {
+  @Reducer
+  enum DemoScreen {
+    case home(HomeFeature)
+    case flow(FlowFeature)
+    case detail(DetailFeature)
+    case settings(SettingsFeature)
+    case nested(NestedCoordinator)
   }
+}
 
-  @CasePathable
-  enum Action {
-    case router(IndexedRouterActionOf<DemoScreen>)
-  }
+extension DemoCoordinator.DemoScreen.State: Equatable {}
 
-  var body: some Reducer<State, Action> {
-    Reduce { state, action in
-      switch action {
-        case .router(let routeAction):
-          return handleRouterAction(state: &state, action: routeAction)
-      }
-    }
-    .forEachRoute(\.routes, action: \.router)
-  }
+// MARK: - Route Handling
 
-  private func handleRouterAction(
+extension DemoCoordinator {
+  func handleRoute(
     state: inout State,
     action: IndexedRouterActionOf<DemoScreen>
   ) -> Effect<Action> {
@@ -53,6 +48,14 @@ struct DemoCoordinator {
         state.routes.push(.detail(.init(title: "Flow Step 2", message: "다음 단계로 이동했습니다")))
         return .none
 
+      case .routeAction(_, .flow(.goToDetailSmartly)):
+        state.routes.goTo(.detail(.init(title: "From Flow", message: "Flow에서 goTo로 이동했습니다")))
+        return .none
+
+      case .routeAction(_, .flow(.goToHomeDirectly)):
+        state.routes.goTo(\.home)
+        return .none
+
       case .routeAction(_, .detail(.goBack)):
         state.routes.goBack()
         return .none
@@ -61,12 +64,36 @@ struct DemoCoordinator {
         state.routes.goBackToRoot()
         return .none
 
+      case .routeAction(_, .detail(.goToHomeDirectly)):
+        state.routes.goTo(\.home)
+        return .none
+
+      case .routeAction(_, .detail(.goToSettingsSmartly)):
+        state.routes.goTo(.settings(.init()))
+        return .none
+
       case .routeAction(_, .settings(.goBack)):
         state.routes.goBack()
         return .none
 
+      case .routeAction(_, .settings(.goToHomeDirectly)):
+        state.routes.goTo(\.home)
+        return .none
+
+      case .routeAction(_, .settings(.goToFlowSmartly)):
+        state.routes.goTo(.flow(.init()))
+        return .none
+
       case .routeAction(_, .nested(.backToMain)):
         state.routes.goBackToRoot()
+        return .none
+
+      case .routeAction(_, .home(.goToSettingsSmartly)):
+        state.routes.goTo(.settings(.init()))
+        return .none
+
+      case .routeAction(_, .home(.goToFlowOrCreate)):
+        state.routes.goTo(.flow(.init()))
         return .none
 
       default:
@@ -74,18 +101,3 @@ struct DemoCoordinator {
     }
   }
 }
-
-// MARK: - DemoScreen
-
-extension DemoCoordinator {
-  @Reducer
-  enum DemoScreen {
-    case home(HomeFeature)
-    case flow(FlowFeature)
-    case detail(DetailFeature)
-    case settings(SettingsFeature)
-    case nested(NestedCoordinator)
-  }
-}
-
-extension DemoCoordinator.DemoScreen.State: Equatable {}

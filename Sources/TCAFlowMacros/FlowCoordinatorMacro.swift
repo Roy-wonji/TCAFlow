@@ -101,49 +101,6 @@ extension FlowCoordinatorMacro: MemberMacro {
     }
 }
 
-// MARK: - ExtensionMacro
-
-extension FlowCoordinatorMacro: ExtensionMacro {
-    public static func expansion(
-        of node: AttributeSyntax,
-        attachedTo declaration: some DeclGroupSyntax,
-        providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo protocols: [TypeSyntax],
-        in context: some MacroExpansionContext
-    ) throws -> [ExtensionDeclSyntax] {
-        guard let extensionDecl = declaration.as(ExtensionDeclSyntax.self) else {
-            return []
-        }
-
-        let typeName = extensionDecl.extendedType.trimmedDescription
-
-        guard let screenEnum = findReducerEnum(in: extensionDecl) else {
-            return []
-        }
-
-        let screenName = screenEnum.name.trimmedDescription
-
-        var extensions: [ExtensionDeclSyntax] = []
-
-        // Reducer conformance
-        let reducerExt: DeclSyntax = """
-            extension \(raw: typeName): Reducer {}
-            """
-        if let ext = reducerExt.as(ExtensionDeclSyntax.self) {
-            extensions.append(ext)
-        }
-
-        // Screen.State: Equatable
-        let equatableExt: DeclSyntax = """
-            extension \(raw: typeName).\(raw: screenName).State: Equatable {}
-            """
-        if let ext = equatableExt.as(ExtensionDeclSyntax.self) {
-            extensions.append(ext)
-        }
-
-        return extensions
-    }
-}
 
 // MARK: - Helpers
 

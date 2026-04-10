@@ -10,6 +10,8 @@ struct FlowFeature {
   @CasePathable
   enum Action {
     case nextStep
+    case goToDetailSmartly           // Detail로 스마트 이동
+    case goToHomeDirectly            // 이전 홈으로 돌아가기
   }
 
   var body: some ReducerOf<Self> {
