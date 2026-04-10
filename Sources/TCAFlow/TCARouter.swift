@@ -221,31 +221,38 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     var body: some View {
         ZStack {
             // Layer 1: This coordinator's NavigationStack
-            WithPerceptionTracking {
-                NavigationStack(path: $path) {
-                    Group {
-                        if Screen.self is ObservableState.Type {
-                            WithPerceptionTracking { screenContent(scopedScreenStore(0)) }
-                        } else {
-                            screenContent(scopedScreenStore(0))
-                        }
+            NavigationStack(path: $path) {
+                Group {
+                    if Screen.self is ObservableState.Type {
+                        WithPerceptionTracking { screenContent(scopedScreenStore(0)) }
+                    } else {
+                        screenContent(scopedScreenStore(0))
                     }
-                    .navigationDestination(for: _RouteIndex.self) { routeIndex in
-                        if routeIndex.coordinatorID == coordinatorID {
-                            if Screen.self is ObservableState.Type {
-                                WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
-                            } else {
-                                screenContent(scopedScreenStore(routeIndex.index))
-                            }
+                }
+                .navigationDestination(for: _RouteIndex.self) { routeIndex in
+                    if routeIndex.coordinatorID == coordinatorID {
+                        if Screen.self is ObservableState.Type {
+                            WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
+                        } else {
+                            screenContent(scopedScreenStore(routeIndex.index))
                         }
                     }
                 }
-                .environment(\._isInsideNavStack, true)
-                .environment(\._stackReplacerHolder, stackReplacer)
-                .onAppear { syncFromStore() }
-                .onChange(of: routeCount) { _ in syncFromStore(animated: true) }
-                .onChange(of: path) { _ in syncToStore() }
             }
+            .environment(\._isInsideNavStack, true)
+            .environment(\._stackReplacerHolder, stackReplacer)
+            .onAppear { syncFromStore() }
+            .onChange(of: path) { _ in syncToStore() }
+            .background(
+                // routeCount 관찰은 WithPerceptionTracking 안에서,
+                // NavigationStack은 바깥에 두어 애니메이션 컨텍스트 보존
+                WithPerceptionTracking {
+                    Color.clear
+                        .onChange(of: routeCount) { _ in
+                            syncFromStore(animated: true)
+                        }
+                }
+            )
             .opacity(stackReplacer.isActive ? 0 : 1)
 
             // Layer 2: Stack replacement content (nested coordinator's NavigationStack)
