@@ -11,12 +11,14 @@ struct NestedCoordinator {
 }
 
 extension NestedCoordinator {
-  @Reducer(state: .equatable)
+  @Reducer
   enum NestedScreen {
     case step1(NestedStep1Feature)
     case step2(NestedStep2Feature)
   }
 }
+
+extension NestedCoordinator.NestedScreen.State: Equatable {}
 
 extension NestedCoordinator {
   func handleRoute(state: inout State, action: Action) -> Effect<Action> {

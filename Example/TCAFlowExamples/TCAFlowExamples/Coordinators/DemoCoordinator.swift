@@ -6,7 +6,7 @@ import TCAFlow
 struct DemoCoordinator {}
 
 extension DemoCoordinator {
-  @Reducer(state: .equatable)
+  @Reducer
   enum DemoScreen {
     case home(HomeFeature)
     case flow(FlowFeature)
@@ -15,6 +15,8 @@ extension DemoCoordinator {
     case nested(NestedCoordinator)
   }
 }
+
+extension DemoCoordinator.DemoScreen.State: Equatable {}
 
 extension DemoCoordinator {
   func handleRoute(state: inout State, action: Action) -> Effect<Action> {
