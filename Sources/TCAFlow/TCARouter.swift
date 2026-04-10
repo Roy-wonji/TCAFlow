@@ -193,10 +193,18 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
         return indices
     }
 
-    private func syncFromStore() {
+    private func syncFromStore(animated: Bool = false) {
         let expected = computePath()
         if path != expected {
-            path = expected
+            if animated {
+                Task { @MainActor in
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        path = expected
+                    }
+                }
+            } else {
+                path = expected
+            }
         }
     }
 
@@ -232,11 +240,10 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
                         }
                     }
                 }
-                .animation(.easeInOut(duration: 0.35), value: path)
                 .environment(\._isInsideNavStack, true)
                 .environment(\._stackReplacerHolder, stackReplacer)
                 .onAppear { syncFromStore() }
-                .onChange(of: routeCount) { _ in syncFromStore() }
+                .onChange(of: routeCount) { _ in syncFromStore(animated: true) }
                 .onChange(of: path) { _ in syncToStore() }
             }
             .opacity(stackReplacer.isActive ? 0 : 1)
