@@ -35,6 +35,21 @@ extension FlowCoordinatorMacro: MemberMacro {
 
         let navigation = params.navigation
 
+        // 접근 제어 수준 감지
+        let accessPrefix: String
+        if let structDecl = declaration.as(StructDeclSyntax.self) {
+            let modifiers = structDecl.modifiers.map { $0.name.text }
+            if modifiers.contains("public") {
+                accessPrefix = "public "
+            } else if modifiers.contains("package") {
+                accessPrefix = "package "
+            } else {
+                accessPrefix = ""
+            }
+        } else {
+            accessPrefix = ""
+        }
+
         // 이미 존재하는 멤버 확인
         let existingMembers = declaration.memberBlock.members.map {
             $0.decl.trimmedDescription
@@ -48,20 +63,18 @@ extension FlowCoordinatorMacro: MemberMacro {
 
         if !hasState {
             if firstCase.isEmpty {
-                // Screen enum이 extension에 있어서 firstCase를 모르는 경우
-                // → 사용자가 init을 직접 작성해야 함
                 results.append("""
                     @ObservableState
-                    struct State: Equatable {
+                    \(raw: accessPrefix)struct State: Equatable {
                         var routes: [Route<\(raw: screenName).State>]
                     }
                     """)
             } else {
                 results.append("""
                     @ObservableState
-                    struct State: Equatable {
+                    \(raw: accessPrefix)struct State: Equatable {
                         var routes: [Route<\(raw: screenName).State>]
-                        init() {
+                        \(raw: accessPrefix)init() {
                             self.routes = [.root(.\(raw: firstCase)(.init()), embedInNavigationView: \(raw: navigation))]
                         }
                     }
@@ -72,7 +85,7 @@ extension FlowCoordinatorMacro: MemberMacro {
         if !hasAction {
             results.append("""
                 @CasePathable
-                enum Action {
+                \(raw: accessPrefix)enum Action {
                     case router(IndexedRouterActionOf<\(raw: screenName)>)
                 }
                 """)
@@ -80,7 +93,7 @@ extension FlowCoordinatorMacro: MemberMacro {
 
         if !hasBody {
             results.append("""
-                var body: some Reducer<State, Action> {
+                \(raw: accessPrefix)var body: some Reducer<State, Action> {
                     Reduce { state, action in
                         return self.handleRoute(state: &state, action: action)
                     }
