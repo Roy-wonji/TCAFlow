@@ -412,33 +412,49 @@ case .backToHomeButtonTapped:
 
 복잡한 플로우는 Nested Coordinator로 분리할 수 있습니다.
 
+> **v1.0.2**: 중첩 코디네이터가 부모 `NavigationStack`을 직접 활용합니다.
+> `navigationDestination(isPresented:)` 체이닝으로 **NavigationStack 1개**만 사용하여 네이티브 슬라이드 애니메이션과 스와이프백이 자동 지원됩니다.
+
+```
+AppCoordinator (NavigationStack)
+  ├─ HomeView (root)
+  ├─ [push] → ProfileView          ← _InlineRouteChain(index: 0)
+  │            └─ navigationDestination(isPresented:)
+  │                 └─ [push] → SettingView   ← _InlineRouteChain(index: 1)
+```
+
 ```swift
-// 🎯 온보딩 전용 Coordinator
+// 🎯 프로필 전용 Coordinator
 @Reducer
-struct OnboardingCoordinator {
+struct ProfileCoordinator {
     @ObservableState
     struct State: Equatable {
-        var routes: [Route<OnboardingScreen.State>] = [
-            .root(.welcome(.init()), embedInNavigationView: true)
+        var routes: [Route<ProfileScreen.State>] = [
+            .root(.profile(.init()), embedInNavigationView: true)
         ]
     }
-    
+
     @CasePathable
     enum Action {
-        case router(IndexedRouterActionOf<OnboardingScreen>)
-        case completed  // 상위 Coordinator에 완료 알림
+        case router(IndexedRouterActionOf<ProfileScreen>)
+        case navigation(NavigationAction)
     }
-    
+
+    enum NavigationAction: Equatable {
+        case presentRoot  // 부모로 돌아가기
+    }
+
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
-            case .router(.routeAction(_, .welcome(.nextTapped))):
-                state.routes.push(.step1(.init()))
+            case .router(.routeAction(_, .profile(.settingTapped))):
+                state.routes.push(.setting(.init()))
                 return .none
-                
-            case .router(.routeAction(_, .step2(.completeTapped))):
-                return .send(.completed)  // 🚀 완료 신호
-                
+
+            case .router(.routeAction(_, .setting(.backTapped))):
+                state.routes.goBack()
+                return .none
+
             default:
                 return .none
             }
@@ -449,10 +465,10 @@ struct OnboardingCoordinator {
 
 // 📱 메인 앱에서 사용
 extension AppCoordinator {
-    @Reducer 
+    @Reducer
     enum Screen {
         case home(HomeFeature)
-        case onboarding(OnboardingCoordinator)  // 🎯 Nested Coordinator
+        case profile(ProfileCoordinator)  // 🎯 Nested Coordinator
     }
 }
 ```
