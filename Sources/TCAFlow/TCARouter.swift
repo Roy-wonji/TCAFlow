@@ -214,14 +214,7 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
         ZStack {
             // Layer 1: This coordinator's NavigationStack
             WithPerceptionTracking {
-                NavigationStack(path: Binding(
-                    get: { path },
-                    set: { newValue in
-                        withAnimation(.easeInOut(duration: 0.35)) {
-                            path = newValue
-                        }
-                    }
-                )) {
+                NavigationStack(path: $path) {
                     Group {
                         if Screen.self is ObservableState.Type {
                             WithPerceptionTracking { screenContent(scopedScreenStore(0)) }
@@ -239,6 +232,7 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
                         }
                     }
                 }
+                .animation(.easeInOut(duration: 0.35), value: path)
                 .environment(\._isInsideNavStack, true)
                 .environment(\._stackReplacerHolder, stackReplacer)
                 .onAppear { syncFromStore() }
