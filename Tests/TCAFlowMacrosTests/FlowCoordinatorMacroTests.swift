@@ -47,8 +47,10 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 }
 
                 var body: some Reducer<State, Action> {
-                    self.routeReducer
-                        .forEachRoute(\\.routes, action: \\.router)
+                    Reduce { state, action in
+                        return self.handleRoute(state: &state, action: action)
+                    }
+                    .forEachRoute(\\.routes, action: \\.router)
                 }
             }
             """,
@@ -92,8 +94,10 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 }
 
                 var body: some Reducer<State, Action> {
-                    self.routeReducer
-                        .forEachRoute(\\.routes, action: \\.router)
+                    Reduce { state, action in
+                        return self.handleRoute(state: &state, action: action)
+                    }
+                    .forEachRoute(\\.routes, action: \\.router)
                 }
             }
             """,
@@ -146,8 +150,10 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 }
 
                 var body: some Reducer<State, Action> {
-                    self.routeReducer
-                        .forEachRoute(\\.routes, action: \\.router)
+                    Reduce { state, action in
+                        return self.handleRoute(state: &state, action: action)
+                    }
+                    .forEachRoute(\\.routes, action: \\.router)
                 }
             }
             """,
@@ -191,8 +197,10 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 }
 
                 var body: some Reducer<State, Action> {
-                    self.routeReducer
-                        .forEachRoute(\\.routes, action: \\.router)
+                    Reduce { state, action in
+                        return self.handleRoute(state: &state, action: action)
+                    }
+                    .forEachRoute(\\.routes, action: \\.router)
                 }
             }
             """,

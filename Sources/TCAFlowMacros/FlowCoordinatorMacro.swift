@@ -84,12 +84,13 @@ extension FlowCoordinatorMacro: MemberMacro {
         }
 
         // 8. body 생성 (항상 생성 - forEachRoute 자동 적용)
-        // 사용자는 body 대신 routeReducer를 작성
         if !hasBody {
             let bodyDecl: DeclSyntax = """
                 var body: some Reducer<State, Action> {
-                    self.routeReducer
-                        .forEachRoute(\\.routes, action: \\.router)
+                    Reduce { state, action in
+                        return self.handleRoute(state: &state, action: action)
+                    }
+                    .forEachRoute(\\.routes, action: \\.router)
                 }
                 """
             results.append(bodyDecl)
