@@ -1,20 +1,20 @@
 import ComposableArchitecture
 import TCAFlow
 
-struct NestedCoordinator: Reducer {}
+@FlowCoordinator(screen: "NestedScreen", navigation: true)
+struct NestedCoordinator {
+  @CasePathable
+  enum Action {
+    case router(IndexedRouterActionOf<NestedScreen>)
+    case backToMain
+  }
+}
 
-@FlowCoordinator(navigation: true)
 extension NestedCoordinator {
   @Reducer(state: .equatable)
   enum NestedScreen {
     case step1(NestedStep1Feature)
     case step2(NestedStep2Feature)
-  }
-
-  @CasePathable
-  enum Action {
-    case router(IndexedRouterActionOf<NestedScreen>)
-    case backToMain
   }
 }
 

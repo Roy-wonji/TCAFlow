@@ -2,8 +2,6 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftDiagnostics
 
-// MARK: - FlowCoordinatorMacro
-
 public struct FlowCoordinatorMacro {}
 
 // MARK: - MemberMacro
@@ -15,20 +13,27 @@ extension FlowCoordinatorMacro: MemberMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // struct 또는 extension 모두 지원
-        guard let screenEnum = findReducerEnum(in: declaration) else {
-            context.addDiagnostics(from: FlowCoordinatorError.noReducerEnum, node: node)
+        let params = extractParams(from: node)
+
+        // Screen enum을 매크로 파라미터 또는 멤버에서 찾기
+        let screenName: String
+        let firstCase: String
+
+        if let paramScreen = params.screen {
+            // 파라미터로 전달된 경우 (struct에 붙었을 때)
+            screenName = paramScreen
+            // firstCase는 알 수 없으므로 빈 문자열 → State init에서 처리 안 함
+            firstCase = ""
+        } else if let enumDecl = findReducerEnum(in: declaration) {
+            // 멤버에서 찾은 경우 (extension에 붙었을 때)
+            screenName = enumDecl.name.trimmedDescription
+            firstCase = findFirstCase(in: enumDecl) ?? ""
+        } else {
+            context.addDiagnostics(from: FlowCoordinatorError.noScreenInfo, node: node)
             return []
         }
 
-        let screenName = screenEnum.name.trimmedDescription
-
-        guard let firstCase = findFirstCase(in: screenEnum) else {
-            context.addDiagnostics(from: FlowCoordinatorError.noEnumCases, node: node)
-            return []
-        }
-
-        let navigation = extractNavigationParam(from: node)
+        let navigation = params.navigation
 
         // 이미 존재하는 멤버 확인
         let existingMembers = declaration.memberBlock.members.map {
@@ -42,15 +47,26 @@ extension FlowCoordinatorMacro: MemberMacro {
         var results: [DeclSyntax] = []
 
         if !hasState {
-            results.append("""
-                @ObservableState
-                struct State: Equatable {
-                    var routes: [Route<\(raw: screenName).State>]
-                    init() {
-                        self.routes = [.root(.\(raw: firstCase)(.init()), embedInNavigationView: \(raw: navigation))]
+            if firstCase.isEmpty {
+                // Screen enum이 extension에 있어서 firstCase를 모르는 경우
+                // → 사용자가 init을 직접 작성해야 함
+                results.append("""
+                    @ObservableState
+                    struct State: Equatable {
+                        var routes: [Route<\(raw: screenName).State>]
                     }
-                }
-                """)
+                    """)
+            } else {
+                results.append("""
+                    @ObservableState
+                    struct State: Equatable {
+                        var routes: [Route<\(raw: screenName).State>]
+                        init() {
+                            self.routes = [.root(.\(raw: firstCase)(.init()), embedInNavigationView: \(raw: navigation))]
+                        }
+                    }
+                    """)
+            }
         }
 
         if !hasAction {
@@ -77,6 +93,60 @@ extension FlowCoordinatorMacro: MemberMacro {
     }
 }
 
+// MARK: - ExtensionMacro
+
+extension FlowCoordinatorMacro: ExtensionMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingExtensionsOf type: some TypeSyntaxProtocol,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [ExtensionDeclSyntax] {
+        guard declaration.is(StructDeclSyntax.self) else { return [] }
+        let typeName = type.trimmedDescription
+
+        var extensions: [ExtensionDeclSyntax] = []
+
+        let reducerExt: DeclSyntax = "extension \(raw: typeName): Reducer {}"
+        if let ext = reducerExt.as(ExtensionDeclSyntax.self) {
+            extensions.append(ext)
+        }
+
+        return extensions
+    }
+}
+
+// MARK: - Param Extraction
+
+private struct MacroParams {
+    let screen: String?
+    let navigation: Bool
+}
+
+private func extractParams(from node: AttributeSyntax) -> MacroParams {
+    var screen: String? = nil
+    var navigation = true
+
+    guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else {
+        return MacroParams(screen: nil, navigation: true)
+    }
+
+    for arg in arguments {
+        if arg.label?.trimmedDescription == "screen",
+           let stringLiteral = arg.expression.as(StringLiteralExprSyntax.self),
+           let segment = stringLiteral.segments.first?.as(StringSegmentSyntax.self) {
+            screen = segment.content.text
+        }
+        if arg.label?.trimmedDescription == "navigation",
+           let boolLiteral = arg.expression.as(BooleanLiteralExprSyntax.self) {
+            navigation = boolLiteral.literal.text == "true"
+        }
+    }
+
+    return MacroParams(screen: screen, navigation: navigation)
+}
+
 // MARK: - Helpers
 
 private func findReducerEnum(in declaration: some DeclGroupSyntax) -> EnumDeclSyntax? {
@@ -100,29 +170,15 @@ private func findFirstCase(in enumDecl: EnumDeclSyntax) -> String? {
     return nil
 }
 
-private func extractNavigationParam(from node: AttributeSyntax) -> Bool {
-    guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else { return true }
-    for arg in arguments {
-        if arg.label?.trimmedDescription == "navigation",
-           let boolLiteral = arg.expression.as(BooleanLiteralExprSyntax.self) {
-            return boolLiteral.literal.text == "true"
-        }
-    }
-    return true
-}
-
 // MARK: - Errors
 
 enum FlowCoordinatorError: String, Error, DiagnosticMessage {
-    case noReducerEnum
-    case noEnumCases
+    case noScreenInfo
 
     var message: String {
         switch self {
-        case .noReducerEnum:
-            return "@FlowCoordinator requires a @Reducer enum inside"
-        case .noEnumCases:
-            return "Screen enum must have at least one case"
+        case .noScreenInfo:
+            return "@FlowCoordinator requires either a @Reducer enum inside, or a 'screen' parameter"
         }
     }
 

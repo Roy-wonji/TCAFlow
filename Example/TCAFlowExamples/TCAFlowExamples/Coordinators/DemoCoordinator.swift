@@ -2,9 +2,9 @@ import ComposableArchitecture
 import SwiftUI
 import TCAFlow
 
-struct DemoCoordinator: Reducer {}
+@FlowCoordinator(screen: "DemoScreen", navigation: true)
+struct DemoCoordinator {}
 
-@FlowCoordinator(navigation: true)
 extension DemoCoordinator {
   @Reducer(state: .equatable)
   enum DemoScreen {
@@ -28,7 +28,7 @@ extension DemoCoordinator {
         return .none
 
       case .router(.routeAction(_, .home(.openNestedCoordinator))):
-        state.routes.push(.nested(.init()))
+        state.routes.push(.nested(.init(routes: [.root(.step1(.init()), embedInNavigationView: true)])))
         return .none
 
       case .router(.routeAction(_, .home(.jumpToSettings))):

@@ -12,7 +12,7 @@ struct TCAFlowExamplesApp: App {
 }
 
 struct ContentView: View {
-  @State private var store = Store(initialState: DemoCoordinator.State()) {
+  @State private var store = Store(initialState: DemoCoordinator.State(routes: [.root(.home(.init()), embedInNavigationView: true)])) {
     DemoCoordinator()
   }
 
