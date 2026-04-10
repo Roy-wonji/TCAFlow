@@ -43,6 +43,7 @@ extension FlowCoordinatorMacro: MemberMacro {
         let hasState = existingMembers.contains("struct State")
         let hasAction = existingMembers.contains("enum Action")
         let hasBody = existingMembers.contains("var body")
+        let hasCoreBody = existingMembers.contains("var coreBody")
 
         var results: [DeclSyntax] = []
 
@@ -79,14 +80,25 @@ extension FlowCoordinatorMacro: MemberMacro {
         }
 
         if !hasBody {
-            results.append("""
-                var body: some Reducer<State, Action> {
-                    Reduce { state, action in
-                        return self.handleRoute(state: &state, action: action)
+            if hasCoreBody {
+                // 사용자가 coreBody 작성 → body는 coreBody + forEachRoute 자동
+                results.append("""
+                    var body: some Reducer<State, Action> {
+                        self.coreBody
+                            .forEachRoute(\\.routes, action: \\.router)
                     }
-                    .forEachRoute(\\.routes, action: \\.router)
-                }
-                """)
+                    """)
+            } else {
+                // coreBody도 없음 → handleRoute 방식
+                results.append("""
+                    var body: some Reducer<State, Action> {
+                        Reduce { state, action in
+                            return self.handleRoute(state: &state, action: action)
+                        }
+                        .forEachRoute(\\.routes, action: \\.router)
+                    }
+                    """)
+            }
         }
 
         return results
