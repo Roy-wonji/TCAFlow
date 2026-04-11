@@ -575,6 +575,218 @@ extension Array where Element == Route<AppCoordinator.Screen.State> {
 }
 ```
 
+## 🆕 1.1.0 신규 API
+
+### 1️⃣ Sheet Detent 지원
+
+하프시트, detent, drag indicator를 `SheetConfiguration`으로 설정합니다.
+
+```swift
+// 프리셋 사용
+state.routes.presentSheet(.settings(.init()), configuration: .half)
+state.routes.presentSheet(.profile(.init()), configuration: .halfAndFull)
+
+// 커스텀 설정
+state.routes.presentSheet(.filter(.init()), configuration: SheetConfiguration(
+    detents: [.medium, .large],
+    showDragIndicator: true
+))
+```
+
+| 프리셋 | 설명 |
+|--------|------|
+| `.default` | 풀 시트 (`[.large]`) |
+| `.half` | 하프 시트 (`[.medium]`) |
+| `.halfAndFull` | 하프 + 풀 (`[.medium, .large]`) |
+
+---
+
+### 2️⃣ Route Logger
+
+디버그 모드에서 route 변경을 자동 로깅하는 미들웨어입니다.
+
+```swift
+var body: some Reducer<State, Action> {
+    Reduce { state, action in
+        handleRoute(state: &state, action: action)
+    }
+    .forEachRoute(\.routes, action: \.router)
+    .routeLogging(level: .verbose, prefix: "🏠 [App]")
+}
+```
+
+| 레벨 | 설명 |
+|------|------|
+| `.minimal` | route 변경 요약만 출력 |
+| `.verbose` | 상세한 route 상태 출력 |
+
+---
+
+### 3️⃣ Route Guard
+
+네비게이션을 인터셉트하여 조건부로 허용/거부합니다.
+
+```swift
+// Guard 정의
+struct AuthGuard: RouteGuard {
+    func canNavigate<Screen>(
+        from currentRoutes: [Route<Screen>],
+        to newRoutes: [Route<Screen>]
+    ) -> RouteGuardResult {
+        if isAuthenticated {
+            return .allow
+        } else {
+            return .reject(reason: "로그인이 필요합니다")
+        }
+    }
+}
+
+// Reducer에 적용
+var body: some Reducer<State, Action> {
+    Reduce { state, action in
+        handleRoute(state: &state, action: action)
+    }
+    .forEachRoute(\.routes, action: \.router)
+    .routeGuard(AuthGuard())
+}
+
+// 수동 체크
+let canProceed = checkRouteGuard(AuthGuard(), from: state.routes, to: newRoutes)
+```
+
+---
+
+### 4️⃣ DeepLink Helper
+
+URL을 Route로 변환하는 프로토콜 기반 딥링크 처리입니다.
+
+```swift
+// Handler 정의
+struct AppDeepLinkHandler: DeepLinkHandler {
+    typealias Screen = AppCoordinator.AppScreen.State
+
+    func routes(for url: URL) -> [Route<Screen>]? {
+        guard let host = url.host else { return nil }
+        let params = url.deepLinkParameters
+
+        switch host {
+        case "detail":
+            return [
+                .root(.home(.init()), embedInNavigationView: true),
+                .push(.detail(.init(title: params["title"] ?? "Detail")))
+            ]
+        default:
+            return nil
+        }
+    }
+}
+
+// 사용
+state.routes.handleDeepLink(
+    URL(string: "app://detail?title=Hello")!,
+    handler: AppDeepLinkHandler(),
+    mode: .replace  // .replace | .keepRoot | .append
+)
+```
+
+| 모드 | 설명 |
+|------|------|
+| `.replace` | 전체 route를 교체 |
+| `.keepRoot` | root를 유지하고 나머지 교체 |
+| `.append` | 기존 route에 추가 |
+
+**URL 헬퍼:**
+```swift
+let url = URL(string: "app://detail?title=Hello&id=123")!
+url.deepLinkParameters     // ["title": "Hello", "id": "123"]
+url.deepLinkPathComponents // ["detail"]
+```
+
+---
+
+### 5️⃣ Tab Coordinator
+
+탭 기반 네비게이션을 위한 전용 라우터입니다.
+
+```swift
+// TabItem 정의
+let tabs = [
+    TabItem(title: "홈", icon: "house.fill", tag: 0),
+    TabItem(title: "프로필", icon: "person.fill", tag: 1),
+    TabItem(title: "설정", icon: "gear", tag: 2),
+]
+
+// View
+TCAFlowTabRouter(
+    selectedTab: $store.selectedTab,
+    tabs: tabs,
+    onReselect: { tab in store.send(.tabReselected(tab)) }
+) { index in
+    switch index {
+    case 0: HomeCoordinatorView(store: homeStore)
+    case 1: ProfileCoordinatorView(store: profileStore)
+    case 2: SettingsCoordinatorView(store: settingsStore)
+    default: EmptyView()
+    }
+}
+```
+
+**TabCoordinatorState 프로토콜:**
+```swift
+struct AppState: TabCoordinatorState {
+    var selectedTab: Int = 0
+    mutating func popToRoot(tab: Int) { /* 탭별 root로 이동 */ }
+}
+```
+
+---
+
+### 6️⃣ 전환 애니메이션 커스텀
+
+route 전환 시 애니메이션을 지정합니다.
+
+```swift
+// View에서 사용
+DetailView(store: store)
+    .routeTransition(.fade(duration: 0.3))
+
+SettingsView(store: store)
+    .routeTransition(.spring(duration: 0.35, bounce: 0.2))
+```
+
+| 애니메이션 | 설명 |
+|-----------|------|
+| `.default` | 시스템 기본 |
+| `.fade(duration:)` | 페이드 인/아웃 |
+| `.spring(duration:bounce:)` | 스프링 |
+| `.easeInOut(duration:)` | ease-in-out |
+| `.none` | 애니메이션 없음 |
+
+---
+
+### 7️⃣ Route 상태 저장/복원
+
+`Codable` Screen과 함께 route 상태를 UserDefaults에 저장/복원합니다.
+
+```swift
+// 저장
+state.routes.saveRoutes(to: "app_routes")
+
+// 복원
+if let saved: [Route<Screen.State>] = .loadRoutes(from: "app_routes") {
+    state.routes = saved
+}
+
+// 직접 사용
+RoutePersistence.save(state.routes, key: "app_routes")
+let routes: [Route<Screen.State>]? = RoutePersistence.load(key: "app_routes")
+RoutePersistence.clear(key: "app_routes")
+```
+
+> ⚠️ Screen.State가 `Codable`을 준수해야 합니다.
+
+---
+
 ## 🔄 Migration from TCACoordinators
 
 ### 1️⃣ 기본 마이그레이션
