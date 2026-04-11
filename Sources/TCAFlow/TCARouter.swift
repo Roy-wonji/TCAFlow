@@ -260,6 +260,10 @@ private struct _SheetMod<Screen, ScreenAction, ScreenContent: View>: ViewModifie
     let scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
     let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
 
+    private var sheetConfig: SheetConfiguration {
+        store.currentState.first(where: { $0.isSheet })?.sheetConfiguration ?? .default
+    }
+
     func body(content: Content) -> some View {
         content.sheet(isPresented: Binding(
             get: { store.currentState.contains(where: { $0.isSheet }) },
@@ -270,6 +274,8 @@ private struct _SheetMod<Screen, ScreenAction, ScreenContent: View>: ViewModifie
             if let idx = store.currentState.firstIndex(where: { $0.isSheet }) {
                 _Presented(idx: idx, store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent)
                     .environment(\._isInsideNavStack, false)
+                    .presentationDetents(sheetConfig.detents)
+                    .presentationDragIndicator(sheetConfig.showDragIndicator ? .visible : .hidden)
             }
         }
     }

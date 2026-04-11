@@ -3,6 +3,29 @@ import CasePaths
 import Foundation
 import SwiftUI
 
+// MARK: - SheetConfiguration
+
+/// Sheet 표시 옵션 (detent, drag indicator 등)
+public struct SheetConfiguration: Equatable, Sendable {
+    public var detents: Set<PresentationDetent>
+    public var showDragIndicator: Bool
+
+    public init(
+        detents: Set<PresentationDetent> = [.large],
+        showDragIndicator: Bool = true
+    ) {
+        self.detents = detents
+        self.showDragIndicator = showDragIndicator
+    }
+
+    /// 기본 풀 시트
+    public static let `default` = SheetConfiguration()
+    /// 하프 시트
+    public static let half = SheetConfiguration(detents: [.medium])
+    /// 하프 + 풀 시트 (드래그로 전환 가능)
+    public static let halfAndFull = SheetConfiguration(detents: [.medium, .large])
+}
+
 // MARK: - Route
 
 /// A route represents a screen and how it should be presented.
@@ -11,13 +34,13 @@ import SwiftUI
 public enum Route<Screen> {
     case root(Screen, embedInNavigationView: Bool = true)
     case push(Screen)
-    case sheet(Screen, embedInNavigationView: Bool = false)
+    case sheet(Screen, embedInNavigationView: Bool = false, configuration: SheetConfiguration = .default)
     case cover(Screen, embedInNavigationView: Bool = false)
 
     public var screen: Screen {
         get {
             switch self {
-            case let .root(s, _), let .push(s), let .sheet(s, _), let .cover(s, _):
+            case let .root(s, _), let .push(s), let .sheet(s, _, _), let .cover(s, _):
                 return s
             }
         }
@@ -25,7 +48,7 @@ public enum Route<Screen> {
             switch self {
             case let .root(_, embed): self = .root(newValue, embedInNavigationView: embed)
             case .push: self = .push(newValue)
-            case let .sheet(_, embed): self = .sheet(newValue, embedInNavigationView: embed)
+            case let .sheet(_, embed, config): self = .sheet(newValue, embedInNavigationView: embed, configuration: config)
             case let .cover(_, embed): self = .cover(newValue, embedInNavigationView: embed)
             }
         }
@@ -33,9 +56,14 @@ public enum Route<Screen> {
 
     public var embedInNavigationView: Bool {
         switch self {
-        case let .root(_, v), let .sheet(_, v), let .cover(_, v): return v
+        case let .root(_, v), let .sheet(_, v, _), let .cover(_, v): return v
         case .push: return false
         }
+    }
+
+    public var sheetConfiguration: SheetConfiguration? {
+        if case let .sheet(_, _, config) = self { return config }
+        return nil
     }
 
     public var isPresented: Bool {
@@ -54,7 +82,7 @@ public enum Route<Screen> {
         switch self {
         case let .root(s, embed): .root(transform(s), embedInNavigationView: embed)
         case let .push(s): .push(transform(s))
-        case let .sheet(s, embed): .sheet(transform(s), embedInNavigationView: embed)
+        case let .sheet(s, embed, config): .sheet(transform(s), embedInNavigationView: embed, configuration: config)
         case let .cover(s, embed): .cover(transform(s), embedInNavigationView: embed)
         }
     }
@@ -130,9 +158,11 @@ extension Array {
     }
 
     public mutating func presentSheet<Screen>(
-        _ screen: Screen, embedInNavigationView: Bool = false
+        _ screen: Screen,
+        embedInNavigationView: Bool = false,
+        configuration: SheetConfiguration = .default
     ) where Element == Route<Screen> {
-        append(.sheet(screen, embedInNavigationView: embedInNavigationView))
+        append(.sheet(screen, embedInNavigationView: embedInNavigationView, configuration: configuration))
     }
 
     public mutating func presentCover<Screen>(
