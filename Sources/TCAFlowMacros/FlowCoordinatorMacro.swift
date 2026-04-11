@@ -119,9 +119,6 @@ extension FlowCoordinatorMacro: ExtensionMacro {
         guard let structDecl = declaration.as(StructDeclSyntax.self) else { return [] }
         let typeName = structDecl.name.trimmedDescription
 
-        let params = extractParams(from: node)
-        let screenName = params.screen ?? ""
-
         var extensions: [ExtensionDeclSyntax] = []
 
         // Reducer conformance
@@ -130,15 +127,25 @@ extension FlowCoordinatorMacro: ExtensionMacro {
             extensions.append(ext)
         }
 
-        // Screen.State: Equatable (screen 파라미터가 있을 때)
-        if !screenName.isEmpty {
-            let equatableExt: DeclSyntax = "extension \(raw: typeName).\(raw: screenName).State: Equatable {}"
-            if let ext = equatableExt.as(ExtensionDeclSyntax.self) {
-                extensions.append(ext)
-            }
-        }
-
         return extensions
+    }
+}
+
+// MARK: - PeerMacro
+
+extension FlowCoordinatorMacro: PeerMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingPeersOf declaration: some DeclSyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else { return [] }
+        let typeName = structDecl.name.trimmedDescription
+
+        let params = extractParams(from: node)
+        guard let screenName = params.screen, !screenName.isEmpty else { return [] }
+
+        return ["extension \(raw: typeName).\(raw: screenName).State: Equatable {}"]
     }
 }
 

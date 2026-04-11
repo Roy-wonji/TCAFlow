@@ -45,8 +45,6 @@ extension DemoCoordinator {
   }
 }
 
-extension DemoCoordinator.DemoScreen.State: Equatable {}
-
 extension DemoCoordinator {
   func handleRoute(state: inout State, action: Action) -> Effect<Action> {
     switch action {
