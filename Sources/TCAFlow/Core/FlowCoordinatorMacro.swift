@@ -49,6 +49,5 @@ import ComposableArchitecture
 /// - Parameter navigation: `true`이면 root route에 `embedInNavigationView: true` 설정 (기본값: `true`)
 @attached(member, names: named(State), named(Action), named(body))
 @attached(extension, conformances: Reducer, names: arbitrary)
-@attached(peer, names: arbitrary)
 public macro FlowCoordinator(screen: String? = nil, navigation: Bool = true) =
     #externalMacro(module: "TCAFlowMacros", type: "FlowCoordinatorMacro")

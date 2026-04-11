@@ -86,6 +86,8 @@ extension ShowcaseCoordinator {
   }
 }
 
+extension ShowcaseCoordinator.ShowcaseScreen.State: Equatable {}
+
 // MARK: - Route Guard 구현
 
 struct LoginGuard: RouteGuard {

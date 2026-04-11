@@ -131,24 +131,6 @@ extension FlowCoordinatorMacro: ExtensionMacro {
     }
 }
 
-// MARK: - PeerMacro
-
-extension FlowCoordinatorMacro: PeerMacro {
-    public static func expansion(
-        of node: AttributeSyntax,
-        providingPeersOf declaration: some DeclSyntaxProtocol,
-        in context: some MacroExpansionContext
-    ) throws -> [DeclSyntax] {
-        guard let structDecl = declaration.as(StructDeclSyntax.self) else { return [] }
-        let typeName = structDecl.name.trimmedDescription
-
-        let params = extractParams(from: node)
-        guard let screenName = params.screen, !screenName.isEmpty else { return [] }
-
-        return ["extension \(raw: typeName).\(raw: screenName).State: Equatable {}"]
-    }
-}
-
 // MARK: - Param Extraction
 
 private struct MacroParams {

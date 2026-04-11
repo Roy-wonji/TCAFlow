@@ -48,3 +48,5 @@ extension NestedCoordinator {
     case step2(NestedStep2Feature)
   }
 }
+
+extension NestedCoordinator.NestedScreen.State: Equatable {}
