@@ -5,6 +5,7 @@ struct HomeView: View {
   @Bindable var store: StoreOf<HomeFeature>
 
   var body: some View {
+    ScrollView {
     VStack(spacing: 30) {
       VStack(spacing: 16) {
         Text("TCAFlow")
@@ -99,9 +100,9 @@ struct HomeView: View {
       )
       .padding(.horizontal, 20)
 
-      Spacer()
     }
     .padding()
+    }
     .navigationBarTitleDisplayMode(.inline)
   }
 }
