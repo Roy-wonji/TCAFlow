@@ -43,6 +43,28 @@ struct HomeView: View {
       }
       .padding(.horizontal, 20)
 
+      // 1.1.0 신규 기능 섹션
+      VStack(spacing: 12) {
+        Text("1.1.0 신규 기능")
+          .font(.headline)
+          .fontWeight(.semibold)
+
+        Button("Half Sheet") { store.send(.openHalfSheet) }
+          .buttonStyle(.bordered)
+          .controlSize(.regular)
+
+        Button("DeepLink Test") { store.send(.openDeepLink) }
+          .buttonStyle(.bordered)
+          .controlSize(.regular)
+      }
+      .padding(.horizontal, 20)
+      .padding(.vertical, 16)
+      .background(
+        RoundedRectangle(cornerRadius: 12)
+          .fill(Color(UIColor.systemGray6))
+      )
+      .padding(.horizontal, 20)
+
       // goTo 예제 섹션
       VStack(spacing: 12) {
         Text("🎯 goTo 스마트 이동")

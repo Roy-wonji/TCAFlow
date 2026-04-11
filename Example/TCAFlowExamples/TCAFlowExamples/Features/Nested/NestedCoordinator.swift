@@ -37,6 +37,7 @@ struct NestedCoordinator {
       }
     }
     .forEachRoute(\.routes, action: \.router)
+    .routeLogging(level: .verbose, prefix: "🏠 [Nested]")
   }
 }
 
