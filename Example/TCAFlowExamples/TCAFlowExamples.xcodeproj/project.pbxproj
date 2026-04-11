@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		887D213A45D541508CFFC261 /* MainTabCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34FCE6546644263985A78DA /* MainTabCoordinator.swift */; };
+		CB646065D24D40F2BDDBA3EA /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A963E8BB38624731B57ED921 /* MainTabView.swift */; };
+		5B51E341D477447C90EBD39E /* ShowcaseCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CC21814D5BD4C98B637D698 /* ShowcaseCoordinator.swift */; };
+		CF1CC94B2C094153BAD03A3D /* ShowcaseCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FAA2FF198EE4CFEB02B25A3 /* ShowcaseCoordinatorView.swift */; };
+		CA4533E5DF3E43408FBC5BC9 /* ShowcaseMenuFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9D7CB413CA4BC2A812A279 /* ShowcaseMenuFeature.swift */; };
+		8E1A5E4EC44849818C920A37 /* ShowcaseMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB0010435524402A765C88D /* ShowcaseMenuView.swift */; };
+		FD1506396BB04E82B2298E54 /* GuardedScreenFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132082F19AF445779DC820E5 /* GuardedScreenFeature.swift */; };
+		EC8B21D7435A4985AFD9D7AD /* GuardRejectedFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA425AF8A80E4ADBBFAA134F /* GuardRejectedFeature.swift */; };
+		B9880D65BD2E4D28955FBC06 /* AnimatedScreenFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC819FA2EFB43E2959678E7 /* AnimatedScreenFeature.swift */; };
+
 		04240871BE071927E734D48D /* DemoCoordinatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07495DE1ACBFE5F775AB6108 /* DemoCoordinatorView.swift */; };
 		1865B17B5E5AD75CF3DDE3EB /* NestedStep1Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = D436BC0164A4847075EC2F59 /* NestedStep1Feature.swift */; };
 		2437B8EE8061CDFD7DAF4B7C /* NestedStep1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7548D234BD903D2D6E95E82 /* NestedStep1View.swift */; };
@@ -43,6 +53,16 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F34FCE6546644263985A78DA /* MainTabCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/MainTabCoordinator.swift"; sourceTree = "<group>"; };
+		A963E8BB38624731B57ED921 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/MainTabView.swift"; sourceTree = "<group>"; };
+		4CC21814D5BD4C98B637D698 /* ShowcaseCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/Showcase/ShowcaseCoordinator.swift"; sourceTree = "<group>"; };
+		8FAA2FF198EE4CFEB02B25A3 /* ShowcaseCoordinatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/Showcase/ShowcaseCoordinatorView.swift"; sourceTree = "<group>"; };
+		4E9D7CB413CA4BC2A812A279 /* ShowcaseMenuFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/Showcase/Features/ShowcaseMenuFeature.swift"; sourceTree = "<group>"; };
+		4BB0010435524402A765C88D /* ShowcaseMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/Showcase/Features/ShowcaseMenuView.swift"; sourceTree = "<group>"; };
+		132082F19AF445779DC820E5 /* GuardedScreenFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/Showcase/Features/GuardedScreenFeature.swift"; sourceTree = "<group>"; };
+		AA425AF8A80E4ADBBFAA134F /* GuardRejectedFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/Showcase/Features/GuardRejectedFeature.swift"; sourceTree = "<group>"; };
+		5EC819FA2EFB43E2959678E7 /* AnimatedScreenFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tab/Showcase/Features/AnimatedScreenFeature.swift"; sourceTree = "<group>"; };
+
 		06CECFFB5670EAF7775A23F0 /* SettingsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFeature.swift; sourceTree = "<group>"; };
 		07495DE1ACBFE5F775AB6108 /* DemoCoordinatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCoordinatorView.swift; sourceTree = "<group>"; };
 		07CB16F779BC5A0D23917C91 /* FlowFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowFeature.swift; sourceTree = "<group>"; };
@@ -128,6 +148,15 @@
 				A424920C7F4C0023CC0A2FB0 /* Coordinators */,
 				B6A8ED2EB71D414DA7087C6C /* Features */,
 				9478151520EBA343D429B491 /* TCAFlowExamplesApp.swift */,
+				F34FCE6546644263985A78DA /* MainTabCoordinator.swift */,
+				A963E8BB38624731B57ED921 /* MainTabView.swift */,
+				4CC21814D5BD4C98B637D698 /* ShowcaseCoordinator.swift */,
+				8FAA2FF198EE4CFEB02B25A3 /* ShowcaseCoordinatorView.swift */,
+				4E9D7CB413CA4BC2A812A279 /* ShowcaseMenuFeature.swift */,
+				4BB0010435524402A765C88D /* ShowcaseMenuView.swift */,
+				132082F19AF445779DC820E5 /* GuardedScreenFeature.swift */,
+				AA425AF8A80E4ADBBFAA134F /* GuardRejectedFeature.swift */,
+				5EC819FA2EFB43E2959678E7 /* AnimatedScreenFeature.swift */,
 			);
 			path = TCAFlowExamples;
 			sourceTree = "<group>";
@@ -300,6 +329,15 @@
 				D4D6825743DC72AE812114D7 /* SettingsFeature.swift in Sources */,
 				D8300744A888472D2E2E4018 /* SettingsView.swift in Sources */,
 				F2E1B5B534766F304A5D480E /* TCAFlowExamplesApp.swift in Sources */,
+				887D213A45D541508CFFC261 /* MainTabCoordinator.swift in Sources */,
+				CB646065D24D40F2BDDBA3EA /* MainTabView.swift in Sources */,
+				5B51E341D477447C90EBD39E /* ShowcaseCoordinator.swift in Sources */,
+				CF1CC94B2C094153BAD03A3D /* ShowcaseCoordinatorView.swift in Sources */,
+				CA4533E5DF3E43408FBC5BC9 /* ShowcaseMenuFeature.swift in Sources */,
+				8E1A5E4EC44849818C920A37 /* ShowcaseMenuView.swift in Sources */,
+				FD1506396BB04E82B2298E54 /* GuardedScreenFeature.swift in Sources */,
+				EC8B21D7435A4985AFD9D7AD /* GuardRejectedFeature.swift in Sources */,
+				B9880D65BD2E4D28955FBC06 /* AnimatedScreenFeature.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
