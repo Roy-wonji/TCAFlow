@@ -116,8 +116,8 @@ extension FlowCoordinatorMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        guard declaration.is(StructDeclSyntax.self) else { return [] }
-        let typeName = type.trimmedDescription
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else { return [] }
+        let typeName = structDecl.name.trimmedDescription
 
         let params = extractParams(from: node)
         let screenName = params.screen ?? ""
