@@ -195,7 +195,8 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
 
     private func syncFromStore(animated: Bool = false) {
         let expected = computePath()
-        guard path != expected else { return }
+        guard path != expected, !isSyncing else { return }
+        isSyncing = true
         if animated {
             var transaction = Transaction(animation: .easeInOut(duration: 0.35))
             transaction.disablesAnimations = false
@@ -205,14 +206,19 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
         } else {
             path = expected
         }
+        isSyncing = false
     }
 
+    @State private var isSyncing = false
+
     private func syncToStore() {
+        guard !isSyncing else { return }
         let routes = store.currentState
         let desired = path.count + 1
-        if routes.count > desired {
-            store.send(.updateRoutes(Array(routes.prefix(desired))))
-        }
+        guard routes.count > desired else { return }
+        isSyncing = true
+        store.send(.updateRoutes(Array(routes.prefix(desired))))
+        isSyncing = false
     }
 
     private var routeCount: Int { store.currentState.count }
