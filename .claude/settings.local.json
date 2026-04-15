@@ -94,7 +94,9 @@
       "Bash(git -C /Users/suhwonji/Desktop/SideProject/TCAFlow log --oneline 1.0.3..HEAD)",
       "Bash(git -C:*)",
       "Bash(rm -rf /Users/suhwonji/Desktop/SideProject/Attendance_iOS_2024/Tuist/.build/artifacts)",
-      "Bash(rm -rf /Users/suhwonji/Desktop/SideProject/Attendance_iOS_2024/Tuist/.build/Build)"
+      "Bash(rm -rf /Users/suhwonji/Desktop/SideProject/Attendance_iOS_2024/Tuist/.build/Build)",
+      "Bash(git tag *)",
+      "Bash(ln *)"
     ]
   }
 }
