@@ -82,16 +82,9 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
             let routes = store.currentState
             if !routes.isEmpty {
                 let firstRoute = routes[0]
-                if firstRoute.embedInNavigationView && isInsideNavStack {
-                    // 부모 NavigationStack 안에서는 별도 NavStack 없이
-                    // navigationDestination 체이닝으로 push 처리
-                    _InlineRouteChain(
-                        store: store,
-                        scopedScreenStore: scopedScreenStore,
-                        screenContent: screenContent,
-                        index: 0
-                    )
-                } else if firstRoute.embedInNavigationView {
+                if firstRoute.embedInNavigationView {
+                    // 안전을 위해 항상 _NavStackHost 사용
+                    // navigationDestination 경고 방지
                     _NavStackHost(
                         store: store,
                         scopedScreenStore: scopedScreenStore,
@@ -116,7 +109,8 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     }
 }
 
-// MARK: - _InlineRouteChain
+
+// MARK: - _InlineRouteChain (기존)
 /// 부모 NavigationStack 안에서 중첩 코디네이터의 push를
 /// navigationDestination(isPresented:) 체이닝으로 처리하는 재귀 뷰.
 /// overlay 없이 부모 NavigationStack이 모든 전환 애니메이션과 스와이프백을 처리한다.
