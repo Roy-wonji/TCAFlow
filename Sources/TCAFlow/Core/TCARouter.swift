@@ -237,7 +237,10 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
                     // 스와이프백 또는 pop: 현재 인덱스 이후 routes 제거
                     let trimmed = Array(routes.prefix(index + 1))
                     if routes.count != trimmed.count {
-                        store.send(.updateRoutes(trimmed))
+                        // 스와이프백 애니메이션과 함께 업데이트
+                        let _ = withAnimation(.easeOut(duration: 0.25)) {
+                            store.send(.updateRoutes(trimmed))
+                        }
                     }
                 }
             }
@@ -319,8 +322,18 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
         let desired = path.count + 1
         guard routes.count > desired else { return }
         isSyncing = true
-        store.send(.updateRoutes(Array(routes.prefix(desired))))
-        isSyncing = false
+
+        // 스와이프백 처리를 위한 애니메이션과 함께 업데이트
+        DispatchQueue.main.async {
+            let _ = withAnimation(.easeOut(duration: 0.25)) {
+                store.send(.updateRoutes(Array(routes.prefix(desired))))
+            }
+
+            // 동기화 플래그를 지연 해제하여 스와이프 제스처와 충돌 방지
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isSyncing = false
+            }
+        }
     }
 
     private var routeCount: Int { store.currentState.count }

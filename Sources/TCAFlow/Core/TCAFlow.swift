@@ -177,6 +177,17 @@ extension Array {
         removeLast(toRemove)
     }
 
+    /// 스와이프 제스처에 최적화된 goBack (애니메이션 포함)
+    public mutating func swipeBack<Screen>(_ count: Int = 1) where Element == Route<Screen> {
+        let toRemove = Swift.min(count, Swift.max(0, self.count - 1))
+        guard toRemove > 0 else { return }
+
+        // 스와이프백 애니메이션과 함께 제거
+        let _ = withAnimation(.easeOut(duration: 0.25)) {
+            removeLast(toRemove)
+        }
+    }
+
     public mutating func goBackToRoot<Screen>() where Element == Route<Screen> {
         guard let root = first else { return }
         self = [root]
