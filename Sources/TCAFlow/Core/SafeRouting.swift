@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import CasePaths
 import Foundation
+import LogMacro
 
 // MARK: - SafeRoutingEnvironment
 
@@ -150,9 +151,9 @@ public struct SafeNavigationReducer<State, Action>: Reducer {
         case let .safeDispatch(wrappedAction, validatorKey):
             if let validator = stateValidators[validatorKey], !validator(state) {
                 #if DEBUG
-                print("[TCAFlow] SafeDispatch: Action ignored due to state validation failure")
-                print("Action: \(wrappedAction)")
-                print("Current State: \(state)")
+                #logError("🚫 [TCAFlow] SafeDispatch: Action ignored due to state validation failure")
+                #logDebug("Action: \(wrappedAction)")
+                #logDebug("Current State: \(state)")
                 #endif
                 return .none
             }

@@ -1,5 +1,5 @@
 {
-  "originHash" : "d11c5ba5e5c405454e97c0bc54d4ae2b461ddb2845468b44330978ad668d36f2",
+  "originHash" : "1b4163429bd48e0ada54366bae4d2f9278e90135e68c887da957bba15814af2b",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "fd16d76fd8b9a976d88bfb6cacc05ca8d19c91b6",
         "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "logmacro",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Roy-wonji/LogMacro",
+      "state" : {
+        "revision" : "593b210346cf7145074c2d94fa4206bbc70198e0",
+        "version" : "1.1.1"
       }
     },
     {

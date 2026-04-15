@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 import Foundation
+import LogMacro
 
 // MARK: - Production Safety Helpers
 
@@ -20,7 +21,7 @@ public struct ProductionSafety {
                 await send(result)
             } catch {
                 #if DEBUG
-                print("🚫 [TCAFlow] Effect '\(id)' failed: \(error)")
+                #logError("🚫 [TCAFlow] Effect '\(id)' failed: \(error)")
                 #endif
             }
         }
@@ -73,7 +74,7 @@ public struct ProductionSafety {
                 } catch {
                     if attempt == retries {
                         #if DEBUG
-                        print("🌐 [TCAFlow] Network request '\(id)' failed after \(retries + 1) attempts")
+                        #logError("🌐 [TCAFlow] Network request '\(id)' failed after \(retries + 1) attempts")
                         #endif
                         throw error
                     }
@@ -151,7 +152,7 @@ public struct SimpleErrorHandling {
                 await send(result)
             } catch {
                 #if DEBUG
-                print("⚠️ [TCAFlow] Safe effect '\(id)' caught error: \(error)")
+                #logError("⚠️ [TCAFlow] Safe effect '\(id)' caught error: \(error)")
                 #endif
                 // 에러 발생 시 무시 (필요하면 에러 액션 전송 가능)
             }
@@ -168,7 +169,7 @@ extension View {
         self
             .onDisappear {
                 #if DEBUG
-                print("🧹 [TCAFlow] Auto cleanup triggered for: \(effectIDs)")
+                #logInfo("🧹 [TCAFlow] Auto cleanup triggered for: \(effectIDs)")
                 #endif
                 // 실제 구현에서는 Store를 통해 effects 취소
             }

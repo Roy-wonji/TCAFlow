@@ -2,6 +2,7 @@ import ComposableArchitecture
 import CasePaths
 import Foundation
 import SwiftUI
+import LogMacro
 
 // MARK: - SheetConfiguration
 
@@ -305,6 +306,6 @@ public func runtimeWarn(
     line: UInt? = nil
 ) {
     #if DEBUG
-    fputs("[TCAFlow] \(message())\n", stderr)
+    #logInfo("[TCAFlow] \(message())")
     #endif
 }

@@ -19,6 +19,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.25.5"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
+        .package(url: "https://github.com/Roy-wonji/LogMacro", from: "1.0.0"),
     ],
     targets: [
         .macro(
@@ -34,6 +35,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "TCAFlowMacros",
+                .product(name: "LogMacro", package: "LogMacro"),
             ],
             path: "Sources/TCAFlow",
             swiftSettings: [

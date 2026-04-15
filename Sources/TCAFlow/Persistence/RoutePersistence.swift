@@ -1,4 +1,5 @@
 import Foundation
+import LogMacro
 
 // MARK: - Route + Codable
 
@@ -76,14 +77,14 @@ public enum RoutePersistence {
     ) {
         guard let data = try? JSONEncoder().encode(routes) else {
             #if DEBUG
-            print("🧭 [TCAFlow] Route 저장 실패: \(key)")
+            #logError("🧭 [TCAFlow] Route 저장 실패: \(key)")
             #endif
             return
         }
         defaults.set(data, forKey: "TCAFlow_\(key)")
 
         #if DEBUG
-        print("🧭 [TCAFlow] Route 저장 성공: \(key) (\(routes.count)개 route)")
+        #logInfo("🧭 [TCAFlow] Route 저장 성공: \(key) (\(routes.count)개 route)")
         #endif
     }
 
@@ -98,7 +99,7 @@ public enum RoutePersistence {
         }
 
         #if DEBUG
-        print("🧭 [TCAFlow] Route 복원 성공: \(key) (\(routes.count)개 route)")
+        #logInfo("🧭 [TCAFlow] Route 복원 성공: \(key) (\(routes.count)개 route)")
         #endif
 
         return routes
