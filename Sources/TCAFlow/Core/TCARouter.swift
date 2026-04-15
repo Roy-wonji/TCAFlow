@@ -116,6 +116,101 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     }
 }
 
+// MARK: - SafeNavigationDestinationModifier
+/// NavigationStack 존재 여부를 확인한 후 안전하게 navigationDestination을 적용하는 modifier
+
+@MainActor
+private struct SafeNavigationDestinationModifier<Destination: View>: ViewModifier {
+    let isPresented: Binding<Bool>
+    let destination: @MainActor () -> Destination
+
+    @Environment(\._isInsideNavStack) private var isInsideNavStack
+    @State private var hasNavigationStack = false
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                // NavigationStack 존재 여부를 감지하는 숨겨진 뷰
+                NavigationStackDetector { hasNavStack in
+                    hasNavigationStack = hasNavStack
+                }
+            )
+            .modifier(ConditionalNavigationDestination(
+                isPresented: isPresented,
+                shouldApply: isInsideNavStack && hasNavigationStack,
+                destination: destination
+            ))
+    }
+}
+
+// MARK: - NavigationStack Detector
+private struct NavigationStackDetector: View {
+    let onDetect: (Bool) -> Void
+
+    var body: some View {
+        GeometryReader { _ in
+            Color.clear
+                .onAppear {
+                    // 실제 Navigation 환경 감지
+                    DispatchQueue.main.async {
+                        onDetect(isInNavigationEnvironment())
+                    }
+                }
+        }
+        .frame(width: 0, height: 0)
+    }
+
+    private func isInNavigationEnvironment() -> Bool {
+        // 현재 뷰가 Navigation 환경에 있는지 확인
+        #if canImport(UIKit)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = scene.windows.first,
+           let rootVC = window.rootViewController {
+            return hasNavigationController(in: rootVC)
+        }
+        #endif
+        return true // 안전한 기본값
+    }
+
+    #if canImport(UIKit)
+    private func hasNavigationController(in viewController: UIViewController) -> Bool {
+        if viewController is UINavigationController {
+            return true
+        }
+
+        for child in viewController.children {
+            if hasNavigationController(in: child) {
+                return true
+            }
+        }
+
+        if let presented = viewController.presentedViewController {
+            return hasNavigationController(in: presented)
+        }
+
+        return false
+    }
+    #endif
+}
+
+// MARK: - Conditional NavigationDestination
+private struct ConditionalNavigationDestination<Destination: View>: ViewModifier {
+    let isPresented: Binding<Bool>
+    let shouldApply: Bool
+    let destination: () -> Destination
+
+    func body(content: Content) -> some View {
+        if shouldApply {
+            content
+                .navigationDestination(isPresented: isPresented) {
+                    destination()
+                }
+        } else {
+            content
+        }
+    }
+}
+
 // MARK: - _InlineRouteChain
 /// 부모 NavigationStack 안에서 중첩 코디네이터의 push를
 /// navigationDestination(isPresented:) 체이닝으로 처리하는 재귀 뷰.
@@ -158,16 +253,23 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
                     screenContent(scopedScreenStore(index))
                 }
             }
-            .navigationDestination(isPresented: isPresentedBinding) {
-                if routes.count > index + 1 {
-                    _InlineRouteChain(
-                        store: store,
-                        scopedScreenStore: scopedScreenStore,
-                        screenContent: screenContent,
-                        index: index + 1
-                    )
+            .modifier(SafeNavigationDestinationModifier(
+                isPresented: isPresentedBinding,
+                destination: {
+                    Group {
+                        if routes.count > index + 1 {
+                            _InlineRouteChain(
+                                store: store,
+                                scopedScreenStore: scopedScreenStore,
+                                screenContent: screenContent,
+                                index: index + 1
+                            )
+                        } else {
+                            EmptyView()
+                        }
+                    }
                 }
-            }
+            ))
         }
     }
 }
