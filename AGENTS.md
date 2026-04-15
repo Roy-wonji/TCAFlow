@@ -60,13 +60,16 @@ TCAFlow/
 ## 🛠️ 개발 가이드라인
 
 ### ✅ DO
+- **⭐ Point-Free 스킬 우선 사용**: TCA 문제는 반드시 Point-Free 스킬로 해결
 - NavigationDestination 사용 시 항상 SafeNavigationDestinationModifier 사용
-- Effect에는 고유한 CancelID 부여
-- State 전환 시 관련 Effect들 명시적 취소
+- Effect에는 고유한 CancelID 부여 (PFW 계층적 패턴)
+- State 전환 시 관련 Effect들 명시적 취소 (PFW Early Blocking)
 - @FlowCoordinator 매크로 적극 활용
 - 중첩 Coordinator에서는 _InlineRouteChain 활용
+- **ifCaseLet 오류 시 즉시 Point-Free 스킬 사용**
 
 ### ❌ DON'T
+- TCA 문제를 수동으로 해결하려 하지 말고 Point-Free 스킬 사용
 - NavigationStack 밖에서 직접 navigationDestination 사용 금지
 - Hashable 제약 추가 금지 (Equatable만 사용)
 - Effect 취소 없이 State 전환 금지
@@ -85,16 +88,54 @@ TCAFlow/
 ))
 ```
 
-### 2. ifCaseLet Action 불일치
+### 2. ifCaseLet Action 불일치 ⭐ Point-Free 전문 해결
 **문제**: State는 auth인데 staff action이 들어옴
 
-**해결**: State 전환 시 Effect 취소
+**🔥 Point-Free 해결책**: 계층적 Effect 취소 + 즉시 Action 차단
 ```swift
-case .logout:
-    return .concatenate(
-        .cancel(id: CancelID.allStaffEffects),
-        .run { send in await send(.setAuthState(.login(.init()))) }
+// 🔥 PFW: Early Action Blocking (child reducer 도달 전 차단)
+private func immediatelyBlockDangerousAction(
+  state: State, 
+  action: Action
+) -> Effect<Action>? {
+  guard case .scope(let scopeAction) = action else { return nil }
+  
+  switch (state, scopeAction) {
+  case (.auth, .staff(.router(.routeAction(_, .profile(.async(.fetchUser)))))):
+    #logDebug("[AppReducer] 🚫 PFW: BLOCKING Staff.fetchUser in Auth state")
+    return .merge(
+      cancelStaffHierarchy(),
+      .cancel(id: CancelID.profileFetchUser)
     )
+  default:
+    return nil
+  }
+}
+
+// 🔥 PFW: 계층적 취소 (App → Coordinator → Feature → Effect)
+private func cancelStaffHierarchy() -> Effect<Action> {
+  return .merge([
+    .cancel(id: CancelID.allStaffHierarchy),
+    .cancel(id: CancelID.profileFetchUser),
+    .cancel(id: CancelID.staffEffects),
+    .cancel(id: CancelID.staffProfile)
+  ])
+}
+
+// 🔥 PFW: Reduce에서 즉시 차단
+public var body: some ReducerOf<Self> {
+  Reduce { state, action in
+    // 위험한 액션 조합을 즉시 감지하고 차단
+    if let dangerousEffect = immediatelyBlockDangerousAction(state: state, action: action) {
+      return dangerousEffect  // child reducer 도달 전에 완전 종료!
+    }
+    // ... 나머지 로직
+  }
+  ._printChanges()  // 🔥 PFW: 디버깅
+  .ifCaseLet(\.staff, action: \.scope.staff) {
+    StaffCoordinator()
+  }
+}
 ```
 
 ### 3. 중첩 Coordinator 문제
@@ -170,11 +211,34 @@ struct AuthGuard: RouteGuard {
 }
 ```
 
+## 🎯 Point-Free 전문 스킬 사용 지시사항
+
+**⭐ IMPORTANT: TCA 관련 문제는 반드시 Point-Free 스킬을 사용하세요!**
+
+### TCA 문제 발생 시 사용할 스킬들:
+- `pfw-composable-architecture` - ifCaseLet 오류, Effect 취소, State 관리
+- `pfw-case-paths` - CaseKeyPath 및 케이스 경로 최적화
+- `pfw-perception` - @ObservableState 및 observation 문제
+- `pfw-swift-navigation` - 고급 네비게이션 패턴
+
+### 사용법:
+```
+Skill(skill: "pfw-composable-architecture", args: "ifCaseLet error: State auth but staff action received")
+```
+
+### 언제 사용할까:
+1. **ifCaseLet 오류**: State와 Action 불일치
+2. **Effect 취소 문제**: 상태 전환 시 Effect가 남아있음
+3. **메모리 누수**: Effect가 제대로 정리되지 않음
+4. **Navigation 문제**: TCA 기반 화면 전환 오류
+5. **성능 이슈**: TCA State 업데이트 최적화
+
 ## 📚 참고 자료
 
 - [README.md](README.md) - 사용법 및 예제
 - [Example/TCAFlowExamples](Example/TCAFlowExamples/) - 완전한 예제 프로젝트
 - [TCA 공식 문서](https://github.com/pointfreeco/swift-composable-architecture)
+- [Point-Free 스킬들] - TCA 전문 해결책 (우선 사용!)
 - [TCACoordinators](https://github.com/johnpatrickmorgan/TCACoordinators) - 원본 라이브러리
 
 ## 🤝 기여할 때
@@ -194,5 +258,5 @@ struct AuthGuard: RouteGuard {
 
 ---
 
-**TCAFlow Agent Guide v1.1.1**  
+**TCAFlow Agent Guide v1.1.2 + Point-Free Skills**  
 **Last Updated**: 2026-04-15
