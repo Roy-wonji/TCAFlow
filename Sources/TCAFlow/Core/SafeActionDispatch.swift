@@ -8,7 +8,7 @@ import Foundation
 public struct SafeActionDispatch {
 
     /// Effect ID를 이용한 안전한 effect 취소
-    public static func cancelEffects<ID: Hashable>(
+    public static func cancelEffects<ID: Hashable & Sendable>(
         withIDs ids: [ID]
     ) -> Effect<Never> {
         .merge(
@@ -17,7 +17,7 @@ public struct SafeActionDispatch {
     }
 
     /// State 변경 시 관련된 모든 effect를 취소하는 헬퍼
-    public static func cancelAllEffectsOnStateChange<ID: Hashable>(
+    public static func cancelAllEffectsOnStateChange<ID: Hashable & Sendable>(
         effectIDs: [ID]
     ) -> Effect<Never> {
         cancelEffects(withIDs: effectIDs)
@@ -33,7 +33,7 @@ public struct StateTransitionGuard {
     public static func prepareTransition<State, Action>(
         from currentState: State,
         to newState: State,
-        cancellingEffects effectIDs: [AnyHashable] = []
+        cancellingEffects effectIDs: [String] = []
     ) -> Effect<Action> {
         // Effect 취소
         let cancelEffect = Effect<Action>.merge(
@@ -48,13 +48,6 @@ public struct StateTransitionGuard {
 
 extension Effect {
 
-    /// Effect에 고유 ID를 부여하여 추후 취소 가능하게 만드는 헬퍼
-    public func cancellable<ID: Hashable & Sendable>(
-        id: ID,
-        cancelInFlight: Bool = false
-    ) -> Effect<Action> {
-        self.cancellable(id: id, cancelInFlight: cancelInFlight)
-    }
 
     /// State 체크와 함께 안전하게 action을 dispatch하는 헬퍼
     public static func safeDispatch<State>(
