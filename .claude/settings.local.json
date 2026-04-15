@@ -96,7 +96,8 @@
       "Bash(rm -rf /Users/suhwonji/Desktop/SideProject/Attendance_iOS_2024/Tuist/.build/artifacts)",
       "Bash(rm -rf /Users/suhwonji/Desktop/SideProject/Attendance_iOS_2024/Tuist/.build/Build)",
       "Bash(git tag *)",
-      "Bash(ln *)"
+      "Bash(ln *)",
+      "WebSearch"
     ]
   }
 }

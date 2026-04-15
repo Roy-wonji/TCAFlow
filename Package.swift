@@ -38,13 +38,17 @@ let package = Package(
             path: "Sources/TCAFlow",
             swiftSettings: [
                 .swiftLanguageMode(.v6),
-                .unsafeFlags(["-suppress-warnings"])
+                .enableExperimentalFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ExistentialAny")
             ]
         ),
         .testTarget(
             name: "TCAFlowTests",
             dependencies: ["TCAFlow"],
-            swiftSettings: [.swiftLanguageMode(.v6)]
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
         ),
         .testTarget(
             name: "TCAFlowMacrosTests",
@@ -52,7 +56,10 @@ let package = Package(
                 "TCAFlowMacros",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ],
-            swiftSettings: [.swiftLanguageMode(.v6)]
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
         ),
     ]
 )

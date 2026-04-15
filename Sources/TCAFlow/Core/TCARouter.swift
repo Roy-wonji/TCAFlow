@@ -108,7 +108,7 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
 
     @ViewBuilder
     func _screenView(at index: Int) -> some View {
-        if Screen.self is ObservableState.Type {
+        if Screen.self is (any ObservableState).Type {
             WithPerceptionTracking { screenContent(scopedScreenStore(at: index)) }
         } else {
             screenContent(scopedScreenStore(at: index))
@@ -247,7 +247,7 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
     var body: some View {
         WithPerceptionTracking {
             Group {
-                if Screen.self is ObservableState.Type {
+                if Screen.self is (any ObservableState).Type {
                     WithPerceptionTracking { screenContent(scopedScreenStore(index)) }
                 } else {
                     screenContent(scopedScreenStore(index))
@@ -328,7 +328,7 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     var body: some View {
         NavigationStack(path: $path) {
             Group {
-                if Screen.self is ObservableState.Type {
+                if Screen.self is (any ObservableState).Type {
                     WithPerceptionTracking { screenContent(scopedScreenStore(0)) }
                 } else {
                     screenContent(scopedScreenStore(0))
@@ -336,7 +336,7 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
             }
             .navigationDestination(for: _RouteIndex.self) { routeIndex in
                 if routeIndex.coordinatorID == coordinatorID {
-                    if Screen.self is ObservableState.Type {
+                    if Screen.self is (any ObservableState).Type {
                         WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
                     } else {
                         screenContent(scopedScreenStore(routeIndex.index))
