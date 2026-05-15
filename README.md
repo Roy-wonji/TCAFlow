@@ -731,6 +731,31 @@ TCAFlowTabRouter(
 }
 ```
 
+커스텀 이미지나 asset 기반 라벨이 필요하면 `tabItemLabel` 클로저를 전달합니다.
+
+```swift
+TCAFlowTabRouter(
+    selectedTab: $store.selectedTab,
+    tabs: tabs,
+    onReselect: { tab in store.send(.tabReselected(tab)) },
+    tabItemLabel: { tab in
+        Label {
+            Text(tab.title)
+        } icon: {
+            Image(tab.icon)
+                .renderingMode(.template)
+        }
+    }
+) { index in
+    switch index {
+    case 0: HomeCoordinatorView(store: homeStore)
+    case 1: ProfileCoordinatorView(store: profileStore)
+    case 2: SettingsCoordinatorView(store: settingsStore)
+    default: EmptyView()
+    }
+}
+```
+
 **TabCoordinatorState 프로토콜:**
 ```swift
 struct AppState: TabCoordinatorState {

@@ -47,23 +47,59 @@ public typealias IndexedTabRouterAction<Tab, TabAction> = TabRouterAction<Tab, T
 ///     }
 /// }
 /// ```
+///
+/// 커스텀 탭 라벨이 필요하면 `tabItemLabel` 클로저를 사용합니다.
+///
+/// ```swift
+/// TCAFlowTabRouter(
+///     selectedTab: $store.selectedTab.sending(\.selectTab),
+///     tabs: tabs,
+///     tabItemLabel: { tab in
+///         Label {
+///             Text(tab.title)
+///         } icon: {
+///             Image(tab.icon)
+///         }
+///     }
+/// ) { index in
+///     HomeCoordinatorView(store: store.scope(state: \.homeState, action: \.home))
+/// }
+/// ```
 @MainActor
-public struct TCAFlowTabRouter<Content: View>: View {
+public struct TCAFlowTabRouter<Content: View, TabItemLabel: View>: View {
     private let selectedTab: Binding<Int>
     private let tabs: [TabItem]
     private let content: (Int) -> Content
     private let onReselect: ((Int) -> Void)?
+    private let tabItemLabel: (TabItem) -> TabItemLabel
 
     public init(
         selectedTab: Binding<Int>,
         tabs: [TabItem],
         onReselect: ((Int) -> Void)? = nil,
         @ViewBuilder content: @escaping (Int) -> Content
+    ) where TabItemLabel == Label<Text, Image> {
+        self.selectedTab = selectedTab
+        self.tabs = tabs
+        self.onReselect = onReselect
+        self.content = content
+        self.tabItemLabel = { tab in
+            Label(tab.title, systemImage: tab.icon)
+        }
+    }
+
+    public init(
+        selectedTab: Binding<Int>,
+        tabs: [TabItem],
+        onReselect: ((Int) -> Void)? = nil,
+        @ViewBuilder tabItemLabel: @escaping (TabItem) -> TabItemLabel,
+        @ViewBuilder content: @escaping (Int) -> Content
     ) {
         self.selectedTab = selectedTab
         self.tabs = tabs
         self.onReselect = onReselect
         self.content = content
+        self.tabItemLabel = tabItemLabel
     }
 
     public var body: some View {
@@ -80,7 +116,7 @@ public struct TCAFlowTabRouter<Content: View>: View {
             ForEach(tabs) { tab in
                 content(tab.tag)
                     .tabItem {
-                        Label(tab.title, systemImage: tab.icon)
+                        tabItemLabel(tab)
                     }
                     .tag(tab.tag)
             }
