@@ -137,7 +137,7 @@ struct AppCoordinatorView: View {
     @Bindable var store: StoreOf<AppCoordinator>
 
     var body: some View {
-        TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
+        TCAFlowRouter(store.scope(\.routes, action: \.router)) { screen in
             switch screen.case {
             case .home(let store):
                 HomeView(store: store)
@@ -152,7 +152,7 @@ struct OnboardingCoordinatorView: View {
     @Bindable var store: StoreOf<OnboardingCoordinator>
 
     var body: some View {
-        TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
+        TCAFlowRouter(store.scope(\.routes, action: \.router)) { screen in
             switch screen.case {
             case .welcome(let store):
                 WelcomeView(store: store)
@@ -176,7 +176,7 @@ struct OnboardingCoordinatorView: View {
     @GestureState private var dragOffset: CGFloat = 0
 
     var body: some View {
-        TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
+        TCAFlowRouter(store.scope(\.routes, action: \.router)) { screen in
             // screen rendering...
         }
         .offset(x: dragOffset)

@@ -20,7 +20,7 @@ public typealias IndexedTabRouterAction<Tab, TabAction> = TabRouterAction<Tab, T
 // MARK: - TCAFlowTabRouter
 
 /// 탭 기반 네비게이션을 관리하는 뷰.
-/// 각 탭은 독립적인 NavigationStack을 가집니다.
+/// 각 탭은 독립적인 navigation container를 가집니다.
 ///
 /// 사용법:
 /// ```swift
@@ -38,9 +38,9 @@ public typealias IndexedTabRouterAction<Tab, TabAction> = TabRouterAction<Tab, T
 ///             ]
 ///         ) { index in
 ///             switch index {
-///             case 0: HomeCoordinatorView(store: store.scope(state: \.homeState, action: \.home))
-///             case 1: SearchCoordinatorView(store: store.scope(state: \.searchState, action: \.search))
-///             case 2: ProfileCoordinatorView(store: store.scope(state: \.profileState, action: \.profile))
+///             case 0: HomeCoordinatorView(store: store.scope(\.homeState, action: \.home))
+///             case 1: SearchCoordinatorView(store: store.scope(\.searchState, action: \.search))
+///             case 2: ProfileCoordinatorView(store: store.scope(\.profileState, action: \.profile))
 ///             default: EmptyView()
 ///             }
 ///         }
@@ -62,7 +62,7 @@ public typealias IndexedTabRouterAction<Tab, TabAction> = TabRouterAction<Tab, T
 ///         }
 ///     }
 /// ) { index in
-///     HomeCoordinatorView(store: store.scope(state: \.homeState, action: \.home))
+///     HomeCoordinatorView(store: store.scope(\.homeState, action: \.home))
 /// }
 /// ```
 @MainActor

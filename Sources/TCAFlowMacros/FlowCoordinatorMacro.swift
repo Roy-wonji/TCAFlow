@@ -75,7 +75,12 @@ extension FlowCoordinatorMacro: MemberMacro {
                     \(raw: accessPrefix)struct State: Equatable {
                         var routes: [Route<\(raw: screenName).State>]
                         \(raw: accessPrefix)init() {
-                            self.routes = [.root(.\(raw: firstCase)(.init()), embedInNavigationView: \(raw: navigation))]
+                            self.routes = [
+                                .root(
+                                    .\(raw: firstCase)(.init()),
+                                    embedInNavigationView: \(raw: navigation ? "true" : "false")
+                                )
+                            ]
                         }
                     }
                     """)

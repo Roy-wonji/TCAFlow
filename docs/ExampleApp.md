@@ -61,7 +61,7 @@ struct AppCoordinator: Sendable {
 
 ```swift
 TCARouter(
-  self.store.scope(state: \.routes, action: \.route)
+  self.store.scope(\.routes, action: \.route)
 ) { screen in
   switch screen.case {
   case .home(let store):

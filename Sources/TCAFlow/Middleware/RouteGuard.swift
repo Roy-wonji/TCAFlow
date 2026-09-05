@@ -56,7 +56,7 @@ public struct _RouteGuardReducer<Base: Reducer>: Reducer where Base.State: Equat
     public var body: some ReducerOf<Base> {
         Reduce { state, action in
             let snapshot = state
-            let effect = base.reduce(into: &state, action: action)
+            let effect = base._reduce(into: &state, action: action)
 
             // state가 변경되었는지 확인
             if snapshot != state {

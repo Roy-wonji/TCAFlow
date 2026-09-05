@@ -1,6 +1,9 @@
 @_spi(Internals) import ComposableArchitecture
 import Perception
 import SwiftUI
+#if canImport(UIKit) && !os(watchOS)
+import UIKit
+#endif
 
 // MARK: - Route Helpers
 
@@ -74,7 +77,7 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     func scopedScreenStore(at index: Int) -> ScreenStore<Screen, ScreenAction> {
         let stateKP: KeyPath<[Route<Screen>], Screen> = \.[screenAt: index]
         let actionKP: CaseKeyPath<IndexedRouterAction<Screen, ScreenAction>, ScreenAction> = \.[id: index]
-        return ScreenStore(store: store.scope(state: stateKP, action: actionKP))
+        return ScreenStore(store: store.scope(stateKP, action: actionKP))
     }
 
     public var body: some View {
@@ -82,22 +85,25 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
             let routes = store.currentState
             if !routes.isEmpty {
                 let firstRoute = routes[0]
-                if firstRoute.embedInNavigationView && isInsideNavStack {
-                    // 부모 NavigationStack 안에서는 별도 NavStack 없이
-                    // navigationDestination 체이닝으로 push 처리
+                switch firstRoute.navigationContext.resolved(
+                    isInsideNavigationStack: isInsideNavStack
+                ) {
+                case .inherited:
                     _InlineRouteChain(
                         store: store,
                         scopedScreenStore: scopedScreenStore,
                         screenContent: screenContent,
                         index: 0
                     )
-                } else if firstRoute.embedInNavigationView {
-                    _NavStackHost(
+
+                case .standalone, .automatic:
+                    _StandaloneNavStackHost(
                         store: store,
                         scopedScreenStore: scopedScreenStore,
                         screenContent: screenContent
                     )
-                } else {
+
+                case .disabled:
                     _screenView(at: 0)
                         .modifier(_SheetMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
                         .modifier(_CoverMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
@@ -112,101 +118,6 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
             WithPerceptionTracking { screenContent(scopedScreenStore(at: index)) }
         } else {
             screenContent(scopedScreenStore(at: index))
-        }
-    }
-}
-
-// MARK: - SafeNavigationDestinationModifier
-/// NavigationStack 존재 여부를 확인한 후 안전하게 navigationDestination을 적용하는 modifier
-
-@MainActor
-private struct SafeNavigationDestinationModifier<Destination: View>: ViewModifier {
-    let isPresented: Binding<Bool>
-    let destination: @MainActor () -> Destination
-
-    @Environment(\._isInsideNavStack) private var isInsideNavStack
-    @State private var hasNavigationStack = false
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                // NavigationStack 존재 여부를 감지하는 숨겨진 뷰
-                NavigationStackDetector { hasNavStack in
-                    hasNavigationStack = hasNavStack
-                }
-            )
-            .modifier(ConditionalNavigationDestination(
-                isPresented: isPresented,
-                shouldApply: isInsideNavStack && hasNavigationStack,
-                destination: destination
-            ))
-    }
-}
-
-// MARK: - NavigationStack Detector
-private struct NavigationStackDetector: View {
-    let onDetect: (Bool) -> Void
-
-    var body: some View {
-        GeometryReader { _ in
-            Color.clear
-                .onAppear {
-                    // 실제 Navigation 환경 감지
-                    DispatchQueue.main.async {
-                        onDetect(isInNavigationEnvironment())
-                    }
-                }
-        }
-        .frame(width: 0, height: 0)
-    }
-
-    private func isInNavigationEnvironment() -> Bool {
-        // 현재 뷰가 Navigation 환경에 있는지 확인
-        #if canImport(UIKit)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = scene.windows.first,
-           let rootVC = window.rootViewController {
-            return hasNavigationController(in: rootVC)
-        }
-        #endif
-        return true // 안전한 기본값
-    }
-
-    #if canImport(UIKit)
-    private func hasNavigationController(in viewController: UIViewController) -> Bool {
-        if viewController is UINavigationController {
-            return true
-        }
-
-        for child in viewController.children {
-            if hasNavigationController(in: child) {
-                return true
-            }
-        }
-
-        if let presented = viewController.presentedViewController {
-            return hasNavigationController(in: presented)
-        }
-
-        return false
-    }
-    #endif
-}
-
-// MARK: - Conditional NavigationDestination
-private struct ConditionalNavigationDestination<Destination: View>: ViewModifier {
-    let isPresented: Binding<Bool>
-    let shouldApply: Bool
-    let destination: () -> Destination
-
-    func body(content: Content) -> some View {
-        if shouldApply {
-            content
-                .navigationDestination(isPresented: isPresented) {
-                    destination()
-                }
-        } else {
-            content
         }
     }
 }
@@ -256,34 +167,63 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
                     screenContent(scopedScreenStore(index))
                 }
             }
-            .modifier(SafeNavigationDestinationModifier(
-                isPresented: isPresentedBinding,
-                destination: {
-                    Group {
-                        if routes.count > index + 1 {
-                            _InlineRouteChain(
-                                store: store,
-                                scopedScreenStore: scopedScreenStore,
-                                screenContent: screenContent,
-                                index: index + 1
-                            )
-                        } else {
-                            EmptyView()
-                        }
+            .navigationDestination(isPresented: isPresentedBinding) {
+                Group {
+                    if routes.count > index + 1 {
+                        _InlineRouteChain(
+                            store: store,
+                            scopedScreenStore: scopedScreenStore,
+                            screenContent: screenContent,
+                            index: index + 1
+                        )
+                    } else {
+                        EmptyView()
                     }
                 }
-            ))
+            }
         }
     }
 }
 
-// MARK: - _NavStackHost
+// MARK: - Standalone Navigation Host
 
 @MainActor
-private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
+private struct _StandaloneNavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     let store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
     let scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
     let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
+
+    var body: some View {
+        Group {
+            #if canImport(UIKit) && !os(watchOS)
+            _UIKitNavStackHost(
+                store: store,
+                scopedScreenStore: scopedScreenStore,
+                screenContent: screenContent,
+                rootIndex: 0
+            )
+            #else
+            _SwiftUINavStackHost(
+                store: store,
+                scopedScreenStore: scopedScreenStore,
+                screenContent: screenContent,
+                rootIndex: 0
+            )
+            #endif
+        }
+        .modifier(_SheetMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
+        .modifier(_CoverMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
+    }
+}
+
+// MARK: - SwiftUI Navigation Fallback
+
+@MainActor
+private struct _SwiftUINavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
+    let store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
+    let scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
+    let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
+    let rootIndex: Int
 
     @State private var coordinatorID = UUID()
     @State private var path: [_RouteIndex] = []
@@ -291,7 +231,8 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     private func computePath() -> [_RouteIndex] {
         let routes = store.currentState
         var indices: [_RouteIndex] = []
-        for i in 1..<routes.count {
+        guard rootIndex + 1 < routes.count else { return [] }
+        for i in (rootIndex + 1)..<routes.count {
             if routes[i].isPresented { break }
             indices.append(_RouteIndex(coordinatorID: coordinatorID, index: i))
         }
@@ -319,7 +260,7 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
     private func syncToStore() {
         guard !isSyncing else { return }
         let routes = store.currentState
-        let desired = path.count + 1
+        let desired = rootIndex + path.count + 1
         guard routes.count > desired else { return }
         isSyncing = true
 
@@ -342,9 +283,9 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
         NavigationStack(path: $path) {
             Group {
                 if Screen.self is (any ObservableState).Type {
-                    WithPerceptionTracking { screenContent(scopedScreenStore(0)) }
+                    WithPerceptionTracking { screenContent(scopedScreenStore(rootIndex)) }
                 } else {
-                    screenContent(scopedScreenStore(0))
+                    screenContent(scopedScreenStore(rootIndex))
                 }
             }
             .navigationDestination(for: _RouteIndex.self) { routeIndex in
@@ -368,10 +309,188 @@ private struct _NavStackHost<Screen, ScreenAction, ScreenContent: View>: View {
                     }
             }
         )
-        .modifier(_SheetMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
-        .modifier(_CoverMod(store: store, scopedScreenStore: scopedScreenStore, screenContent: screenContent))
     }
 }
+
+#if canImport(UIKit) && !os(watchOS)
+// MARK: - UIKitNavigation Host
+
+/// SwiftUI 진입점의 standalone 흐름을 UIKitNavigation이 소유하도록 연결한다.
+/// NavigationStackController는 representable 생명주기 동안 한 번만 생성된다.
+@MainActor
+private struct _UIKitNavStackHost<Screen, ScreenAction, ScreenContent: View>: UIViewControllerRepresentable {
+    let store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
+    let scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
+    let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
+    let rootIndex: Int
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            store: store,
+            scopedScreenStore: scopedScreenStore,
+            screenContent: screenContent,
+            rootIndex: rootIndex
+        )
+    }
+
+    func makeUIViewController(context: Context) -> NavigationStackController {
+        let coordinator = context.coordinator
+        coordinator.synchronizeFromStore(animated: false)
+
+        let navigationController = NavigationStackController(path: coordinator.$path) {
+            coordinator.makeScreenViewController(at: coordinator.rootIndex)
+        }
+        navigationController.navigationDestination(for: _RouteIndex.self) { [weak coordinator] routeIndex in
+            guard
+                let coordinator,
+                routeIndex.coordinatorID == coordinator.coordinatorID
+            else { return UIViewController() }
+            return coordinator.makeScreenViewController(at: routeIndex.index)
+        }
+        return navigationController
+    }
+
+    func updateUIViewController(
+        _ navigationController: NavigationStackController,
+        context: Context
+    ) {
+        context.coordinator.update(
+            store: store,
+            scopedScreenStore: scopedScreenStore,
+            screenContent: screenContent,
+            rootIndex: rootIndex
+        )
+        context.coordinator.refreshRoot(in: navigationController)
+        context.coordinator.synchronizeFromStore(animated: true)
+    }
+
+    static func dismantleUIViewController(
+        _ navigationController: NavigationStackController,
+        coordinator: Coordinator
+    ) {
+        coordinator.invalidate()
+        navigationController.delegate = nil
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        let coordinatorID = UUID()
+
+        var store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
+        var scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
+        var screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
+        var rootIndex: Int
+        private var isApplyingStorePath = false
+        private var isActive = true
+
+        @UIBinding var path: [_RouteIndex] = [] {
+            didSet { synchronizeToStore() }
+        }
+
+        init(
+            store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
+            scopedScreenStore: @escaping @MainActor (Int) -> ScreenStore<Screen, ScreenAction>,
+            screenContent: @escaping (ScreenStore<Screen, ScreenAction>) -> ScreenContent,
+            rootIndex: Int
+        ) {
+            self.store = store
+            self.scopedScreenStore = scopedScreenStore
+            self.screenContent = screenContent
+            self.rootIndex = rootIndex
+        }
+
+        func update(
+            store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
+            scopedScreenStore: @escaping @MainActor (Int) -> ScreenStore<Screen, ScreenAction>,
+            screenContent: @escaping (ScreenStore<Screen, ScreenAction>) -> ScreenContent,
+            rootIndex: Int
+        ) {
+            self.store = store
+            self.scopedScreenStore = scopedScreenStore
+            self.screenContent = screenContent
+            self.rootIndex = rootIndex
+        }
+
+        func makeScreenViewController(at index: Int) -> UIViewController {
+            UIHostingController(rootView: hostedScreen(at: index))
+        }
+
+        func refreshRoot(in navigationController: NavigationStackController) {
+            guard
+                let root = navigationController.viewControllers.first as? UIHostingController<AnyView>
+            else { return }
+            root.rootView = hostedScreen(at: rootIndex)
+        }
+
+        func synchronizeFromStore(animated: Bool) {
+            guard isActive else { return }
+            let expected = expectedPath()
+            guard path != expected else { return }
+
+            isApplyingStorePath = true
+            withUITransaction(\.uiKit.disablesAnimations, !animated) {
+                path = expected
+            }
+            isApplyingStorePath = false
+        }
+
+        private func synchronizeToStore() {
+            guard isActive, !isApplyingStorePath else { return }
+            guard path.allSatisfy({ $0.coordinatorID == coordinatorID }) else {
+                synchronizeFromStore(animated: false)
+                return
+            }
+
+            let routes = store.currentState
+            let desiredCount = rootIndex + path.count + 1
+            guard routes.count > desiredCount else { return }
+            store.send(.updateRoutes(Array(routes.prefix(desiredCount))))
+        }
+
+        private func expectedPath() -> [_RouteIndex] {
+            let routes = store.currentState
+            guard rootIndex + 1 < routes.count else { return [] }
+
+            var result: [_RouteIndex] = []
+            for index in (rootIndex + 1)..<routes.count {
+                if routes[index].isPresented { break }
+                result.append(_RouteIndex(coordinatorID: coordinatorID, index: index))
+            }
+            return result
+        }
+
+        private func hostedScreen(at index: Int) -> AnyView {
+            AnyView(
+                _HostedScreen(
+                    screenStore: scopedScreenStore(index),
+                    screenContent: screenContent
+                )
+                .environment(\._isInsideNavStack, true)
+            )
+        }
+
+        func invalidate() {
+            isActive = false
+        }
+    }
+}
+
+@MainActor
+private struct _HostedScreen<Screen, ScreenAction, ScreenContent: View>: View {
+    let screenStore: ScreenStore<Screen, ScreenAction>
+    let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
+
+    var body: some View {
+        Group {
+            if Screen.self is (any ObservableState).Type {
+                WithPerceptionTracking { screenContent(screenStore) }
+            } else {
+                screenContent(screenStore)
+            }
+        }
+    }
+}
+#endif
 
 // MARK: - Sheet Modifier
 
@@ -448,51 +567,42 @@ private struct _Presented<Screen, ScreenAction, ScreenContent: View>: View {
     let scopedScreenStore: @MainActor (Int) -> ScreenStore<Screen, ScreenAction>
     let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
 
-    @State private var coordinatorID = UUID()
-    @State private var path: [_RouteIndex] = []
-
-    private func computePath() -> [_RouteIndex] {
-        let routes = store.currentState
-        var indices: [_RouteIndex] = []
-        for i in (idx + 1)..<routes.count {
-            if routes[i].isPresented { break }
-            indices.append(_RouteIndex(coordinatorID: coordinatorID, index: i))
-        }
-        return indices
-    }
-
-    private var routeCount: Int { store.currentState.count }
+    @Environment(\._isInsideNavStack) private var isInsideNavStack
 
     var body: some View {
         WithPerceptionTracking {
             let routes = store.currentState
             if idx < routes.count {
                 let route = routes[idx]
-                if route.embedInNavigationView {
-                    NavigationStack(path: $path) {
-                        screenContent(scopedScreenStore(idx))
-                            .navigationDestination(for: _RouteIndex.self) { routeIndex in
-                                if routeIndex.coordinatorID == coordinatorID {
-                                    screenContent(scopedScreenStore(routeIndex.index))
-                                }
-                            }
-                    }
-                    .environment(\._isInsideNavStack, true)
-                    .onAppear { path = computePath() }
-                    .onChange(of: routeCount) { _ in
-                        DispatchQueue.main.async {
-                            let expected = computePath()
-                            if path != expected { path = expected }
-                        }
-                    }
-                    .onChange(of: path) { _ in
-                        let routes = store.currentState
-                        let desired = idx + 1 + path.count
-                        if routes.count > desired {
-                            store.send(.updateRoutes(Array(routes.prefix(desired))))
-                        }
-                    }
-                } else {
+                switch route.navigationContext.resolved(
+                    isInsideNavigationStack: isInsideNavStack
+                ) {
+                case .standalone, .automatic:
+                    #if canImport(UIKit) && !os(watchOS)
+                    _UIKitNavStackHost(
+                        store: store,
+                        scopedScreenStore: scopedScreenStore,
+                        screenContent: screenContent,
+                        rootIndex: idx
+                    )
+                    #else
+                    _SwiftUINavStackHost(
+                        store: store,
+                        scopedScreenStore: scopedScreenStore,
+                        screenContent: screenContent,
+                        rootIndex: idx
+                    )
+                    #endif
+
+                case .inherited:
+                    _InlineRouteChain(
+                        store: store,
+                        scopedScreenStore: scopedScreenStore,
+                        screenContent: screenContent,
+                        index: idx
+                    )
+
+                case .disabled:
                     screenContent(scopedScreenStore(idx))
                 }
             }

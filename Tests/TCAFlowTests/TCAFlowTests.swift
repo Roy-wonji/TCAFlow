@@ -11,6 +11,10 @@ final class TCAFlowTests: XCTestCase {
         case settings
     }
 
+    enum StringScreen: String, Codable {
+        case home
+    }
+
     // MARK: - Route 기본 테스트
 
     func testRouteCreation() {
@@ -18,6 +22,47 @@ final class TCAFlowTests: XCTestCase {
         XCTAssertEqual(route.screen, .home)
         XCTAssertFalse(route.isPresented)
         XCTAssertTrue(route.isPush)
+    }
+
+    func testRootUsesAutomaticNavigationByDefault() {
+        let route = Route<TestScreen>.root(.home)
+
+        XCTAssertTrue(route.embedInNavigationView)
+        XCTAssertEqual(route.navigationContext, .automatic)
+    }
+
+    func testDisabledNavigationContextIsDerivedInternally() {
+        let route = Route<TestScreen>.root(
+            .home,
+            embedInNavigationView: false
+        )
+
+        XCTAssertEqual(route.navigationContext, .disabled)
+    }
+
+    func testLegacyEmbedInNavigationViewMapsToAutomaticContext() {
+        let route = Route<TestScreen>.root(
+            .home,
+            embedInNavigationView: true
+        )
+
+        XCTAssertEqual(route.navigationContext, .automatic)
+        XCTAssertTrue(route.embedInNavigationView)
+        XCTAssertFalse(Route<TestScreen>.push(.detail).embedInNavigationView)
+    }
+
+    func testAutomaticNavigationContextUsesParentStackWhenAvailable() {
+        XCTAssertEqual(
+            NavigationContext.automatic.resolved(isInsideNavigationStack: true),
+            .inherited
+        )
+    }
+
+    func testAutomaticNavigationContextCreatesStackWithoutParent() {
+        XCTAssertEqual(
+            NavigationContext.automatic.resolved(isInsideNavigationStack: false),
+            .standalone
+        )
     }
 
     func testRouteEquality() {
@@ -247,6 +292,16 @@ final class TCAFlowTests: XCTestCase {
         XCTAssertEqual(decoded[2].screen, .profile)
         XCTAssertTrue(decoded[0].embedInNavigationView)
         XCTAssertTrue(decoded[1].isPush)
+    }
+
+    func testRouteCodableMigratesLegacyEmbedFlag() throws {
+        let data = Data(
+            #"{"type":"root","screen":"home","embedInNavigationView":true}"#.utf8
+        )
+
+        let decoded = try JSONDecoder().decode(Route<StringScreen>.self, from: data)
+
+        XCTAssertEqual(decoded.navigationContext, .automatic)
     }
 
     func testRoutePersistenceSaveAndLoad() {

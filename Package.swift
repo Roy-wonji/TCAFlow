@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 import PackageDescription
 import CompilerPluginSupport
 
@@ -17,9 +17,12 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.25.5"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
-        .package(url: "https://github.com/Roy-wonji/LogMacro", from: "1.0.0"),
+        .package(
+            url: "https://github.com/pointfreeco/swift-composable-architecture",
+            from: "1.26.2",
+            traits: ["ComposableArchitecture2Deprecations"]
+        ),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "603.0.2"),
     ],
     targets: [
         .macro(
@@ -35,7 +38,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "TCAFlowMacros",
-                .product(name: "LogMacro", package: "LogMacro"),
             ],
             path: "Sources/TCAFlow",
             swiftSettings: [
@@ -46,7 +48,10 @@ let package = Package(
         ),
         .testTarget(
             name: "TCAFlowTests",
-            dependencies: ["TCAFlow"],
+            dependencies: [
+                "TCAFlow",
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
                 .enableExperimentalFeature("StrictConcurrency")

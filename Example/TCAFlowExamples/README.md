@@ -65,7 +65,7 @@ TCAFlowExamples/
 
 ### 의존성
 - TCAFlow (로컬 패키지)
-- ComposableArchitecture 1.25.5+
+- ComposableArchitecture 1.26.2+
 - IdentifiedCollections 1.1.1+
 
 ### 실행 방법
@@ -112,7 +112,7 @@ TCAFlowExamples/
 
 - **@FlowCoordinator 매크로**: 보일러플레이트 코드를 대폭 줄여줍니다
 - **Equatable만 필요**: Hashable 제약 없이 모든 State를 사용할 수 있습니다
-- **Native NavigationStack**: iOS 16+의 최신 API를 직접 활용합니다
+- **Hybrid Navigation**: SwiftUI 화면을 유지하면서 UIKitNavigation이 push/pop을 담당합니다
 - **성능 최적화**: 불필요한 업데이트를 방지하는 최적화가 적용되어 있습니다
 
 ## 📚 참고 자료

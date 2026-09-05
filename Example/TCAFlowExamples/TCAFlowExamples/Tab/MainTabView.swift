@@ -18,9 +18,9 @@ struct MainTabView: View {
     ) { index in
       switch index {
       case 0:
-        DemoCoordinatorView(store: store.scope(state: \.demoState, action: \.demo))
+        DemoCoordinatorView(store: store.scope(\.demoState, action: \.demo))
       case 1:
-        ShowcaseCoordinatorView(store: store.scope(state: \.showcaseState, action: \.showcase))
+        ShowcaseCoordinatorView(store: store.scope(\.showcaseState, action: \.showcase))
       default:
         EmptyView()
       }

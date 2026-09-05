@@ -6,7 +6,7 @@ struct ShowcaseCoordinatorView: View {
   @Bindable var store: StoreOf<ShowcaseCoordinator>
 
   var body: some View {
-    TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
+    TCAFlowRouter(store.scope(\.routes, action: \.router)) { screen in
       switch screen.case {
       case .menu(let store):
         ShowcaseMenuView(store: store)

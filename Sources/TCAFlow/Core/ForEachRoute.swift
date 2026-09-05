@@ -1,4 +1,4 @@
-@_spi(Internals) import ComposableArchitecture
+import ComposableArchitecture
 import CasePaths
 import Foundation
 
@@ -11,7 +11,7 @@ struct OnRoutes<WrappedReducer: Reducer>: Reducer {
   let wrapped: WrappedReducer
 
   var body: some ReducerOf<Self> {
-    Scope(state: \.screen, action: \.self) { wrapped }
+    Scope(\.screen, action: \.self) { wrapped }
   }
 }
 
@@ -60,7 +60,7 @@ where Parent.Action: CasePathable {
       }
       let casePath = AnyCasePath(toElementAction)
       return element
-        .reduce(into: &state[keyPath: toElementsState][index], action: elementAction)
+        ._reduce(into: &state[keyPath: toElementsState][index], action: elementAction)
         .map { casePath.embed((id: index, action: $0)) }
     }
     parent

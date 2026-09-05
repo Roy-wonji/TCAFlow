@@ -1,11 +1,10 @@
 import Foundation
-import LogMacro
 
 // MARK: - Route + Codable
 
 extension Route: Codable where Screen: Codable {
     private enum CodingKeys: String, CodingKey {
-        case type, screen, embedInNavigationView
+        case type, screen, navigationContext, embedInNavigationView
     }
 
     private enum RouteType: String, Codable {
@@ -16,7 +15,10 @@ extension Route: Codable where Screen: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(RouteType.self, forKey: .type)
         let screen = try container.decode(Screen.self, forKey: .screen)
-        let embed = try container.decodeIfPresent(Bool.self, forKey: .embedInNavigationView) ?? false
+        let embed = try Self.decodeEmbedInNavigationView(
+            from: container,
+            routeType: type
+        )
 
         switch type {
         case .root:
@@ -51,6 +53,27 @@ extension Route: Codable where Screen: Codable {
             try container.encode(embed, forKey: .embedInNavigationView)
         }
     }
+
+    private static func decodeEmbedInNavigationView(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        routeType: RouteType
+    ) throws -> Bool {
+        if let context = try container.decodeIfPresent(
+            NavigationContext.self,
+            forKey: .navigationContext
+        ) {
+            return context != .disabled
+        }
+
+        if let embed = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .embedInNavigationView
+        ) {
+            return embed
+        }
+
+        return routeType == .root
+    }
 }
 
 // MARK: - RoutePersistence
@@ -76,16 +99,12 @@ public enum RoutePersistence {
         defaults: UserDefaults = .standard
     ) {
         guard let data = try? JSONEncoder().encode(routes) else {
-            #if DEBUG
-            #logError("🧭 [TCAFlow] Route 저장 실패: \(key)")
-            #endif
+            TCAFlowLogger.error("🧭 Route 저장 실패: \(key)")
             return
         }
         defaults.set(data, forKey: "TCAFlow_\(key)")
 
-        #if DEBUG
-        #logInfo("🧭 [TCAFlow] Route 저장 성공: \(key) (\(routes.count)개 route)")
-        #endif
+        TCAFlowLogger.info("🧭 Route 저장 성공: \(key) (\(routes.count)개 route)")
     }
 
     /// UserDefaults에서 Route 배열을 복원합니다.
@@ -98,9 +117,7 @@ public enum RoutePersistence {
             return nil
         }
 
-        #if DEBUG
-        #logInfo("🧭 [TCAFlow] Route 복원 성공: \(key) (\(routes.count)개 route)")
-        #endif
+        TCAFlowLogger.info("🧭 Route 복원 성공: \(key) (\(routes.count)개 route)")
 
         return routes
     }

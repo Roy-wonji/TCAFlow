@@ -37,7 +37,12 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 struct State: Equatable {
                     var routes: [Route<Screen.State>]
                     init() {
-                        self.routes = [.root(.home(.init()), embedInNavigationView: true)]
+                        self.routes = [
+                            .root(
+                                .home(.init()),
+                                embedInNavigationView: true
+                            )
+                        ]
                     }
                 }
 
@@ -84,7 +89,12 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 struct State: Equatable {
                     var routes: [Route<Screen.State>]
                     init() {
-                        self.routes = [.root(.login(.init()), embedInNavigationView: false)]
+                        self.routes = [
+                            .root(
+                                .login(.init()),
+                                embedInNavigationView: false
+                            )
+                        ]
                     }
                 }
 
@@ -145,7 +155,12 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 struct State: Equatable {
                     var routes: [Route<NestedScreen.State>]
                     init() {
-                        self.routes = [.root(.step1(.init()), embedInNavigationView: true)]
+                        self.routes = [
+                            .root(
+                                .step1(.init()),
+                                embedInNavigationView: true
+                            )
+                        ]
                     }
                 }
 
@@ -187,7 +202,12 @@ final class FlowCoordinatorMacroTests: XCTestCase {
                 struct State: Equatable {
                     var routes: [Route<Screen.State>]
                     init() {
-                        self.routes = [.root(.home(.init()), embedInNavigationView: true)]
+                        self.routes = [
+                            .root(
+                                .home(.init()),
+                                embedInNavigationView: true
+                            )
+                        ]
                     }
                 }
 

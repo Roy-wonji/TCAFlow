@@ -7,21 +7,21 @@
 `Route`는 route stack 안의 개별 화면을 표현합니다.
 
 ```swift
-@ObservableState
-public struct Route<State: Equatable>: Identifiable, Equatable, Hashable {
-  public let id: UUID
-  public var state: State
-  public var embedInNavigationView: Bool
+public enum Route<Screen> {
+  case root(Screen, embedInNavigationView: Bool = true)
+  case push(Screen)
+  case sheet(Screen, embedInNavigationView: Bool = false)
+  case cover(Screen, embedInNavigationView: Bool = false)
 }
 ```
 
-`Hashable` 구현은 `id` 기준입니다. 화면 state 자체는 `Equatable`만 요구합니다. `embedInNavigationView`는 root route가 `NavigationStack` 안에 렌더링될지 결정합니다.
+화면 state에는 `Hashable` 제약이 없습니다. `embedInNavigationView: true`이면 부모 TCAFlow navigation을 상속하거나, 부모가 없을 때 UIKitNavigation의 독립적인 `NavigationStackController`를 생성합니다.
 
 ```swift
 let route = Route.root(.home(HomeFeature.State()), embedInNavigationView: true)
 ```
 
-네비게이션 컨테이너 없이 화면만 렌더링하고 싶으면 `false`를 넘깁니다.
+네비게이션 컨테이너 없이 화면만 렌더링하려면 `embedInNavigationView: false`를 사용합니다.
 
 ```swift
 let route = Route.root(.home(HomeFeature.State()), embedInNavigationView: false)
@@ -104,7 +104,7 @@ case .route(.pathChanged(let path)):
 
 ```swift
 TCARouter(
-  self.store.scope(state: \.routes, action: \.route)
+  self.store.scope(\.routes, action: \.route)
 ) { screen in
   switch screen.case {
   case .home(let store):

@@ -1,6 +1,6 @@
 # TCACoordinators Comparison
 
-TCAFlow는 TCACoordinators와 같은 coordinator-style navigation 문제를 다룹니다. 차이는 API 방향입니다. TCAFlow는 TCA 1.25+의 observation, key-path scoping, macro 기반 boilerplate 제거에 맞춰 설계되어 있습니다.
+TCAFlow는 TCACoordinators와 같은 coordinator-style navigation 문제를 다룹니다. 차이는 API 방향입니다. TCAFlow는 TCA 1.26+의 observation, key-path scoping, macro 기반 boilerplate 제거에 맞춰 설계되어 있습니다.
 
 ## 핵심 차이
 
@@ -9,7 +9,7 @@ TCAFlow는 TCACoordinators와 같은 coordinator-style navigation 문제를 다�
 | 화면 state 제약 | hashable route state 패턴이 부담될 수 있음 | screen state는 `Equatable`만 요구 |
 | Coordinator 선언 | screen enum, route state, action wiring을 직접 관리 | `@FlowCoordinator`가 `AppScreen`, `State`, `Action` 생성 |
 | Root navigation 옵션 | route 설정에서 직접 처리 | `@FlowCoordinator(navigation: true/false)`로 선택 |
-| Router view | TCACoordinators router API 사용 | `TCARouter(self.store.scope(state: \.routes, action: \.route))` |
+| Router view | TCACoordinators router API 사용 | `TCARouter(self.store.scope(\.routes, action: \.route))` |
 | TCA API 방향 | 기존 coordinator 패턴 | `@ObservableState`, `@SwiftUI.Bindable`, key-path scoping 기준 |
 | 화면 push/pop | route stack mutation | `state.routes.push`, `pop`, `popToRoot`, `goTo`, `goBackTo` |
 
@@ -63,7 +63,7 @@ TCAFlow는 route stack store를 `TCARouter`에 넘깁니다.
 
 ```swift
 TCARouter(
-  self.store.scope(state: \.routes, action: \.route)
+  self.store.scope(\.routes, action: \.route)
 ) { screen in
   switch screen.case {
   case .home(let store):

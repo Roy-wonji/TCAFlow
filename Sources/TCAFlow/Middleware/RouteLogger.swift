@@ -20,7 +20,7 @@ public struct _RouteLoggingReducer<Base: Reducer>: Reducer {
     public var body: some ReducerOf<Base> {
         Reduce { state, action in
             let before = String(describing: state)
-            let effect = base.reduce(into: &state, action: action)
+            let effect = base._reduce(into: &state, action: action)
             let after = String(describing: state)
 
             if before != after {
@@ -48,18 +48,18 @@ public struct RouteLogger: Sendable {
     }
 
     func log<Action>(action: Action) {
-        #if DEBUG
         let actionDescription = String(describing: action)
 
-        // router action에서 의미 있는 부분만 추출
         switch level {
         case .minimal:
-            print("\(prefix) \(actionDescription)")
+            TCAFlowLogger.debug(actionDescription, prefix: prefix)
         case .verbose:
-            let timestamp = ISO8601DateFormatter().string(from: Date())
-            print("\(prefix) [\(timestamp)] \(actionDescription)")
+            TCAFlowLogger.debug(
+                actionDescription,
+                prefix: prefix,
+                includeTimestamp: true
+            )
         }
-        #endif
     }
 }
 

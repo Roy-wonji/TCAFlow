@@ -139,7 +139,7 @@ struct AppCoordinatorView: View {
     @Bindable var store: StoreOf<AppCoordinator>
 
     var body: some View {
-        TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
+        TCAFlowRouter(store.scope(\.routes, action: \.router)) { screen in
             switch screen.case {
             case .home(let store):
                 HomeView(store: store)

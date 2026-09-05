@@ -7,7 +7,7 @@ TCAFlow는 [TCACoordinators](https://github.com/johnpatrickmorgan/TCACoordinator
 ## ✨ 주요 특징
 
 - 🚀 **Hashable 제약 없음** - `Equatable`만으로 충분
-- 📱 **Native NavigationStack** - iOS 16+의 최신 Navigation API 활용  
+- 📱 **Hybrid Navigation** - SwiftUI 화면과 UIKitNavigation 기반 push/pop 결합
 - 🎯 **TCA 전용 설계** - 불필요한 의존성 없음
 - 🏗️ **Nested Coordinator** - 복잡한 플로우 완벽 지원
 - 🔄 **Migration 친화적** - TCACoordinators에서 쉬운 전환
@@ -20,14 +20,14 @@ TCAFlow는 [TCACoordinators](https://github.com/johnpatrickmorgan/TCACoordinator
 |------|-----------------|---------|
 | **Screen State 제약** | `Hashable` 필수 | `Equatable`만 요구 ✅ |
 | **의존성** | TCA + FlowStacks | TCA만 ✅ |
-| **Navigation API** | FlowStacks 래핑 | Native NavigationStack ✅ |
+| **Navigation API** | FlowStacks 래핑 | UIKitNavigation + SwiftUI ✅ |
 | **성능** | 간접 참조 오버헤드 | 직접 참조 최적화 ✅ |
 | **Nested 지원** | 제한적 | 완전 지원 ✅ |
 
 ## 📋 요구사항
 
 - **Swift**: 6.0+
-- **TCA**: 1.25.5+
+- **TCA**: 1.26.2+
 - **플랫폼**: iOS 16.0+ / macOS 13.0+ / watchOS 9.0+ / tvOS 16.0+
 - **Xcode**: 16.0+ (매크로 지원)
 
@@ -37,7 +37,7 @@ TCAFlow는 [TCACoordinators](https://github.com/johnpatrickmorgan/TCACoordinator
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Roy-wonji/TCAFlow.git", from: "1.0.2")
+    .package(url: "https://github.com/Roy-wonji/TCAFlow.git", from: "1.1.4")
 ]
 ```
 
@@ -160,12 +160,12 @@ extension AppCoordinator {
 ```swift
 @FlowCoordinator(
     screen: "Screen",    // Screen enum 이름 (optional)
-    navigation: true     // root route에 embedInNavigationView 적용 (기본값: true)
+    navigation: true     // root route를 standalone navigation으로 구성 (기본값: true)
 )
 ```
 
 - **`screen`**: Screen enum의 이름을 명시적으로 지정
-- **`navigation`**: `true`이면 root route가 NavigationView를 embed
+- **`navigation`**: `true`이면 root route가 독립적인 navigation container를 사용
 
 ### 🎛️ 커스터마이징
 
@@ -296,7 +296,7 @@ struct AppCoordinatorView: View {
     @Bindable var store: StoreOf<AppCoordinator>
     
     var body: some View {
-        TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
+        TCAFlowRouter(store.scope(\.routes, action: \.router)) { screen in
             switch screen.case {
             case .home(let store):
                 HomeView(store: store)

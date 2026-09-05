@@ -51,7 +51,7 @@ state.routes.dismissAll()       // 모두
 
 ### embedInNavigationView
 
-`embedInNavigationView: true`로 설정하면 sheet/cover 안에서 자체 NavigationStack을 가집니다. push 기반 navigation이 필요한 모달에 사용합니다.
+`embedInNavigationView: true`로 설정하면 Router가 navigation 소유권을 자동 판단합니다. 부모 TCAFlow navigation이 있으면 상속하고, 없으면 UIKitNavigation의 독립적인 `NavigationStackController`를 생성합니다. `false`이면 navigation container를 만들지 않습니다.
 
 ## 특정 화면으로 이동
 
@@ -103,7 +103,7 @@ public enum Route<Screen> {
 | 프로퍼티 | 설명 |
 |---------|------|
 | `screen` | 화면 데이터 (get/set) |
-| `embedInNavigationView` | NavigationStack 포함 여부 |
+| `embedInNavigationView` | navigation container 자동 구성 여부 |
 | `isPresented` | sheet/cover 여부 |
 | `isPush` | push 여부 |
 | `isSheet` | sheet 여부 |

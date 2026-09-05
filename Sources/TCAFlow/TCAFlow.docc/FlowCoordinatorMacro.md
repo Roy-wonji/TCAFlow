@@ -69,7 +69,7 @@ extension AppCoordinator: Reducer {}
 | 파라미터 | 타입 | 기본값 | 설명 |
 |---------|------|-------|------|
 | `screen` | `String?` | `nil` | Screen enum 이름. extension으로 분리할 때 필수 |
-| `navigation` | `Bool` | `true` | root route의 `embedInNavigationView` 값 |
+| `navigation` | `Bool` | `true` | root route의 navigation context 선택 |
 
 ### screen 파라미터
 

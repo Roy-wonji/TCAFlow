@@ -72,7 +72,7 @@ extension Reducer {
     ) -> some Reducer<State, Action> {
         Reduce { state, action in
             let effectsToCancel = effectIDs(state)
-            let effects = self.reduce(into: &state, action: action)
+            let effects = self._reduce(into: &state, action: action)
 
             let cancelEffects = Effect<Action>.merge(
                 effectsToCancel.map { Effect<Action>.cancel(id: $0) }

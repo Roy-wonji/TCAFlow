@@ -2,7 +2,6 @@ import ComposableArchitecture
 import CasePaths
 import Foundation
 import SwiftUI
-import LogMacro
 
 // MARK: - SheetConfiguration
 
@@ -29,6 +28,28 @@ public struct SheetConfiguration: Equatable, Sendable {
 
 // MARK: - Route
 
+/// Router 내부에서만 사용하는 navigation 소유권 표현입니다.
+enum NavigationContext: String, Codable, Equatable, Sendable {
+    /// 부모 TCAFlow navigation 안에서는 해당 container를 사용하고,
+    /// 그렇지 않으면 독립적인 container를 생성합니다.
+    case automatic
+
+    /// 부모 SwiftUI NavigationStack을 사용합니다.
+    case inherited
+
+    /// 독립적인 navigation container를 생성합니다.
+    /// UIKit 플랫폼에서는 UIKitNavigation의 NavigationStackController를 사용합니다.
+    case standalone
+
+    /// NavigationStack을 구성하지 않습니다.
+    case disabled
+
+    func resolved(isInsideNavigationStack: Bool) -> Self {
+        guard self == .automatic else { return self }
+        return isInsideNavigationStack ? .inherited : .standalone
+    }
+}
+
 /// A route represents a screen and how it should be presented.
 /// Same as TCACoordinators Route but does NOT require Hashable.
 @CasePathable
@@ -49,16 +70,37 @@ public enum Route<Screen> {
             switch self {
             case let .root(_, embed): self = .root(newValue, embedInNavigationView: embed)
             case .push: self = .push(newValue)
-            case let .sheet(_, embed, config): self = .sheet(newValue, embedInNavigationView: embed, configuration: config)
-            case let .cover(_, embed): self = .cover(newValue, embedInNavigationView: embed)
+            case let .sheet(_, embed, config):
+                self = .sheet(
+                    newValue,
+                    embedInNavigationView: embed,
+                    configuration: config
+                )
+            case let .cover(_, embed):
+                self = .cover(newValue, embedInNavigationView: embed)
             }
+        }
+    }
+
+    var navigationContext: NavigationContext {
+        switch self {
+        case let .root(_, embed),
+             let .sheet(_, embed, _),
+             let .cover(_, embed):
+            return embed ? .automatic : .disabled
+        case .push:
+            return .inherited
         }
     }
 
     public var embedInNavigationView: Bool {
         switch self {
-        case let .root(_, v), let .sheet(_, v, _), let .cover(_, v): return v
-        case .push: return false
+        case .push:
+            return false
+        case let .root(_, embed),
+             let .sheet(_, embed, _),
+             let .cover(_, embed):
+            return embed
         }
     }
 
@@ -81,10 +123,17 @@ public enum Route<Screen> {
 
     public func map<T>(_ transform: (Screen) -> T) -> Route<T> {
         switch self {
-        case let .root(s, embed): .root(transform(s), embedInNavigationView: embed)
+        case let .root(s, embed):
+            .root(transform(s), embedInNavigationView: embed)
         case let .push(s): .push(transform(s))
-        case let .sheet(s, embed, config): .sheet(transform(s), embedInNavigationView: embed, configuration: config)
-        case let .cover(s, embed): .cover(transform(s), embedInNavigationView: embed)
+        case let .sheet(s, embed, config):
+            .sheet(
+                transform(s),
+                embedInNavigationView: embed,
+                configuration: config
+            )
+        case let .cover(s, embed):
+            .cover(transform(s), embedInNavigationView: embed)
         }
     }
 }
@@ -163,11 +212,18 @@ extension Array {
         embedInNavigationView: Bool = false,
         configuration: SheetConfiguration = .default
     ) where Element == Route<Screen> {
-        append(.sheet(screen, embedInNavigationView: embedInNavigationView, configuration: configuration))
+        append(
+            .sheet(
+                screen,
+                embedInNavigationView: embedInNavigationView,
+                configuration: configuration
+            )
+        )
     }
 
     public mutating func presentCover<Screen>(
-        _ screen: Screen, embedInNavigationView: Bool = false
+        _ screen: Screen,
+        embedInNavigationView: Bool = false
     ) where Element == Route<Screen> {
         append(.cover(screen, embedInNavigationView: embedInNavigationView))
     }
@@ -197,9 +253,12 @@ extension Array {
     public mutating func goBackTo<Screen, Value>(
         _ casePath: CaseKeyPath<Screen, Value>
     ) where Element == Route<Screen> {
-        goBackTo(AnyCasePath(casePath))
+        let casePath = AnyCasePath(casePath)
+        guard let index = lastIndex(where: { casePath.extract(from: $0.screen) != nil }) else { return }
+        self = Array(prefix(through: index))
     }
 
+    @available(*, deprecated, message: "Use the CaseKeyPath overload instead.")
     public mutating func goBackTo<Screen, Value>(
         _ casePath: AnyCasePath<Screen, Value>
     ) where Element == Route<Screen> {
@@ -249,9 +308,13 @@ extension Array {
     public mutating func goTo<Screen, Value>(
         _ casePath: CaseKeyPath<Screen, Value>
     ) where Element == Route<Screen> {
-        goTo(AnyCasePath(casePath))
+        let casePath = AnyCasePath(casePath)
+        if let index = lastIndex(where: { casePath.extract(from: $0.screen) != nil }) {
+            self = Array(prefix(through: index))
+        }
     }
 
+    @available(*, deprecated, message: "Use the CaseKeyPath overload instead.")
     public mutating func goTo<Screen, Value>(
         _ casePath: AnyCasePath<Screen, Value>
     ) where Element == Route<Screen> {
@@ -295,7 +358,7 @@ public func routeWithDelaysIfUnsupported<Action: CasePathable, Screen, ScreenAct
 ) -> Effect<Action> {
     var newRoutes = routes
     update(&newRoutes)
-    return Effect.send(AnyCasePath(keyPath).embed(.updateRoutes(newRoutes)))
+    return .send(keyPath(.updateRoutes(newRoutes)))
 }
 
 // MARK: - runtimeWarn
@@ -305,7 +368,5 @@ public func runtimeWarn(
     file: StaticString? = nil,
     line: UInt? = nil
 ) {
-    #if DEBUG
-    #logInfo("[TCAFlow] \(message())")
-    #endif
+    TCAFlowLogger.warning(message())
 }

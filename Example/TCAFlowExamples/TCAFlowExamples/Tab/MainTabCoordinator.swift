@@ -26,10 +26,10 @@ struct MainTabCoordinator {
   }
 
   var body: some ReducerOf<Self> {
-    Scope(state: \.demoState, action: \.demo) {
+    Scope(\.demoState, action: \.demo) {
       DemoCoordinator()
     }
-    Scope(state: \.showcaseState, action: \.showcase) {
+    Scope(\.showcaseState, action: \.showcase) {
       ShowcaseCoordinator()
     }
     Reduce { state, action in

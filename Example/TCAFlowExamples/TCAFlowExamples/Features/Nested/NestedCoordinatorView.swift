@@ -7,7 +7,7 @@ struct NestedCoordinatorView: View {
   @GestureState private var dragOffset: CGFloat = 0
 
   var body: some View {
-    TCAFlowRouter(store.scope(state: \.routes, action: \.router)) { screen in
+    TCAFlowRouter(store.scope(\.routes, action: \.router)) { screen in
       switch screen.case {
         case .step1(let store):
           NestedStep1View(store: store)

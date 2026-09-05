@@ -1,6 +1,6 @@
 # TCAFlow Documentation
 
-TCAFlow는 TCA 1.25+의 `@Reducer`, `@ObservableState`, `Store.scope(state:action:)` key-path API에 맞춘 coordinator-style navigation helper입니다.
+TCAFlow는 TCA 1.26.2+의 `@Reducer`, `@ObservableState`, `Store.scope(_:action:)` key-path API에 맞춘 coordinator-style navigation helper입니다.
 
 핵심 목표는 TCACoordinators처럼 route stack을 reducer state로 관리하되, 화면 state에 `Hashable`을 강제하지 않고 `Equatable`만 요구하는 것입니다.
 
@@ -15,7 +15,7 @@ TCAFlow는 TCA 1.25+의 `@Reducer`, `@ObservableState`, `Store.scope(state:actio
 ## 최소 요구사항
 
 - Swift 6.0+
-- TCA 1.25.5+
+- TCA 1.26.2+
 - iOS 16.0+
 - macOS 13.0+
 - watchOS 9.0+
@@ -59,7 +59,7 @@ struct AppCoordinatorView: View {
 
   var body: some View {
     TCARouter(
-      self.store.scope(state: \.routes, action: \.route)
+      self.store.scope(\.routes, action: \.route)
     ) { screen in
       switch screen.case {
       case .home(let store):

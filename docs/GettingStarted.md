@@ -8,7 +8,7 @@
 
 ```swift
 dependencies: [
-  .package(url: "git@github.com:Roy-wonji/TCAFlow.git", from: "1.0.0")
+  .package(url: "git@github.com:Roy-wonji/TCAFlow.git", from: "1.1.4")
 ]
 ```
 
@@ -133,7 +133,7 @@ struct AppCoordinatorView: View {
 
   var body: some View {
     TCARouter(
-      self.store.scope(state: \.routes, action: \.route)
+      self.store.scope(\.routes, action: \.route)
     ) { screen in
       switch screen.case {
       case .home(let store):

@@ -1,7 +1,6 @@
 import ComposableArchitecture
 import CasePaths
 import Foundation
-import LogMacro
 
 // MARK: - SafeRoutingEnvironment
 
@@ -39,12 +38,12 @@ public struct SafeCoordinatorReducer<ChildState, ChildAction>: Reducer {
         self.childReducer = childReducer
     }
 
-    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
+    public func _reduce(into state: inout State, action: Action) -> Effect<Action> {
         // State 변경 전에 현재 state를 기록
         let previousState = state
 
         // Child reducer 실행
-        let effects = childReducer.reduce(into: &state, action: action)
+        let effects = childReducer._reduce(into: &state, action: action)
 
         // State가 변경된 경우 관련 effects 취소
         if String(describing: previousState) != String(describing: state) {
@@ -84,7 +83,7 @@ where ChildState: Equatable {
         self.onStateChange = onStateChange
     }
 
-    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
+    public func _reduce(into state: inout State, action: Action) -> Effect<Action> {
         guard let childAction = toChildAction.extract(from: action) else {
             return .none
         }
@@ -102,7 +101,7 @@ where ChildState: Equatable {
         }
 
         let previousChildState = childState
-        let childEffects = childReducer.reduce(into: &childState, action: childAction)
+        let childEffects = childReducer._reduce(into: &childState, action: childAction)
 
         // State 변경사항 적용
         state[keyPath: toChildState] = childState
@@ -146,21 +145,21 @@ public struct SafeNavigationReducer<State, Action>: Reducer {
         self.stateValidators = stateValidators
     }
 
-    public func reduce(into state: inout State, action: SafeNavigationAction<Action>) -> Effect<SafeNavigationAction<Action>> {
+    public func _reduce(into state: inout State, action: SafeNavigationAction<Action>) -> Effect<SafeNavigationAction<Action>> {
         switch action {
         case let .safeDispatch(wrappedAction, validatorKey):
             if let validator = stateValidators[validatorKey], !validator(state) {
-                #if DEBUG
-                #logError("🚫 [TCAFlow] SafeDispatch: Action ignored due to state validation failure")
-                #logDebug("Action: \(wrappedAction)")
-                #logDebug("Current State: \(state)")
-                #endif
+                TCAFlowLogger.warning(
+                    "🚫 SafeDispatch: Action ignored due to state validation failure"
+                )
+                TCAFlowLogger.debug("Action: \(wrappedAction)")
+                TCAFlowLogger.debug("Current State: \(state)")
                 return .none
             }
             fallthrough
 
         case let .wrapped(wrappedAction):
-            return baseReducer.reduce(into: &state, action: wrappedAction)
+            return baseReducer._reduce(into: &state, action: wrappedAction)
                 .map { .wrapped($0) }
 
         case let .cancelEffects(effectIDs):
