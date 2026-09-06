@@ -12,6 +12,17 @@ final class RouteScreenStateTests: XCTestCase {
         XCTAssertFalse(detail.isAttached)
     }
 
+    func testRouteUpdatePrewarmsStateForDestinationTeardown() {
+        let cache = _RouteScreenStateCache<Int>()
+        cache.update([.root(0), .push(1)])
+        cache.update([.root(0)])
+
+        let detail = cache.state(at: 1, routes: [.root(0)])
+
+        XCTAssertEqual(detail.read(from: [.root(0)]), 1)
+        XCTAssertFalse(detail.isAttached)
+    }
+
     func testPushPopCyclesReuseScopeKeys() {
         let cache = _RouteScreenStateCache<Int>()
         let detail = cache.state(at: 1, routes: [.root(0), .push(1)])

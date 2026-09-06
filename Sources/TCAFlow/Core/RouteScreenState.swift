@@ -40,22 +40,34 @@ final class _RouteScreenState<Screen>: Hashable {
 final class _RouteScreenStateCache<Screen> {
     private var states: [Int: _RouteScreenState<Screen>] = [:]
 
+    init(routes: [Route<Screen>] = []) {
+        update(routes)
+    }
+
     func update(_ routes: [Route<Screen>]) {
         for state in states.values {
             _ = state.read(from: routes)
+        }
+
+        for index in routes.indices {
+            let value = routes[index].screen
+            if let state = states[index] {
+                if !state.isAttached {
+                    state.attach(value: value)
+                }
+            } else {
+                states[index] = _RouteScreenState(index: index, value: value)
+            }
         }
     }
 
     func state(at index: Int, routes: [Route<Screen>]) -> _RouteScreenState<Screen> {
         update(routes)
-        if let state = states[index] {
-            // Routes are index-addressed. Reuse the same scope key on a later push
-            // so TCA's child-store cache does not grow for every push/pop cycle.
-            if !state.isAttached { state.attach(value: routes[index].screen) }
-            return state
+        guard let state = states[index] else {
+            preconditionFailure("A route screen must be cached before it is rendered.")
         }
-        let state = _RouteScreenState(index: index, value: routes[index].screen)
-        states[index] = state
+        // Routes are index-addressed. Reuse the same scope key on a later push
+        // so TCA's child-store cache does not grow for every push/pop cycle.
         return state
     }
 }

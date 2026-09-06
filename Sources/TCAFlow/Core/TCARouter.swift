@@ -69,7 +69,7 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     @Perception.Bindable private var store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
     private let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
 
-    @State private var screenStates = _RouteScreenStateCache<Screen>()
+    @State private var screenStates: _RouteScreenStateCache<Screen>
     @State private var routeCount: Int
 
     @Environment(\._isInsideNavStack) private var isInsideNavStack
@@ -81,6 +81,7 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     ) {
         self.store = store
         self.screenContent = screenContent
+        self._screenStates = State(initialValue: _RouteScreenStateCache(routes: store.currentState))
         self._routeCount = State(initialValue: store.currentState.count)
     }
 
