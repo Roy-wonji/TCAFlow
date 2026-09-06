@@ -60,6 +60,9 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     @Perception.Bindable private var store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>
     private let screenContent: (ScreenStore<Screen, ScreenAction>) -> ScreenContent
 
+    @State private var screenStates = _RouteScreenStateCache<Screen>()
+    @State private var routeCount: Int
+
     @Environment(\._isInsideNavStack) private var isInsideNavStack
 
 
@@ -69,10 +72,12 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     ) {
         self.store = store
         self.screenContent = screenContent
+        self._routeCount = State(initialValue: store.currentState.count)
     }
 
     func scopedScreenStore(at index: Int) -> ScreenStore<Screen, ScreenAction> {
-        let stateKP: KeyPath<[Route<Screen>], Screen> = \.[screenAt: index]
+        let state = screenStates.state(at: index, routes: store.currentState)
+        let stateKP: KeyPath<[Route<Screen>], Screen> = \.[retaining: state]
         let actionKP: CaseKeyPath<IndexedRouterAction<Screen, ScreenAction>, ScreenAction> = \.[id: index]
         return ScreenStore(store: store.scope(stateKP, action: actionKP))
     }
@@ -80,7 +85,7 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
     public var body: some View {
         WithPerceptionTracking {
             let routes = store.currentState
-            if !routes.isEmpty {
+            if routeCount > 0, !routes.isEmpty {
                 let firstRoute = routes[0]
                 switch firstRoute.navigationContext.resolved(
                     isInsideNavigationStack: isInsideNavStack
@@ -107,14 +112,20 @@ public struct TCAFlowRouter<Screen, ScreenAction, ScreenContent: View>: View {
                 }
             }
         }
+        .onReceive(store.publisher) { routes in
+            screenStates.update(routes)
+            routeCount = routes.count
+        }
     }
 
     @ViewBuilder
     func _screenView(at index: Int) -> some View {
-        if Screen.self is (any ObservableState).Type {
-            WithPerceptionTracking { screenContent(scopedScreenStore(at: index)) }
-        } else {
-            screenContent(scopedScreenStore(at: index))
+        if store.currentState.indices.contains(index) {
+            if Screen.self is (any ObservableState).Type {
+                WithPerceptionTracking { screenContent(scopedScreenStore(at: index)) }
+            } else {
+                screenContent(scopedScreenStore(at: index))
+            }
         }
     }
 }
@@ -140,7 +151,7 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
             get: { hasNext },
             set: { presented in
                 hasNext = presented
-                if !presented {
+                if !presented, routes.indices.contains(index) {
                     // 스와이프백 또는 pop: 현재 인덱스 이후 routes 제거
                     let trimmed = Array(routes.prefix(index + 1))
                     if routes.count != trimmed.count {
@@ -156,29 +167,31 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
 
     var body: some View {
         WithPerceptionTracking {
-            Group {
-                if Screen.self is (any ObservableState).Type {
-                    WithPerceptionTracking { screenContent(scopedScreenStore(index)) }
-                } else {
-                    screenContent(scopedScreenStore(index))
-                }
-            }
-            .navigationDestination(isPresented: isPresentedBinding) {
-                WithPerceptionTracking {
-                    if routes.count > index + 1 {
-                        _InlineRouteChain(
-                            store: store,
-                            scopedScreenStore: scopedScreenStore,
-                            screenContent: screenContent,
-                            index: index + 1
-                        )
+            if routes.indices.contains(index) {
+                Group {
+                    if Screen.self is (any ObservableState).Type {
+                        WithPerceptionTracking { screenContent(scopedScreenStore(index)) }
                     } else {
-                        EmptyView()
+                        screenContent(scopedScreenStore(index))
                     }
                 }
-            }
-            .onReceive(store.publisher) { routes in
-                hasNext = routes.count > index + 1 && routes[index + 1].isPush
+                .navigationDestination(isPresented: isPresentedBinding) {
+                    WithPerceptionTracking {
+                        if routes.indices.contains(index + 1), routes[index + 1].isPush {
+                            _InlineRouteChain(
+                                store: store,
+                                scopedScreenStore: scopedScreenStore,
+                                screenContent: screenContent,
+                                index: index + 1
+                            )
+                        } else {
+                            EmptyView()
+                        }
+                    }
+                }
+                .onReceive(store.publisher) { routes in
+                    hasNext = routes.count > index + 1 && routes[index + 1].isPush
+                }
             }
         }
     }
@@ -265,23 +278,29 @@ private struct _SwiftUINavStackHost<Screen, ScreenAction, ScreenContent: View>: 
     var body: some View {
         NavigationStack(path: pathBinding) {
             Group {
-                if Screen.self is (any ObservableState).Type {
-                    WithPerceptionTracking { screenContent(scopedScreenStore(rootIndex)) }
-                } else {
-                    screenContent(scopedScreenStore(rootIndex))
-                }
-            }
-            .navigationDestination(for: _RouteIndex.self) { routeIndex in
-                if routeIndex.coordinatorID == coordinatorID {
+                if store.currentState.indices.contains(rootIndex) {
                     if Screen.self is (any ObservableState).Type {
-                        WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
+                        WithPerceptionTracking { screenContent(scopedScreenStore(rootIndex)) }
                     } else {
-                        screenContent(scopedScreenStore(routeIndex.index))
+                        screenContent(scopedScreenStore(rootIndex))
                     }
                 }
             }
+            .environment(\._isInsideNavStack, true)
+            .navigationDestination(for: _RouteIndex.self) { routeIndex in
+                if routeIndex.coordinatorID == coordinatorID,
+                   store.currentState.indices.contains(routeIndex.index) {
+                    Group {
+                        if Screen.self is (any ObservableState).Type {
+                            WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
+                        } else {
+                            screenContent(scopedScreenStore(routeIndex.index))
+                        }
+                    }
+                    .environment(\._isInsideNavStack, true)
+                }
+            }
         }
-        .environment(\._isInsideNavStack, true)
         .onReceive(store.publisher) { routes in
             let expected = Self.computePath(for: routes, rootIndex: rootIndex, coordinatorID: coordinatorID)
             guard path != expected else { return }

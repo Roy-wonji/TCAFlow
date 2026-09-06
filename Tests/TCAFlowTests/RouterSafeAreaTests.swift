@@ -7,6 +7,14 @@ import XCTest
 
 @MainActor
 final class RouterSafeAreaTests: XCTestCase {
+    func testRemovedScreenStoreDoesNotBecomeRootDuringTeardown() {
+        let store = makeStore(routes: [.root(0), .push(1)])
+        let router = TCAFlowRouter(store) { _ in Text("Screen") }
+        let detail = router.scopedScreenStore(at: 1).store
+        store.send(.updateRoutes([.root(0)]))
+        XCTAssertEqual(detail.withState { $0 }, 1)
+    }
+
     func testRootContainerFillsBoundsAndPreservesScreenSafeArea() async throws {
         try await assertSafeAreaLayout(routes: [.root(0)], visibleScreen: 0)
     }
