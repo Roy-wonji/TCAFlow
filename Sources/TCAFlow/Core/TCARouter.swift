@@ -198,22 +198,23 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
 
     var body: some View {
         WithPerceptionTracking {
-            if routes.indices.contains(index) {
-                Group {
-                    if Screen.self is (any ObservableState).Type {
-                        WithPerceptionTracking { screenContent(scopedScreenStore(index)) }
-                    } else {
-                        screenContent(scopedScreenStore(index))
-                    }
+            // Keep the retained screen mounted until SwiftUI finishes an interactive pop.
+            // Removing it as soon as the route array shrinks exposes the hosting
+            // controller's default background during the transition.
+            Group {
+                if Screen.self is (any ObservableState).Type {
+                    WithPerceptionTracking { screenContent(scopedScreenStore(index)) }
+                } else {
+                    screenContent(scopedScreenStore(index))
                 }
-                .modifier(_ActiveNavigationDestinationModifier(
-                    isActive: isNavigationHostActive.wrappedValue,
-                    isPresented: isPresentedBinding,
-                    destination: destination
-                ))
-                .onReceive(store.publisher) { routes in
-                    hasNext = routes.count > index + 1 && routes[index + 1].isPush
-                }
+            }
+            .modifier(_ActiveNavigationDestinationModifier(
+                isActive: isNavigationHostActive.wrappedValue,
+                isPresented: isPresentedBinding,
+                destination: destination
+            ))
+            .onReceive(store.publisher) { routes in
+                hasNext = routes.count > index + 1 && routes[index + 1].isPush
             }
         }
     }
@@ -330,8 +331,9 @@ private struct _SwiftUINavStackHost<Screen, ScreenAction, ScreenContent: View>: 
             .environment(\._isInsideNavStack, true)
             .environment(\._isNavigationHostActive, $isNavigationHostActive)
             .navigationDestination(for: _RouteIndex.self) { routeIndex in
-                if routeIndex.coordinatorID == coordinatorID,
-                   store.currentState.indices.contains(routeIndex.index) {
+                // A popped destination remains visible while the transition completes.
+                // Its scoped Store retains the last route state for that lifetime.
+                if routeIndex.coordinatorID == coordinatorID {
                     Group {
                         if Screen.self is (any ObservableState).Type {
                             WithPerceptionTracking { screenContent(scopedScreenStore(routeIndex.index)) }
