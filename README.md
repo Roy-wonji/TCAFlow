@@ -349,6 +349,28 @@ state.routes.pop()              // push된 화면만 pop
 state.routes.popToRoot()        // push된 화면 모두 pop
 ```
 
+### 뒤로가기 버튼을 숨기면서 스와이프 유지 (iOS)
+
+push된 화면에 `.swipeBackButtonHidden()`을 적용하면 기본 뒤로가기 버튼을
+숨기면서 화면 가장자리 스와이프로 뒤로 갈 수 있습니다. 별도 UIKit 확장이나
+제스처 복원 코드를 작성할 필요가 없습니다.
+
+```swift
+import TCAFlow
+
+DetailView(store: store)
+    .swipeBackButtonHidden()
+
+// 조건에 따라 숨기기: false이면 기본 버튼과 기존 제스처 설정 복원
+DetailView(store: store)
+    .swipeBackButtonHidden(isBackButtonHidden)
+```
+
+NavigationStack 또는 TCAFlowRouter 안의 개별 화면에 적용하세요.
+루트 화면과 화면 전환 중에는 스와이프 시작을 차단합니다.
+화면이 보이는 동안 가장자리 스와이프의 delegate를 임시로 교체하므로
+같은 제스처에 별도 delegate를 함께 설정하지 마세요.
+
 ### 📑 Sheet / FullScreenCover
 
 ```swift

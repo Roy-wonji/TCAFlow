@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import TCAFlow
 
 struct DetailView: View {
   @Bindable var store: StoreOf<DetailFeature>
@@ -57,5 +58,6 @@ struct DetailView: View {
     }
     .padding()
     .navigationTitle(store.title)
+    .swipeBackButtonHidden()
   }
 }

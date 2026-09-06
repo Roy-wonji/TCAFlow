@@ -29,6 +29,7 @@ final class RouterSafeAreaTests: XCTestCase {
         let root = UIHostingController(rootView: TCAFlowRouter(parent) { _ in
             TCAFlowRouter(child) { screen in
                 Text("Child")
+                    .swipeBackButtonHidden()
                     .onAppear {
                         if screen.store.withState({ $0 }) == 0 {
                             rootAppeared.fulfill()
@@ -98,6 +99,7 @@ final class RouterSafeAreaTests: XCTestCase {
         let root = UIHostingController(
             rootView: TCAFlowRouter(store) { screen in
                 Text("Screen")
+                    .swipeBackButtonHidden()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.red.ignoresSafeArea())
                     .onAppear {

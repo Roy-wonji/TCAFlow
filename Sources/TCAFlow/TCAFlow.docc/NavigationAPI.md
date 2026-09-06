@@ -108,3 +108,18 @@ public enum Route<Screen> {
 | `isPush` | push 여부 |
 | `isSheet` | sheet 여부 |
 | `isCover` | cover 여부 |
+
+## 뒤로가기 버튼 숨기기와 스와이프 유지
+
+iOS에서 push된 화면에 `swipeBackButtonHidden()`을 적용하면 기본 뒤로가기
+버튼을 숨기면서 화면 가장자리 스와이프로 뒤로 갈 수 있습니다.
+
+```swift
+DetailView(store: store)
+    .swipeBackButtonHidden()
+```
+
+`false`를 전달하면 기본 뒤로가기 버튼과 기존 제스처 설정을 복원합니다.
+해당 화면을 감싸는 navigation controller를 사용하며 루트 화면과 화면 전환
+중에는 스와이프 시작을 차단합니다. 화면이 보이는 동안 가장자리 스와이프의
+delegate를 임시로 교체하므로 같은 제스처에 별도 delegate를 설정하지 마세요.
