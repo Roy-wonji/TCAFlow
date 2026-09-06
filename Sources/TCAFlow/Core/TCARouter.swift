@@ -45,10 +45,19 @@ private struct _InsideNavStackKey: EnvironmentKey {
     static let defaultValue = false
 }
 
+private struct _NavigationHostActiveKey: EnvironmentKey {
+    static let defaultValue = Binding.constant(false)
+}
+
 extension EnvironmentValues {
     var _isInsideNavStack: Bool {
         get { self[_InsideNavStackKey.self] }
         set { self[_InsideNavStackKey.self] = newValue }
+    }
+
+    var _isNavigationHostActive: Binding<Bool> {
+        get { self[_NavigationHostActiveKey.self] }
+        set { self[_NavigationHostActiveKey.self] = newValue }
     }
 }
 
@@ -145,6 +154,7 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
     private var routes: [Route<Screen>] { store.currentState }
 
     @State private var hasNext = false
+    @Environment(\._isNavigationHostActive) private var isNavigationHostActive
 
     private var isPresentedBinding: Binding<Bool> {
         Binding(
@@ -165,6 +175,27 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
         )
     }
 
+    @ViewBuilder
+    private func destination() -> some View {
+        let nextIndex = index + 1
+        WithPerceptionTracking {
+            if routes.indices.contains(nextIndex) {
+                if routes[nextIndex].isPush {
+                    _InlineRouteChain(
+                        store: store,
+                        scopedScreenStore: scopedScreenStore,
+                        screenContent: screenContent,
+                        index: nextIndex
+                    )
+                } else {
+                    EmptyView()
+                }
+            } else {
+                EmptyView()
+            }
+        }
+    }
+
     var body: some View {
         WithPerceptionTracking {
             if routes.indices.contains(index) {
@@ -175,24 +206,33 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
                         screenContent(scopedScreenStore(index))
                     }
                 }
-                .navigationDestination(isPresented: isPresentedBinding) {
-                    WithPerceptionTracking {
-                        if routes.indices.contains(index + 1), routes[index + 1].isPush {
-                            _InlineRouteChain(
-                                store: store,
-                                scopedScreenStore: scopedScreenStore,
-                                screenContent: screenContent,
-                                index: index + 1
-                            )
-                        } else {
-                            EmptyView()
-                        }
-                    }
-                }
+                .modifier(_ActiveNavigationDestinationModifier(
+                    isActive: isNavigationHostActive.wrappedValue,
+                    isPresented: isPresentedBinding,
+                    destination: destination
+                ))
                 .onReceive(store.publisher) { routes in
                     hasNext = routes.count > index + 1 && routes[index + 1].isPush
                 }
             }
+        }
+    }
+}
+
+@MainActor
+private struct _ActiveNavigationDestinationModifier<Destination: View>: ViewModifier {
+    let isActive: Bool
+    let isPresented: Binding<Bool>
+    let destination: @MainActor () -> Destination
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isActive {
+            content.navigationDestination(isPresented: isPresented) {
+                destination()
+            }
+        } else {
+            content
         }
     }
 }
@@ -230,6 +270,7 @@ private struct _SwiftUINavStackHost<Screen, ScreenAction, ScreenContent: View>: 
 
     @State private var coordinatorID = UUID()
     @State private var path: [_RouteIndex] = []
+    @State private var isNavigationHostActive = true
 
     init(
         store: Store<[Route<Screen>], IndexedRouterAction<Screen, ScreenAction>>,
@@ -287,6 +328,7 @@ private struct _SwiftUINavStackHost<Screen, ScreenAction, ScreenContent: View>: 
                 }
             }
             .environment(\._isInsideNavStack, true)
+            .environment(\._isNavigationHostActive, $isNavigationHostActive)
             .navigationDestination(for: _RouteIndex.self) { routeIndex in
                 if routeIndex.coordinatorID == coordinatorID,
                    store.currentState.indices.contains(routeIndex.index) {
@@ -298,9 +340,12 @@ private struct _SwiftUINavStackHost<Screen, ScreenAction, ScreenContent: View>: 
                         }
                     }
                     .environment(\._isInsideNavStack, true)
+                    .environment(\._isNavigationHostActive, $isNavigationHostActive)
                 }
             }
         }
+        .onAppear { isNavigationHostActive = true }
+        .onDisappear { isNavigationHostActive = false }
         .onReceive(store.publisher) { routes in
             let expected = Self.computePath(for: routes, rootIndex: rootIndex, coordinatorID: coordinatorID)
             guard path != expected else { return }

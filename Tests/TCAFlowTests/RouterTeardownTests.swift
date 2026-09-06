@@ -51,25 +51,27 @@ final class RouterTeardownTests: XCTestCase {
         let store: StoreOf<Feature>
 
         var body: some View {
-            ZStack {
-                if let parent = store.scope(\.parent, action: \.parent),
-                   let child = store.scope(\.child, action: \.child) {
-                    TCAFlowRouter(parent) { screen in
-                        if screen.store.withState({ $0 }) == 0 {
-                            Text("Home")
-                        } else {
-                            TCAFlowRouter(child) { nested in
-                                Text("Profile")
-                                    .onAppear { nested.store.send(.appeared) }
+            WithPerceptionTracking {
+                ZStack {
+                    if let parent = store.scope(\.parent, action: \.parent),
+                       let child = store.scope(\.child, action: \.child) {
+                        TCAFlowRouter(parent) { screen in
+                            if screen.store.withState({ $0 }) == 0 {
+                                Text("Home")
+                            } else {
+                                TCAFlowRouter(child) { nested in
+                                    Text("Profile")
+                                        .onAppear { nested.store.send(.appeared) }
+                                }
                             }
                         }
+                        .transition(.opacity)
+                    } else {
+                        Text("Auth")
                     }
-                    .transition(.opacity)
-                } else {
-                    Text("Auth")
                 }
+                .animation(.easeInOut(duration: 0.2), value: store.parent == nil)
             }
-            .animation(.easeInOut(duration: 0.2), value: store.parent == nil)
         }
     }
 
