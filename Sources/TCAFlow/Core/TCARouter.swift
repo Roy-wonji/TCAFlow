@@ -182,12 +182,16 @@ private struct _InlineRouteChain<Screen, ScreenAction, ScreenContent: View>: Vie
         WithPerceptionTracking {
             if routes.indices.contains(nextIndex) {
                 if routes[nextIndex].isPush {
+                    // 다음 단계 destination에도 부모 navigation host의 환경을 명시적으로 전달한다.
+                    // 활성 상태는 같은 Binding을 공유해 중첩 push와 host 종료를 함께 반영한다.
                     _InlineRouteChain(
                         store: store,
                         scopedScreenStore: scopedScreenStore,
                         screenContent: screenContent,
                         index: nextIndex
                     )
+                    .environment(\._isInsideNavStack, true)
+                    .environment(\._isNavigationHostActive, isNavigationHostActive)
                 } else {
                     EmptyView()
                 }
