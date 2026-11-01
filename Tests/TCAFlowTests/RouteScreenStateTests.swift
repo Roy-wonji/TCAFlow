@@ -33,4 +33,15 @@ final class RouteScreenStateTests: XCTestCase {
             XCTAssertEqual(next.read(from: [.root(0), .push(value)]), value)
         }
     }
+
+    func testReusedSlotReadsNewRouteBeforeRouterRenders() {
+        let cache = _RouteScreenStateCache<Int>()
+        let detail = cache.state(at: 1, routes: [.root(0), .push(1)])
+        XCTAssertEqual(detail.read(from: [.root(0)]), 1)
+        XCTAssertFalse(detail.isAttached)
+
+        // 라우터 렌더(cache.state) 없이 scoped Store가 먼저 새 부모 상태를 읽는다.
+        XCTAssertEqual(detail.read(from: [.root(0), .push(2)]), 2)
+        XCTAssertTrue(detail.isAttached)
+    }
 }
