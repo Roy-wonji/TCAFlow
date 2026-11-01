@@ -12,12 +12,13 @@ final class _RouteScreenState<Screen>: Hashable {
     }
 
     func read(from routes: [Route<Screen>]) -> Screen {
-        if isAttached {
-            if routes.indices.contains(index) {
-                value = routes[index].screen
-            } else {
-                isAttached = false
-            }
+        if routes.indices.contains(index) {
+            // 같은 index에 새 route가 push되면 재사용하는 scope가 곧바로 새 화면 상태를 읽어야 한다.
+            // 라우터 렌더 전에 이전 화면 상태를 돌려주면 Store 관찰이 변화를 놓쳐 새 화면에 이전 상태가 남는다.
+            value = routes[index].screen
+            isAttached = true
+        } else {
+            isAttached = false
         }
         return value
     }
